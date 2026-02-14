@@ -7,6 +7,3 @@
 [submodule "packages/js-lingui-solid"]
 	path = packages/js-lingui-solid
 	url = https://github.com/revoltchat/js-lingui-solid
-[submodule "packages/client/assets"]
-	path = packages/client/assets
-	url = https://github.com/stoatchat/assets.git
