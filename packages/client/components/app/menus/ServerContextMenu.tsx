@@ -6,6 +6,7 @@ import { Server } from "stoat.js";
 
 import { useClient } from "@revolt/client";
 import { useModals } from "@revolt/modal";
+import { useNavigate } from "@revolt/routing";
 import { useState } from "@revolt/state";
 import { Column, Text, Time } from "@revolt/ui";
 
@@ -40,6 +41,7 @@ import {
 export function ServerContextMenu(props: { server: Server }) {
   const state = useState();
   const client = useClient();
+  const navigate = useNavigate();
   const { openModal } = useModals();
 
   /**
@@ -114,10 +116,7 @@ export function ServerContextMenu(props: { server: Server }) {
    * Open server in Stoat Admin Panel
    */
   function openAdminPanel() {
-    window.open(
-      `https://old-admin.stoatinternal.com/panel/inspect/server/${props.server.id}`,
-      "_blank",
-    );
+    navigate(`/moderation/server/${props.server.id}`);
   }
 
   /**

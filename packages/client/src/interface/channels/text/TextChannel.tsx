@@ -16,6 +16,7 @@ import { decodeTime, ulid } from "ulid";
 import { DraftMessages, Messages } from "@revolt/app";
 import { useClient } from "@revolt/client";
 import { Keybind, KeybindAction, createKeybind } from "@revolt/keybinds";
+import { useVoice } from "@revolt/rtc";
 import { useNavigate, useSmartParams } from "@revolt/routing";
 import { useState } from "@revolt/state";
 import { LAYOUT_SECTIONS } from "@revolt/state/stores/Layout";
@@ -59,6 +60,7 @@ export type SidebarState =
 export function TextChannel(props: ChannelPageProps) {
   const state = useState();
   const client = useClient();
+  const voice = useVoice();
 
   // Last unread message id
   const [lastId, setLastId] = createSignal<string>();
@@ -75,6 +77,8 @@ export function TextChannel(props: ChannelPageProps) {
 
   const canConnect = () =>
     props.channel.isVoice && props.channel.havePermission("Connect");
+
+  const hasActiveCallInChannel = () => voice.channel()?.id === props.channel.id;
 
   // Get a reference to the message box's load latest function
   let jumpToBottomRef: ((nearby?: string) => void) | undefined;
@@ -218,7 +222,26 @@ export function TextChannel(props: ChannelPageProps) {
               </BelowFloatingHeader>
             }
           >
-            <VoiceChannelCallCardMount channel={props.channel} />
+            <Show
+              when={!isMobile() || hasActiveCallInChannel()}
+              fallback={
+                <BelowFloatingHeader>
+                  <div>
+                    <Text
+                      class="label"
+                      style={{
+                        padding: "10px 14px",
+                        color: "var(--md-sys-color-on-surface-variant)",
+                      }}
+                    >
+                      Tap the phone button in the header to join this call.
+                    </Text>
+                  </div>
+                </BelowFloatingHeader>
+              }
+            >
+              <VoiceChannelCallCardMount channel={props.channel} />
+            </Show>
           </Show>
 
           <Messages
@@ -354,7 +377,8 @@ const sidebar = cva({
       top: 0,
       right: 0,
       bottom: 0,
-      zIndex: 20,
+      // Keep member drawer above all in-content mobile UI; overlays still use higher layers.
+      zIndex: 150,
       width: "min(100vw, 360px)",
       maxWidth: "100vw",
       borderRadius: 0,
@@ -394,7 +418,7 @@ const MobileSidebarScrim = styled("button", {
     right: 0,
     bottom: 0,
     left: 0,
-    zIndex: 19,
+    zIndex: 140,
     cursor: "pointer",
     background: "rgba(15, 23, 42, 0.5)",
   },

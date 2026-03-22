@@ -176,10 +176,7 @@ export function UserContextMenu(props: {
    * Open user in Stoat Admin Panel
    */
   function openAdminPanel() {
-    window.open(
-      `https://old-admin.stoatinternal.com/panel/inspect/user/${props.user.id}`,
-      "_blank",
-    );
+    navigate(`/moderation/user/${props.user.id}`);
   }
 
   /**

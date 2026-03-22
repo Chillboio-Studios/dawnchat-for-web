@@ -16,6 +16,7 @@ import { ChannelContextMenu, ServerContextMenu } from "@revolt/app";
 import { MessageCache } from "@revolt/app/interface/channels/text/MessageCache";
 import { Titlebar } from "@revolt/app/interface/desktop/Titlebar";
 import { IncomingCallOverlay } from "@revolt/client/IncomingCallOverlay";
+import { NotificationSettingsWorker } from "@revolt/client/NotificationSettingsWorker";
 import { PresenceWorker, useClient, useClientLifecycle } from "@revolt/client";
 import { State } from "@revolt/client/Controller";
 import { NotificationsWorker } from "@revolt/client/NotificationsWorker";
@@ -150,6 +151,7 @@ const Interface = (props: { children: JSX.Element }) => {
 
         <NotificationsWorker />
         <PresenceWorker />
+        <NotificationSettingsWorker />
         <IncomingCallOverlay />
       </div>
     </MessageCache>
@@ -216,7 +218,7 @@ const MobileSidebarScrim = styled("button", {
     right: 0,
     bottom: 0,
     left: 0,
-    zIndex: 9,
+    zIndex: 140,
     cursor: "pointer",
     background: "rgba(15, 23, 42, 0.5)",
   },

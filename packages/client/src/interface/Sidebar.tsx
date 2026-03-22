@@ -58,6 +58,7 @@ export const Sidebar = (props: {
 
   const mobileSidebarOpen = () =>
     state.layout.getSectionState(LAYOUT_SECTIONS.PRIMARY_SIDEBAR, !isMobile());
+  const isModerationRoute = () => location.pathname.startsWith("/moderation");
 
   return (
     <div class={drawer({ mobileOpen: mobileSidebarOpen() })}>
@@ -97,7 +98,8 @@ export const Sidebar = (props: {
       <Show
         when={
           mobileSidebarOpen() &&
-          !location.pathname.startsWith("/discover")
+          !location.pathname.startsWith("/discover") &&
+          !isModerationRoute()
         }
       >
         <Switch fallback={<Home />}>
@@ -121,7 +123,8 @@ const drawer = cva({
       position: "absolute",
       top: 0,
       left: 0,
-      zIndex: 20,
+      // Keep menu drawer above all in-content mobile UI; overlays still use higher layers.
+      zIndex: 150,
       transition: "transform 0.2s ease",
       background: "var(--md-sys-color-surface-container-low)",
       boxShadow: "0 16px 32px rgba(0, 0, 0, 0.25)",
@@ -153,7 +156,7 @@ const mobileCloseButton = cva({
       position: "absolute",
       top: "8px",
       right: "8px",
-      zIndex: 25,
+      zIndex: 151,
       background: "var(--md-sys-color-surface-container-highest)",
       borderRadius: "var(--borderRadius-circle)",
     },

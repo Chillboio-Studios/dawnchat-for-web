@@ -53,7 +53,12 @@ export function NotificationsWorker() {
       case "none":
         return; // ignore if muted/none
       case "mention":
-        if (!message.mentioned) return; // ignore if not mentioned
+        if (
+          message.channel?.type === "TextChannel" &&
+          !message.mentioned
+        ) {
+          return; // keep mention-only semantics for server text channels
+        }
     }
 
     // Ignore if we're busy or focused

@@ -3,6 +3,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  on,
   onCleanup,
 } from "solid-js";
 
@@ -16,79 +17,68 @@ import {
 } from "@revolt/common/lib/clientApiSocket";
 import { useNavigate } from "@revolt/routing";
 import { useVoice } from "@revolt/rtc";
+import { useState } from "@revolt/state";
 import { Button } from "@revolt/ui/components/design";
+import callRingtoneMp3 from "../../assets/ringer/Call Sound.mp3";
 
-type WindowWithWebkitAudioContext = Window & {
+const RING_TIMEOUT_MS = 60_000;
+
+type WebkitWindow = Window & {
   webkitAudioContext?: typeof AudioContext;
 };
 
+function toRoutablePath(candidate?: string): string | undefined {
+  if (!candidate) return undefined;
+
+  // Accept already-routable app paths.
+  if (candidate.startsWith("/")) {
+    return candidate;
+  }
+
+  // Convert absolute links to app-relative paths.
+  if (/^https?:\/\//i.test(candidate)) {
+    try {
+      const parsed = new URL(candidate);
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
 function createRingtoneController() {
-  let context: AudioContext | undefined;
-  let oscillator: OscillatorNode | undefined;
-  let gainNode: GainNode | undefined;
-  let stopTimer: ReturnType<typeof setInterval> | undefined;
+  let audio: HTMLAudioElement | undefined;
 
   function stop() {
-    if (stopTimer) {
-      clearInterval(stopTimer);
-      stopTimer = undefined;
+    if (!audio) {
+      return;
     }
 
     try {
-      oscillator?.stop();
+      audio.pause();
+      audio.currentTime = 0;
     } catch {
       // no-op
     }
-
-    oscillator?.disconnect();
-    gainNode?.disconnect();
-
-    oscillator = undefined;
-    gainNode = undefined;
   }
 
   async function start() {
     if (typeof window === "undefined") return;
-    if (oscillator) return;
 
-    const appWindow = window as WindowWithWebkitAudioContext;
-    const AudioContextImpl =
-      appWindow.AudioContext || appWindow.webkitAudioContext;
-    if (!AudioContextImpl) return;
-
-    if (!context) {
-      context = new AudioContextImpl();
+    if (!audio) {
+      audio = new Audio(callRingtoneMp3);
+      audio.loop = true;
+      audio.preload = "auto";
+      audio.volume = 0.9;
     }
 
-    if (context.state === "suspended") {
-      try {
-        await context.resume();
-      } catch {
-        return;
-      }
+    try {
+      await audio.play();
+    } catch {
+      // Ignore autoplay/media permission issues.
     }
-
-    oscillator = context.createOscillator();
-    gainNode = context.createGain();
-
-    oscillator.type = "sine";
-    oscillator.frequency.value = 720;
-    gainNode.gain.value = 0.0001;
-
-    oscillator.connect(gainNode);
-    gainNode.connect(context.destination);
-    oscillator.start();
-
-    const currentContext = context;
-    let ringOn = true;
-    stopTimer = setInterval(() => {
-      if (!gainNode || !currentContext) return;
-      gainNode.gain.setValueAtTime(
-        ringOn ? 0.06 : 0.0001,
-        currentContext.currentTime,
-      );
-      ringOn = !ringOn;
-    }, 500);
   }
 
   return {
@@ -100,8 +90,11 @@ function createRingtoneController() {
 export function IncomingCallOverlay() {
   const client = useClient();
   const voice = useVoice();
+  const state = useState();
   const navigate = useNavigate();
-  const [dismissedCallIds, setDismissedCallIds] = createSignal<string[]>([]);
+  const [dismissedCallIds, setDismissedCallIds] = createSignal<
+    Record<string, number>
+  >({});
   const ringtone = createRingtoneController();
 
   createEffect(() => {
@@ -118,11 +111,46 @@ export function IncomingCallOverlay() {
       .filter((item) => item.status === "Ringing")
       .filter((item) => item.startedById !== currentUserId)
       .filter((item) => item.channelId !== activeChannelId)
-      .filter((item) => !dismissedCallIds().includes(item.callId))
+      .filter((item) => {
+        const channel = client().channels.get(item.channelId);
+        return channel?.type === "DirectMessage" || channel?.type === "Group";
+      })
+      .filter((item) => {
+        const dismissedAt = dismissedCallIds()[item.callId] ?? 0;
+        // Allow re-ringing if this call state has been updated after dismissal.
+        return item.updatedAt > dismissedAt;
+      })
+      .filter((item) => Date.now() - item.updatedAt < RING_TIMEOUT_MS)
       .sort((a, b) => b.updatedAt - a.updatedAt)[0];
   });
 
+  createEffect(
+    on(
+      () => activeIncomingCall()?.callId,
+      (nextCallId, previousCallId) => {
+        if (!nextCallId || !previousCallId || nextCallId === previousCallId) {
+          return;
+        }
+
+        // Keep dismissed map bounded as calls change over time.
+        setDismissedCallIds((current) => {
+          const entries = Object.entries(current);
+          if (entries.length <= 128) {
+            return current;
+          }
+
+          return Object.fromEntries(entries.slice(-96));
+        });
+      },
+    ),
+  );
+
   createEffect(() => {
+    if (state.settings.getValue("notifications:ringing_enabled") === false) {
+      ringtone.stop();
+      return;
+    }
+
     if (activeIncomingCall()) {
       void ringtone.start();
       return;
@@ -137,14 +165,22 @@ export function IncomingCallOverlay() {
 
     const channel = client().channels.get(call.channelId);
     if (!channel) return;
+    if (channel.type !== "DirectMessage" && channel.type !== "Group") return;
 
     try {
       await voice.connect(channel);
       await pushRemoteCallState(call.channelId, call.callId, "Active", {
         startedById: call.startedById,
         updatedById: client().user?.id,
+        channelType: channel.type,
       });
-      navigate(channel.url || channel.path);
+
+      const fallbackPath = `/channel/${channel.id}`;
+      const nextPath =
+        toRoutablePath(channel.url) ||
+        toRoutablePath(channel.path) ||
+        fallbackPath;
+      navigate(nextPath);
     } catch (error) {
       console.error("[call] failed to accept incoming call", error);
     }
@@ -154,13 +190,66 @@ export function IncomingCallOverlay() {
     const call = activeIncomingCall();
     if (!call) return;
 
-    setDismissedCallIds((current) => [...current, call.callId]);
+    setDismissedCallIds((current) => ({
+      ...current,
+      [call.callId]: Date.now(),
+    }));
 
     await pushRemoteCallState(call.channelId, call.callId, "Missed", {
       startedById: call.startedById,
       updatedById: client().user?.id,
     });
   }
+
+  async function stopRinging() {
+    const call = activeIncomingCall();
+    if (!call) return;
+
+    const channel = client().channels.get(call.channelId);
+    const channelType =
+      channel?.type === "DirectMessage" || channel?.type === "Group"
+        ? channel.type
+        : undefined;
+
+    setDismissedCallIds((current) => ({
+      ...current,
+      [call.callId]: Date.now(),
+    }));
+
+    await pushRemoteCallState(call.channelId, call.callId, "Ended", {
+      startedById: call.startedById,
+      updatedById: client().user?.id,
+      channelType,
+    });
+  }
+
+  function disableRinging() {
+    state.settings.setValue("notifications:ringing_enabled", false);
+    ringtone.stop();
+  }
+
+  createEffect(() => {
+    const call = activeIncomingCall();
+    if (!call) {
+      return;
+    }
+
+    const elapsed = Date.now() - call.updatedAt;
+    const remaining = RING_TIMEOUT_MS - elapsed;
+
+    if (remaining <= 0) {
+      void stopRinging();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void stopRinging();
+    }, remaining);
+
+    onCleanup(() => {
+      window.clearTimeout(timer);
+    });
+  });
 
   onCleanup(() => {
     ringtone.stop();
@@ -177,6 +266,12 @@ export function IncomingCallOverlay() {
               <OverlayTitle>Incoming Call</OverlayTitle>
               <OverlayBody>{channel()?.name || "Unknown Channel"}</OverlayBody>
               <OverlayActions>
+                <Button variant="tonal" onPress={disableRinging}>
+                  Disable Ringing
+                </Button>
+                <Button variant="tonal" onPress={stopRinging}>
+                  Stop Ringing
+                </Button>
                 <Button variant="_error" onPress={dismissCall}>
                   Decline
                 </Button>

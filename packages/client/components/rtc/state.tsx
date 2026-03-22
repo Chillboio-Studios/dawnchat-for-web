@@ -219,10 +219,92 @@ class Voice {
     if (!this.canScreenShare) throw "screen share unsupported";
     if (!this.videoPermission) throw "missing video permission";
 
+    const shouldEnable = !room.localParticipant.isScreenShareEnabled;
+
+    // Some mobile browsers expose getDisplayMedia on navigator, but not on mediaDevices.
+    if (
+      typeof navigator !== "undefined" &&
+      typeof navigator.mediaDevices?.getDisplayMedia !== "function" &&
+      typeof (navigator as Navigator & { getDisplayMedia?: unknown })
+        .getDisplayMedia === "function"
+    ) {
+      (
+        navigator.mediaDevices as MediaDevices & {
+          getDisplayMedia?: MediaDevices["getDisplayMedia"];
+        }
+      ).getDisplayMedia = (
+        navigator as Navigator & {
+          getDisplayMedia: MediaDevices["getDisplayMedia"];
+        }
+      ).getDisplayMedia;
+    }
+
+    if (
+      typeof window !== "undefined" &&
+      typeof navigator !== "undefined" &&
+      typeof navigator.mediaDevices?.getDisplayMedia !== "function" &&
+      typeof (
+        window as Window & {
+          getDisplayMedia?: unknown;
+        }
+      ).getDisplayMedia === "function"
+    ) {
+      (
+        navigator.mediaDevices as MediaDevices & {
+          getDisplayMedia?: MediaDevices["getDisplayMedia"];
+        }
+      ).getDisplayMedia = (
+        window as Window & {
+          getDisplayMedia: MediaDevices["getDisplayMedia"];
+        }
+      ).getDisplayMedia;
+    }
+
+    const userAgent =
+      typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
+    const isMobile = /android|iphone|ipad|ipod/.test(userAgent);
+
+    const captureOptions: {
+      audio: boolean;
+      video: boolean;
+      preferCurrentTab?: boolean;
+      selfBrowserSurface?: string;
+      systemAudio?: string;
+    } = {
+      audio: this.#settings.screenShareWithAudio,
+      video: true,
+    };
+
+    if (isMobile) {
+      captureOptions.preferCurrentTab = true;
+      captureOptions.selfBrowserSurface = "include";
+      captureOptions.systemAudio = this.#settings.screenShareWithAudio
+        ? "include"
+        : "exclude";
+    }
+
     try {
-      await room.localParticipant.setScreenShareEnabled(
-        !room.localParticipant.isScreenShareEnabled,
-      );
+      if (!shouldEnable) {
+        await room.localParticipant.setScreenShareEnabled(false);
+      } else {
+        try {
+          await room.localParticipant.setScreenShareEnabled(
+            true,
+            captureOptions,
+          );
+        } catch (error) {
+          if (!this.#settings.screenShareWithAudio) {
+            throw error;
+          }
+
+          // Retry without audio when browsers reject combined capture.
+          await room.localParticipant.setScreenShareEnabled(true, {
+            ...captureOptions,
+            audio: false,
+          });
+        }
+      }
+
       this.#setScreenshare(room.localParticipant.isScreenShareEnabled);
     } catch (error) {
       console.error("[rtc] failed to toggle screenshare", error);
@@ -255,9 +337,44 @@ class Voice {
   }
 
   get canScreenShare() {
-    return (
-      typeof navigator !== "undefined" &&
-      typeof navigator.mediaDevices?.getDisplayMedia === "function"
+    if (typeof navigator === "undefined") return false;
+
+    const mediaDevicesAny = navigator.mediaDevices as
+      | (MediaDevices & {
+          getDisplayMedia?: unknown;
+        })
+      | undefined;
+
+    const legacyNavigator = navigator as Navigator & {
+      getDisplayMedia?: unknown;
+    };
+
+    const legacyWindow =
+      typeof window !== "undefined"
+        ? (window as Window & {
+            getDisplayMedia?: unknown;
+          })
+        : undefined;
+
+    // On some mobile browsers the function is exposed lazily or non-typed.
+    const hasDisplayCaptureSignal =
+      typeof mediaDevicesAny?.getDisplayMedia === "function" ||
+      "getDisplayMedia" in (mediaDevicesAny ?? {}) ||
+      typeof legacyNavigator.getDisplayMedia === "function" ||
+      typeof legacyWindow?.getDisplayMedia === "function";
+
+    if (hasDisplayCaptureSignal) return true;
+
+    const ua = navigator.userAgent.toLowerCase();
+    const isMobile = /android|iphone|ipad|ipod/.test(ua);
+
+    // Be optimistic on modern mobile secure contexts; runtime call will still
+    // fail safely if the browser blocks capture.
+    return Boolean(
+      isMobile &&
+        typeof window !== "undefined" &&
+        window.isSecureContext &&
+        typeof navigator.mediaDevices?.getUserMedia === "function",
     );
   }
 }

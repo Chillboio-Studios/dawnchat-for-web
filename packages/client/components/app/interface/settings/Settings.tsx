@@ -1,13 +1,18 @@
 import {
   type JSX,
   Accessor,
+  Show,
   createContext,
   createMemo,
+  createEffect,
+  onCleanup,
+  onMount,
   createSignal,
   untrack,
   useContext,
 } from "solid-js";
 import { Motion, Presence } from "solid-motionone";
+import { styled } from "styled-system/jsx";
 
 import { Rerun } from "@solid-primitives/keyed";
 
@@ -50,6 +55,24 @@ export function Settings(props: SettingsProps & SettingsConfiguration<never>) {
   );
   const [transition, setTransition] =
     createSignal<SettingsTransition>("normal");
+  const [isMobile, setIsMobile] = createSignal(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = createSignal(false);
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    onCleanup(() => mediaQuery.removeEventListener("change", update));
+  });
+
+  createEffect(() => {
+    if (!isMobile()) {
+      setMobileSidebarOpen(false);
+    }
+  });
 
   /**
    * Navigate to a certain page
@@ -80,6 +103,10 @@ export function Settings(props: SettingsProps & SettingsConfiguration<never>) {
     }
 
     setPage(id);
+
+    if (isMobile()) {
+      setMobileSidebarOpen(false);
+    }
   }
 
   return (
@@ -92,12 +119,28 @@ export function Settings(props: SettingsProps & SettingsConfiguration<never>) {
       <MemoisedList context={props.context} list={props.list}>
         {(list) => (
           <>
-            <SettingsSidebar list={list} page={page} setPage={setPage} />
+            <Show when={isMobile() && mobileSidebarOpen()}>
+              <MobileSidebarScrim
+                type="button"
+                onClick={() => setMobileSidebarOpen(false)}
+                aria-label="Close settings sidebar"
+              />
+            </Show>
+
+            <SettingsSidebar
+              list={list}
+              page={page}
+              setPage={setPage}
+              mobileSidebarOpen={mobileSidebarOpen}
+              onCloseMobileSidebar={() => setMobileSidebarOpen(false)}
+            />
             <SettingsContent
               page={page}
               list={list}
               title={props.title}
               onClose={props.onClose}
+              isMobile={isMobile}
+              onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
             >
               <Presence exitBeforeEnter>
                 <Rerun on={page}>
@@ -172,3 +215,19 @@ function MemoisedList(props: {
  */
 export const useSettingsNavigation = () =>
   useContext(SettingsNavigationContext)!;
+
+const MobileSidebarScrim = styled("button", {
+  base: {
+    display: "none",
+    mdDown: {
+      display: "block",
+      border: "none",
+      padding: "0",
+      position: "fixed",
+      inset: "0",
+      zIndex: 155,
+      background: "rgba(15, 23, 42, 0.52)",
+      cursor: "pointer",
+    },
+  },
+});

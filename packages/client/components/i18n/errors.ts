@@ -55,6 +55,8 @@ export function useError() {
           return t`You cannot remove yourself.`;
         case "CannotReportYourself":
           return t`You cannot report yourself.`;
+        case "NoReasonProvided":
+          return t`Please select a reason before submitting your report.`;
         case "CannotTimeoutYourself":
           return t`You cannot timeout yourself.`;
         case "DatabaseError":

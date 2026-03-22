@@ -38,8 +38,32 @@ export function FloatingManager() {
     mouseY = clientY;
   }
 
-  onMount(() => document.addEventListener("mousemove", onMouseMove));
-  onCleanup(() => document.addEventListener("mousemove", onMouseMove));
+  function onTouchMove(event: TouchEvent) {
+    const touch = event.touches[0] ?? event.changedTouches[0];
+    if (!touch) return;
+
+    mouseX = touch.clientX;
+    mouseY = touch.clientY;
+  }
+
+  function onContextMenu({ clientX, clientY }: MouseEvent) {
+    mouseX = clientX;
+    mouseY = clientY;
+  }
+
+  onMount(() => {
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("touchstart", onTouchMove, { passive: true });
+    document.addEventListener("touchmove", onTouchMove, { passive: true });
+    document.addEventListener("contextmenu", onContextMenu, true);
+  });
+
+  onCleanup(() => {
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("touchstart", onTouchMove);
+    document.removeEventListener("touchmove", onTouchMove);
+    document.removeEventListener("contextmenu", onContextMenu, true);
+  });
 
   /**
    * Whether a floating element is visible

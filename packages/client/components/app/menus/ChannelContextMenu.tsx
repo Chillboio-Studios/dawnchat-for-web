@@ -4,6 +4,7 @@ import { Trans } from "@lingui-solid/solid/macro";
 import { Channel } from "stoat.js";
 
 import { useModals } from "@revolt/modal";
+import { useNavigate } from "@revolt/routing";
 import { useState } from "@revolt/state";
 
 import MdBadge from "@material-design-icons/svg/outlined/badge.svg?component-solid";
@@ -28,6 +29,7 @@ import { NotificationContextMenu } from "./shared/NotificationContextMenu";
  */
 export function ChannelContextMenu(props: { channel: Channel }) {
   const state = useState();
+  const navigate = useNavigate();
   const { openModal } = useModals();
 
   /**
@@ -82,10 +84,7 @@ export function ChannelContextMenu(props: { channel: Channel }) {
    * Open channel in Stoat Admin Panel
    */
   function openAdminPanel() {
-    window.open(
-      `https://old-admin.stoatinternal.com/panel/inspect/channel/${props.channel.id}`,
-      "_blank",
-    );
+    navigate("/moderation");
   }
 
   /**

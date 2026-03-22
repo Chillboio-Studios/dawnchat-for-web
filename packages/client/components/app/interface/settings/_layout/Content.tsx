@@ -6,6 +6,7 @@ import { styled } from "styled-system/jsx";
 import { Breadcrumbs, IconButton, Text } from "@revolt/ui";
 
 import MdClose from "@material-design-icons/svg/outlined/close.svg?component-solid";
+import MdMenu from "@material-design-icons/svg/outlined/menu.svg?component-solid";
 
 import { SettingsList } from "..";
 import { useSettingsNavigation } from "../Settings";
@@ -19,6 +20,8 @@ export function SettingsContent(props: {
   list: Accessor<SettingsList<unknown>>;
   title: (ctx: SettingsList<never>, key: string) => string;
   page: Accessor<string | undefined>;
+  isMobile: Accessor<boolean>;
+  onOpenMobileSidebar: () => void;
 }) {
   const { navigate } = useSettingsNavigation();
 
@@ -31,15 +34,27 @@ export function SettingsContent(props: {
       <Show when={props.page()}>
         <InnerContent>
           <InnerColumn>
-            <Text class="title" size="large">
-              <Breadcrumbs
-                elements={props.page()!.split("/")}
-                renderElement={(key) =>
-                  props.title(props.list() as SettingsList<never>, key)
-                }
-                navigate={(keys) => navigate(keys.join("/"))}
-              />
-            </Text>
+            <HeaderRow>
+              <Show when={props.isMobile()}>
+                <IconButton
+                  variant="tonal"
+                  onPress={props.onOpenMobileSidebar}
+                  aria-label="Open settings pages"
+                >
+                  <MdMenu />
+                </IconButton>
+              </Show>
+
+              <Text class="title" size="large">
+                <Breadcrumbs
+                  elements={props.page()!.split("/")}
+                  renderElement={(key) =>
+                    props.title(props.list() as SettingsList<never>, key)
+                  }
+                  navigate={(keys) => navigate(keys.join("/"))}
+                />
+              </Text>
+            </HeaderRow>
             {props.children}
             <div class={css({ minHeight: "80px" })} />
           </InnerColumn>
@@ -68,6 +83,12 @@ const base = cva({
     background: "var(--md-sys-color-surface-container-low)",
     borderStartStartRadius: "30px",
     borderEndStartRadius: "30px",
+    mdDown: {
+      borderStartStartRadius: "0px",
+      borderEndStartRadius: "0px",
+      borderRadius: "0px",
+      flex: "1 1 auto",
+    },
 
     "& > a": {
       textDecoration: "none",
@@ -88,6 +109,10 @@ const InnerContent = styled("div", {
     padding: "80px 32px",
     justifyContent: "stretch",
     zIndex: 1,
+    mdDown: {
+      maxWidth: "none",
+      padding: "16px 12px 20px",
+    },
   },
 });
 
@@ -101,6 +126,18 @@ const InnerColumn = styled("div", {
     display: "flex",
     flexDirection: "column",
     marginBlockEnd: "80px",
+    mdDown: {
+      marginBlockEnd: "28px",
+    },
+  },
+});
+
+const HeaderRow = styled("div", {
+  base: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    minWidth: 0,
   },
 });
 
@@ -115,6 +152,7 @@ const CloseAction = styled("div", {
     visibility: "visible",
     position: "sticky",
     top: 0,
+    alignSelf: "flex-start",
 
     "&:after": {
       content: '"ESC"',
@@ -125,6 +163,16 @@ const CloseAction = styled("div", {
       fontWeight: 600,
       color: "var(--md-sys-color-on-surface)",
       fontSize: "0.75rem",
+    },
+    mdDown: {
+      position: "fixed",
+      top: "12px",
+      right: "12px",
+      padding: "0px",
+      zIndex: 4,
+      "&:after": {
+        display: "none",
+      },
     },
   },
 });

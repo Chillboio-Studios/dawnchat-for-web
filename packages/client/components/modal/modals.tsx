@@ -43,6 +43,7 @@ import { LinkWarningModal } from "./modals/LinkWarning";
 import { MFAEnableTOTPModal } from "./modals/MFAEnableTOTP";
 import { MFAFlowModal } from "./modals/MFAFlow";
 import { MFARecoveryModal } from "./modals/MFARecovery";
+import { ModerationPanelModal } from "./modals/ModerationPanel";
 import { OnboardingModal } from "./modals/Onboarding";
 import { PolicyChangeModal } from "./modals/PolicyChange";
 import { RenameSessionModal } from "./modals/RenameSession";
@@ -161,6 +162,8 @@ export function RenderModal(props: ActiveModal & { onClose: () => void }) {
       return <RenameSessionModal {...modalProps} />;
     case "report_content":
       return <ReportContentModal {...modalProps} />;
+    case "moderation_panel":
+      return <ModerationPanelModal {...modalProps} />;
     case "server_identity":
       return <ServerIdentityModal {...modalProps} />;
     case "server_info":

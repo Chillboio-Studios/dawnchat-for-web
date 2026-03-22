@@ -1,4 +1,12 @@
-import { JSX, Match, Show, Switch, createEffect, onMount } from "solid-js";
+import {
+  JSX,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createSignal,
+  onMount,
+} from "solid-js";
 
 import { Trans } from "@lingui-solid/solid/macro";
 import {
@@ -28,6 +36,7 @@ import {
   getRemoteCallState,
   pushRemoteCallState,
 } from "@revolt/common/lib/clientApiSocket";
+import { Button } from "@revolt/ui/components/design";
 import { formatTime, Time } from "@revolt/ui/components/utils";
 
 interface Props {
@@ -65,6 +74,13 @@ export function SystemMessage(props: Props) {
   const dayjs = useTime();
   const voice = useVoice();
   const client = useClient();
+  const [lastAutoPushed, setLastAutoPushed] = createSignal<
+    | {
+        key: string;
+        status: string;
+      }
+    | undefined
+  >();
 
   const callSystemMessage = () =>
     props.systemMessage as CallStartedSystemMessage | undefined;
@@ -87,6 +103,17 @@ export function SystemMessage(props: Props) {
     if (remoteState?.status) return remoteState.status;
 
     return localCallStatus();
+  };
+
+  const canStopRinging = () => {
+    const call = callSystemMessage();
+    const currentUserId = client().user?.id;
+    return (
+      !!call &&
+      !!currentUserId &&
+      call.byId === currentUserId &&
+      callStatus() === "Ringing"
+    );
   };
 
   const localCallStatus = () => {
@@ -120,17 +147,60 @@ export function SystemMessage(props: Props) {
     void fetchRemoteCallState(channelId, callId);
   });
 
+  async function stopRinging() {
+    const channelId = props.channelId;
+    const callId = props.messageId;
+    const call = callSystemMessage();
+    const currentUserId = client().user?.id;
+    const channel = channelId ? client().channels.get(channelId) : undefined;
+
+    if (!channelId || !callId || !call || !currentUserId || !channel) return;
+
+    await pushRemoteCallState(channelId, callId, "Ended", {
+      startedById: call.byId,
+      updatedById: currentUserId,
+      channelType:
+        channel.type === "DirectMessage" || channel.type === "Group"
+          ? channel.type
+          : undefined,
+    });
+  }
+
   createEffect(() => {
     const channelId = props.channelId;
     const callId = props.messageId;
     const call = callSystemMessage();
     const currentUserId = client().user?.id;
+    const channel = channelId ? client().channels.get(channelId) : undefined;
+    const remoteState = getRemoteCallState(channelId, callId);
 
-    if (!channelId || !callId || !call || !currentUserId) return;
+    if (!channelId || !callId || !call || !currentUserId || !channel) return;
+    if (channel.type !== "DirectMessage" && channel.type !== "Group") return;
+    if (call.byId !== currentUserId) return;
 
-    void pushRemoteCallState(channelId, callId, localCallStatus(), {
+    // Once a call has been marked terminal remotely, do not reopen it from local heuristics.
+    if (
+      remoteState?.status === "Missed" ||
+      remoteState?.status === "Ended"
+    ) {
+      return;
+    }
+
+    // Caller should publish Ringing when a call starts; Active is driven by recipient accept.
+    const nextStatus = call.finishedAt != null ? "Ended" : "Ringing";
+    const key = `${channelId}:${callId}`;
+    const previous = lastAutoPushed();
+
+    if (previous?.key === key && previous.status === nextStatus) {
+      return;
+    }
+
+    setLastAutoPushed({ key, status: nextStatus });
+
+    void pushRemoteCallState(channelId, callId, nextStatus, {
       startedById: call.byId,
       updatedById: currentUserId,
+      channelType: channel.type,
     });
   });
 
@@ -301,6 +371,14 @@ export function SystemMessage(props: Props) {
               </Trans>
             </CallMeta>
 
+            <Show when={canStopRinging()}>
+              <CallActions>
+                <Button variant="tonal" size="sm" onPress={stopRinging}>
+                  Stop ringing
+                </Button>
+              </CallActions>
+            </Show>
+
             <Show
               when={
                 (props.systemMessage as CallStartedSystemMessage).finishedAt !=
@@ -420,5 +498,12 @@ const CallMeta = styled("div", {
   base: {
     color: "var(--md-sys-color-on-surface-variant)",
     fontSize: "13px",
+  },
+});
+
+const CallActions = styled("div", {
+  base: {
+    display: "flex",
+    justifyContent: "flex-end",
   },
 });

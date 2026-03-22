@@ -1,7 +1,7 @@
 import { Accessor, Setter, createSignal } from "solid-js";
 
 import { detect } from "detect-browser";
-import { API, Client, ConnectionState } from "stoat.js";
+import { API, Client, ConnectionState, UserFlags } from "stoat.js";
 import { ProtocolV1 } from "stoat.js/lib/events/v1";
 
 import { CONFIGURATION } from "@revolt/common";
@@ -72,6 +72,20 @@ type PolicyAttentionRequired = [
   () => Promise<void>,
 ];
 
+export type SignedOutReason =
+  | "disabled"
+  | "banned"
+  | "suspended"
+  | "invalid_session"
+  | "unknown";
+
+export type SignedOutNotice = {
+  reason: SignedOutReason;
+  source: "login" | "flags" | "socket";
+  userId?: string;
+  errorType?: string;
+};
+
 class Lifecycle {
   #controller: ClientController;
 
@@ -85,6 +99,9 @@ class Lifecycle {
     undefined | PolicyAttentionRequired
   >;
   #policyAttentionRequired: Setter<undefined | PolicyAttentionRequired>;
+
+  readonly signedOutNotice: Accessor<undefined | SignedOutNotice>;
+  #signedOutNotice: Setter<undefined | SignedOutNotice>;
 
   client: Client;
 
@@ -113,6 +130,13 @@ class Lifecycle {
 
     this.policyAttentionRequired = policyAttentionRequired;
     this.#policyAttentionRequired = setPolicyAttentionRequired;
+
+    const [signedOutNotice, setSignedOutNotice] = createSignal<
+      undefined | SignedOutNotice
+    >(undefined);
+
+    this.signedOutNotice = signedOutNotice;
+    this.#signedOutNotice = setSignedOutNotice;
 
     this.client = null!;
     this.dispose();
@@ -379,6 +403,28 @@ class Lifecycle {
   }
 
   private onReady() {
+    const userFlags = this.client.user?.flags ?? 0;
+
+    if (userFlags & UserFlags.Banned) {
+      this.#signedOutNotice({
+        reason: "banned",
+        source: "flags",
+        userId: this.client.user?.id,
+      });
+      this.#controller.logout();
+      return;
+    }
+
+    if (userFlags & UserFlags.Suspended) {
+      this.#signedOutNotice({
+        reason: "suspended",
+        source: "flags",
+        userId: this.client.user?.id,
+      });
+      this.#controller.logout();
+      return;
+    }
+
     this.transition({
       type: TransitionType.SocketConnected,
     });
@@ -399,11 +445,30 @@ class Lifecycle {
       case ConnectionState.Disconnected:
         if (this.client.events.lastError) {
           if (this.client.events.lastError.type === "revolt") {
+            const errorType = this.client.events.lastError.data.type;
+            if (errorType === "Banned" || errorType === "Suspended") {
+              this.#signedOutNotice({
+                reason: errorType === "Banned" ? "banned" : "suspended",
+                source: "socket",
+                userId: this.client.user?.id,
+                errorType,
+              });
+              this.#controller.state.auth.removeSession();
+            } else if (errorType === "InvalidSession") {
+              this.#signedOutNotice({
+                reason: "invalid_session",
+                source: "socket",
+                userId: this.client.user?.id,
+                errorType,
+              });
+              this.#controller.state.auth.removeSession();
+            }
+
             // if (this.client.events.lastError.data.type == 'InvalidSession') {
 
             this.transition({
               type: TransitionType.PermanentFailure,
-              error: this.client.events.lastError.data.type,
+              error: errorType,
             });
 
             break;
@@ -423,6 +488,14 @@ class Lifecycle {
    */
   get permanentError() {
     return this.#permanentError!;
+  }
+
+  clearSignedOutNotice() {
+    this.#signedOutNotice(undefined);
+  }
+
+  setSignedOutNotice(notice: SignedOutNotice) {
+    this.#signedOutNotice(notice);
   }
 }
 
@@ -556,8 +629,13 @@ export default class ClientController {
     }
 
     if (session.result === "Disabled") {
-      // TODO
-      alert("Account is disabled, run special logic here.");
+      this.state.auth.removeSession();
+      this.lifecycle.setSignedOutNotice({
+        reason: "disabled",
+        source: "login",
+        userId: session.user_id,
+      });
+
       return;
     }
 

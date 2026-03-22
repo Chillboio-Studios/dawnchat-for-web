@@ -2,7 +2,8 @@ import { Accessor, For, Setter, Show, onMount } from "solid-js";
 
 import { styled } from "styled-system/jsx";
 
-import { Column, OverflowingText, Ripple } from "@revolt/ui";
+import { Column, IconButton, OverflowingText, Ripple } from "@revolt/ui";
+import MdClose from "@material-design-icons/svg/outlined/close.svg?component-solid";
 
 // import MdError from "@material-design-icons/svg/filled/error.svg?component-solid";
 // import MdOpenInNew from "@material-design-icons/svg/filled/open_in_new.svg?component-solid";
@@ -23,6 +24,8 @@ export function SettingsSidebar(props: {
 
   setPage: Setter<string | undefined>;
   page: Accessor<string | undefined>;
+  mobileSidebarOpen: Accessor<boolean>;
+  onCloseMobileSidebar: () => void;
 }) {
   const { navigate } = useSettingsNavigation();
 
@@ -36,7 +39,13 @@ export function SettingsSidebar(props: {
   });
 
   return (
-    <Base>
+    <Base data-mobile-open={props.mobileSidebarOpen()}>
+      <MobileHeader>
+        <span>Settings</span>
+        <IconButton onPress={props.onCloseMobileSidebar} aria-label="Close settings pages">
+          <MdClose />
+        </IconButton>
+      </MobileHeader>
       <div use:invisibleScrollable>
         <Content>
           <Column gap="lg">
@@ -53,7 +62,10 @@ export function SettingsSidebar(props: {
                         {(entry) => (
                           <Show when={!entry.hidden}>
                             <SidebarButton
-                              onClick={() => navigate(entry)}
+                              onClick={() => {
+                                navigate(entry);
+                                props.onCloseMobileSidebar();
+                              }}
                               aria-selected={
                                 props.page()?.split("/")[0] ===
                                 entry.id?.split("/")[0]
@@ -104,6 +116,41 @@ const Base = styled("div", {
     flex: "1 0 218px",
     paddingLeft: "8px",
     justifyContent: "flex-end",
+    mdDown: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      bottom: 0,
+      width: "min(84vw, 340px)",
+      maxWidth: "340px",
+      zIndex: 160,
+      background: "var(--md-sys-color-surface-container)",
+      boxShadow: "0 24px 40px rgba(0, 0, 0, 0.28)",
+      transform: "translateX(calc(-100% - 12px))",
+      transition: "transform 0.2s ease",
+      flexDirection: "column",
+      overflow: "hidden",
+      paddingLeft: "0px",
+      justifyContent: "flex-start",
+      '&[data-mobile-open="true"]': {
+        transform: "translateX(0)",
+      },
+    },
+  },
+});
+
+const MobileHeader = styled("div", {
+  base: {
+    display: "none",
+    mdDown: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "10px 10px 8px",
+      borderBottom: "1px solid var(--md-sys-color-outline-variant)",
+      fontWeight: 700,
+      color: "var(--md-sys-color-on-surface)",
+    },
   },
 });
 
@@ -122,6 +169,12 @@ const Content = styled("div", {
 
     "& a > div": {
       margin: 0,
+    },
+    mdDown: {
+      minWidth: "0px",
+      maxWidth: "none",
+      width: "100%",
+      padding: "10px 10px 10px",
     },
   },
 });

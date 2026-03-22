@@ -1,9 +1,12 @@
 {
   "name": "client",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "prepare": "panda codegen"
+    "prepare": "panda codegen",
+    "build:web": "vite build",
+    "build-desktop-linux": "node ./scripts/build-desktop.mjs linux",
+    "build-desktop-windows": "node ./scripts/build-desktop.mjs windows"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^2.0.2",
@@ -29,6 +32,8 @@
     "lnk": "^1.1.0",
     "rehype-stringify": "^10.0.1",
     "stoat.js": "workspace:^",
+    "@tauri-apps/cli": "^2.5.0",
+    "dotenv": "^16.6.1",
     "typescript": "^5.8.3",
     "vite": "^5.4.19",
     "vite-plugin-babel-macros": "^1.0.6",

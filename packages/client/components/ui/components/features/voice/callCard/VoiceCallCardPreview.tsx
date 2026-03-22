@@ -17,7 +17,10 @@ export function VoiceCallCardPreview(props: { channel: Channel }) {
   const voice = useVoice();
   const { t } = useLingui();
 
-  const ids = () => [...props.channel.voiceParticipants.keys()];
+  const ids = () =>
+    [...props.channel.voiceParticipants.values()]
+      .map((participant) => participant.userId)
+      .filter((id, index, list) => Boolean(id) && list.indexOf(id) === index);
   const users = useUsers(ids);
 
   function subtext() {

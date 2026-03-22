@@ -93,6 +93,14 @@ const EditorBox = styled("div", {
   },
 });
 
+function updateControlValue(
+  control: IFormControl<string>,
+  value: string,
+) {
+  control.setValue(value);
+  control.markDirty(true);
+}
+
 /**
  * Form wrapper for TextField.Select
  */
@@ -109,8 +117,10 @@ FormTextField.Select = (
         {...remote}
         value={local.control.value}
         onChange={(e) => {
-          local.control.setValue(e.currentTarget.value);
-          local.control.markDirty(true);
+          updateControlValue(local.control, e.currentTarget.value);
+        }}
+        onInput={(e) => {
+          updateControlValue(local.control, e.currentTarget.value);
         }}
         required={local.control.isRequired}
         disabled={local.control.isDisabled}

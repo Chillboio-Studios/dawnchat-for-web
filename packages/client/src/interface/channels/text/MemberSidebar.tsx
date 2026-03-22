@@ -7,6 +7,7 @@ import { styled } from "styled-system/jsx";
 
 import { floatingUserMenus } from "@revolt/app/menus/UserContextMenu";
 import { useClient } from "@revolt/client";
+import { getEffectiveUserPresence } from "@revolt/client/presenceState";
 import { TextWithEmoji } from "@revolt/markdown";
 import { userInformation } from "@revolt/markdown/users";
 import {
@@ -122,7 +123,8 @@ export function ServerMemberSidebar(props: Props) {
     hoistedRoles.forEach((role) => (byRole[role.id] = []));
 
     for (const member of members) {
-      if (!member.user?.online) {
+      const effectivePresence = getEffectiveUserPresence(member.user);
+      if (effectivePresence === "Invisible" || effectivePresence === "Offline") {
         byRole["offline"].push(member);
         continue;
       }
@@ -233,10 +235,13 @@ export function ServerMemberSidebar(props: Props) {
   const onlineMembers = createMemo(
     () =>
       client().serverMembers.filter(
-        (member) =>
-          (member.id.server === props.channel.serverId &&
-            member.user?.online) ||
-          false,
+        (member) => {
+          if (member.id.server !== props.channel.serverId) return false;
+          const effectivePresence = getEffectiveUserPresence(member.user);
+          return (
+            effectivePresence !== "Invisible" && effectivePresence !== "Offline"
+          );
+        },
       ).length,
   );
 
@@ -375,23 +380,46 @@ const NameStatusStack = styled("div", {
   },
 });
 
+const NameWithTag = styled("span", {
+  base: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+  },
+});
+
+const BotTag = styled("span", {
+  base: {
+    paddingX: "6px",
+    lineHeight: "16px",
+    borderRadius: "999px",
+    fontSize: "10px",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    background: "var(--md-sys-color-surface-container-highest)",
+    border: "1px solid var(--md-sys-color-outline-variant)",
+    color: "var(--md-sys-color-on-surface-variant)",
+  },
+});
+
 /**
  * Member
  */
 function Member(props: { user?: User; member?: ServerMember }) {
   const { t } = useLingui();
+  const targetUser = () => props.user ?? props.member?.user;
+  const effectivePresence = () => getEffectiveUserPresence(targetUser());
 
   /**
    * Create user information
    */
-  const user = () =>
-    userInformation((props.user ?? props.member?.user)!, props.member);
+  const user = () => userInformation(targetUser()!, props.member);
 
   /**
    * Get user status
    */
   const status = () =>
-    (props.user ?? props.member?.user)?.statusMessage((s) =>
+    targetUser()?.statusMessage((s) =>
       s === "Online"
         ? t`Online`
         : s === "Busy"
@@ -413,7 +441,9 @@ function Member(props: { user?: User; member?: ServerMember }) {
       <MenuButton
         size="normal"
         attention={
-          (props.user ?? props.member?.user)?.online ? "active" : "muted"
+          effectivePresence() === "Invisible" || effectivePresence() === "Offline"
+            ? "muted"
+            : "active"
         }
         icon={
           <Avatar
@@ -422,7 +452,13 @@ function Member(props: { user?: User; member?: ServerMember }) {
             holepunch="bottom-right"
             overlay={
               <UserStatus.Graphic
-                status={(props.user ?? props.member?.user)?.presence}
+                status={effectivePresence()}
+                attention={
+                  effectivePresence() === "Invisible" ||
+                  effectivePresence() === "Offline"
+                    ? "muted"
+                    : "active"
+                }
               />
             }
           />
@@ -430,7 +466,12 @@ function Member(props: { user?: User; member?: ServerMember }) {
       >
         <NameStatusStack>
           <OverflowingText>
-            <Username username={user().username} colour={user().colour!} />
+            <NameWithTag>
+              <Username username={user().username} colour={user().colour!} />
+              <Show when={targetUser()?.bot}>
+                <BotTag>{t`Bot`}</BotTag>
+              </Show>
+            </NameWithTag>
           </OverflowingText>
           <Show when={status()}>
             <Tooltip

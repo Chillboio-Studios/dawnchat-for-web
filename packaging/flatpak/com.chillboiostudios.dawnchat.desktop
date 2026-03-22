@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=DawnChat
+Comment=DawnChat Desktop
+Exec=dawnchat
+Icon=com.chillboiostudios.dawnchat
+Categories=Network;Chat;
+Terminal=false
+StartupNotify=true

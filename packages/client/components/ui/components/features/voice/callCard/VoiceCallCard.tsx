@@ -70,6 +70,7 @@ export function VoiceCallCardContext(props: { children: JSX.Element }) {
 
   const [moving, setMoving] = createSignal<boolean>();
   const [offset, setOffset] = createSignal({ x: 0, y: 0 });
+  let viewTransitionInFlight = false;
 
   function position() {
     const position = state();
@@ -196,14 +197,26 @@ export function VoiceCallCardContext(props: { children: JSX.Element }) {
   }
 
   function updateStateWithTransition(state?: NewState) {
-    // no clue if this works
-
-    if (!document.startViewTransition) {
+    if (!document.startViewTransition || viewTransitionInFlight) {
       updateState(state);
       return;
     }
 
-    document.startViewTransition(() => updateState(state));
+    try {
+      viewTransitionInFlight = true;
+      const transition = document.startViewTransition(() => updateState(state));
+
+      void transition.finished
+        .catch(() => {
+          // Transition can reject if interrupted; state has already been applied.
+        })
+        .finally(() => {
+          viewTransitionInFlight = false;
+        });
+    } catch {
+      viewTransitionInFlight = false;
+      updateState(state);
+    }
   }
 
   return (

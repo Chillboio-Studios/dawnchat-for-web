@@ -6,6 +6,7 @@ import { File, Message } from "stoat.js";
 import { useClient, useUser } from "@revolt/client";
 import { CustomEmoji, UnicodeEmoji } from "@revolt/markdown/emoji";
 import { useModals } from "@revolt/modal";
+import { useNavigate } from "@revolt/routing";
 import { useState } from "@revolt/state";
 
 import MdBadge from "@material-design-icons/svg/outlined/badge.svg?component-solid";
@@ -39,6 +40,7 @@ export function MessageContextMenu(props: { message?: Message; file?: File }) {
   const user = useUser();
   const state = useState();
   const client = useClient();
+  const navigate = useNavigate();
   const { openModal, showError } = useModals();
 
   /**
@@ -91,10 +93,7 @@ export function MessageContextMenu(props: { message?: Message; file?: File }) {
    * Open message in Stoat Admin Panel
    */
   function openAdminPanel() {
-    window.open(
-      `https://old-admin.stoatinternal.com/panel/inspect/message/${props.message!.id}`,
-      "_blank",
-    );
+    navigate(`/moderation/message/${props.message!.id}`);
   }
 
   /**

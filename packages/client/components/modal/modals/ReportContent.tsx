@@ -13,7 +13,6 @@ import {
   DialogProps,
   Form2,
   Initials,
-  MenuItem,
 } from "@revolt/ui";
 
 import { useModals } from "..";
@@ -55,35 +54,60 @@ export function ReportContentModal(
   const { t } = useLingui();
   const { showError } = useModals();
 
-  const strings: Record<
+  const reasonDescriptions: Record<
     API.ContentReportReason | API.UserReportReason,
     string
   > = {
-    Illegal: t`Content breaks one or more laws`,
-    IllegalGoods: t`Drugs or illegal goods`,
-    IllegalExtortion: t`Extortion or blackmail`,
-    IllegalPornography: t`Revenge or underage pornography`,
-    IllegalHacking: t`Illegal hacking or cracking`,
-    ExtremeViolence: t`Extreme violence, gore or animal cruelty`,
-    PromotesHarm: t`Promotes harm`,
-    UnsolicitedSpam: t`Unsolicited advertising or spam`,
-    Raid: t`Raid or spam attack`,
-    SpamAbuse: t`Spam or similar platform abuse`,
-    ScamsFraud: t`Scams or fraud`,
-    Malware: t`Malware or phishing`,
-    Harassment: t`Harassment or cyberbullying`,
+    Illegal: t`This content appears to break one or more laws.`,
+    IllegalGoods: t`This involves drugs or other illegal goods.`,
+    IllegalExtortion: t`This includes extortion, threats, or blackmail.`,
+    IllegalPornography: t`This includes revenge porn or underage sexual content.`,
+    IllegalHacking: t`This includes illegal hacking, cracking, or exploit activity.`,
+    ExtremeViolence: t`This contains extreme violence, gore, or animal cruelty.`,
+    PromotesHarm: t`This promotes self-harm, violence, or dangerous behavior.`,
+    UnsolicitedSpam: t`This is unsolicited advertising or repeated spam.`,
+    Raid: t`This is part of a raid or coordinated spam attack.`,
+    SpamAbuse: t`This is spam or another form of platform abuse.`,
+    ScamsFraud: t`This appears to be a scam or fraud attempt.`,
+    Malware: t`This includes malware, phishing, or malicious links/files.`,
+    Harassment: t`This includes harassment, bullying, or targeted abuse.`,
     NoneSpecified: t`Other`,
 
-    InappropriateProfile: t`User's profile has inappropriate content`,
-    Impersonation: t`Impersonation`,
-    BanEvasion: t`Ban evasion`,
-    Underage: t`Not of minimum age to use the platform`,
+    InappropriateProfile: t`This user's profile contains inappropriate content.`,
+    Impersonation: t`This user is impersonating another person, group, or brand.`,
+    BanEvasion: t`This user appears to be evading a previous ban.`,
+    Underage: t`This user appears to be below the minimum age for the platform.`,
   };
 
   const group = createFormGroup({
     category: createFormControl("", { required: true }),
     detail: createFormControl(""),
   });
+
+  const reasonLabels: Record<
+    API.ContentReportReason | API.UserReportReason,
+    string
+  > = {
+    Illegal: t`Illegal content`,
+    IllegalGoods: t`Illegal goods`,
+    IllegalExtortion: t`Extortion or blackmail`,
+    IllegalPornography: t`Revenge or underage sexual content`,
+    IllegalHacking: t`Illegal hacking`,
+    ExtremeViolence: t`Extreme violence or gore`,
+    PromotesHarm: t`Promotes harm`,
+    UnsolicitedSpam: t`Unsolicited ads or spam`,
+    Raid: t`Raid or coordinated spam`,
+    SpamAbuse: t`Spam or platform abuse`,
+    ScamsFraud: t`Scams or fraud`,
+    Malware: t`Malware or phishing`,
+    Harassment: t`Harassment or bullying`,
+    NoneSpecified: t`Other`,
+
+    InappropriateProfile: t`Inappropriate profile`,
+    Impersonation: t`Impersonation`,
+    BanEvasion: t`Ban evasion`,
+    Underage: t`Underage account`,
+  };
 
   const reasons =
     // eslint-disable-next-line solid/reactivity
@@ -94,8 +118,14 @@ export function ReportContentModal(
       const category = group.controls.category.value;
       const detail = group.controls.detail.value;
 
-      if (!category || (category === "NoneSpecified" && !detail)) {
-        throw new Error("NoReasonProvided");
+      if (!category) {
+        throw new Error(t`Please select a reason before submitting your report.`);
+      }
+
+      if (category === "NoneSpecified" && !detail.trim()) {
+        throw new Error(
+          t`Please provide additional details when selecting Other.`,
+        );
       }
 
       await props.client.api.post("/safety/report", {
@@ -180,20 +210,45 @@ export function ReportContentModal(
             )}
           </div>
 
-          <Form2.TextField.Select control={group.controls.category}>
-            <MenuItem value="">
-              <Trans>Please select a reason</Trans>
-            </MenuItem>
-            <For each={reasons}>
-              {(value) => <MenuItem value={value}>{strings[value]}</MenuItem>}
-            </For>
-          </Form2.TextField.Select>
+          <Column gap="sm">
+            <div class={reasonPrompt()}>
+              <Trans>Select the reason that best matches this report.</Trans>
+            </div>
+            <div class={reasonList()}>
+              <For each={reasons}>
+                {(value) => (
+                  <label
+                    class={reasonOption({
+                      active: group.controls.category.value === value,
+                    })}
+                  >
+                    <input
+                      type="radio"
+                      name="report-reason"
+                      value={value}
+                      checked={group.controls.category.value === value}
+                      onChange={(event) => {
+                        group.controls.category.setValue(event.currentTarget.value);
+                        group.controls.category.markDirty(true);
+                      }}
+                    />
+                    <div class={reasonText()}>
+                      <span class={reasonTitle()}>{reasonLabels[value]}</span>
+                      <span class={reasonDescription()}>
+                        {reasonDescriptions[value]}
+                      </span>
+                    </div>
+                  </label>
+                )}
+              </For>
+            </div>
+          </Column>
 
           {/* TODO: use TextEditor? */}
           <Form2.TextField
             name="detail"
             control={group.controls.detail}
-            label={t`Give us some detail`}
+            label={t`Additional details`}
           />
         </Column>
       </form>
@@ -211,5 +266,63 @@ const contentContainer = cva({
       pointerEvents: "none",
       userSelect: "none",
     },
+  },
+});
+
+const reasonList = cva({
+  base: {
+    display: "grid",
+    gap: "8px",
+  },
+});
+
+const reasonPrompt = cva({
+  base: {
+    fontSize: "13px",
+    color: "var(--md-sys-color-on-surface-variant)",
+  },
+});
+
+const reasonOption = cva({
+  base: {
+    display: "flex",
+    gap: "10px",
+    alignItems: "flex-start",
+    border: "1px solid var(--md-sys-color-outline-variant)",
+    borderRadius: "var(--borderRadius-md)",
+    padding: "10px",
+    cursor: "pointer",
+    background: "var(--md-sys-color-surface-container-high)",
+  },
+  variants: {
+    active: {
+      true: {
+        borderColor: "var(--md-sys-color-primary)",
+        background: "var(--md-sys-color-primary-container)",
+      },
+    },
+  },
+});
+
+const reasonText = cva({
+  base: {
+    display: "grid",
+    gap: "2px",
+    minWidth: 0,
+  },
+});
+
+const reasonTitle = cva({
+  base: {
+    fontWeight: "600",
+    color: "var(--md-sys-color-on-surface)",
+  },
+});
+
+const reasonDescription = cva({
+  base: {
+    fontSize: "13px",
+    color: "var(--md-sys-color-on-surface-variant)",
+    lineHeight: "1.3",
   },
 });

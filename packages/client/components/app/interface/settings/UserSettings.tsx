@@ -22,6 +22,8 @@ import MdSmartToy from "@material-design-icons/svg/outlined/smart_toy.svg?compon
 import MdVerifiedUser from "@material-design-icons/svg/outlined/verified_user.svg?component-solid";
 import MdWorkspacePremium from "@material-design-icons/svg/outlined/workspace_premium.svg?component-solid";
 
+import { version as appVersion } from "../../../../../../package.json";
+
 import { SettingsConfiguration } from ".";
 import { MyAccount } from "./user/Account";
 import AdvancedSettings from "./user/Advanced";
@@ -35,6 +37,35 @@ import { MyBots, ViewBot } from "./user/bots";
 import { EditProfile } from "./user/profile";
 import { EditSubscription } from "./user/subscriptions";
 import { VoiceSettings } from "./user/voice/VoiceSettings";
+
+function getSettingsFooterVersionLabel() {
+  if (!window.native) {
+    return `dawnchat-web-${appVersion}`;
+  }
+
+  const desktopVersion = window.native.versions.desktop();
+  const userAgent = navigator.userAgent.toLowerCase();
+
+  if (userAgent.includes("windows")) {
+    return `dawnchat-windows-${desktopVersion}`;
+  }
+
+  if (userAgent.includes("linux")) {
+    const linuxFlavorRaw = (
+      import.meta.env.VITE_DESKTOP_LINUX_FLAVOR as string | undefined
+    )
+      ?.trim()
+      .toLowerCase();
+    const linuxFlavor =
+      linuxFlavorRaw === "flatpak"
+        ? "flatpak"
+        : (linuxFlavorRaw?.replace(/[^a-z0-9._-]/g, "") ?? "distro");
+
+    return `dawnchat-linux-${linuxFlavor}-${desktopVersion}`;
+  }
+
+  return `dawnchat-desktop-${desktopVersion}`;
+}
 
 const Config: SettingsConfiguration<{ server: Server }> = {
   /**
@@ -104,6 +135,7 @@ const Config: SettingsConfiguration<{ server: Server }> = {
   list() {
     const { pop } = useModals();
     const { logout } = useClientLifecycle();
+    const footerVersion = getSettingsFooterVersionLabel();
 
     return {
       context: null!,
@@ -119,7 +151,7 @@ const Config: SettingsConfiguration<{ server: Server }> = {
             <span class={css({ userSelect: "none", fontWeight: "bold" })}>
               <Trans>Version:</Trans>
             </span>{" "}
-            <span class={css({ userSelect: "all" })}>dawnchat-web-0.1.0</span>
+            <span class={css({ userSelect: "all" })}>{footerVersion}</span>
           </Text>
           <Show when={window.native}>
             <Text class="label">
@@ -262,7 +294,7 @@ const Config: SettingsConfiguration<{ server: Server }> = {
             //   title: t("app.special.modals.changelogs.title"),
             // },
             {
-              href: "https://github.com/Chillboio-Studios/otube-for-web",
+              href: "https://github.com/Chillboio-Studios/dawnchat-for-web",
               icon: <MdMemory {...iconSize(20)} />,
               title: <Trans>Source Code</Trans>,
             },

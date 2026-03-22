@@ -2,6 +2,8 @@ import console from "node:console";
 
 import { MongoClient } from "mongodb";
 
+const RING_TIMEOUT_MS = 60_000;
+
 /**
  * Create a MongoDB-backed call/ringing state store.
  */
@@ -46,16 +48,27 @@ export function createCallStateStore({
   function normalizeDocument(document) {
     if (!document) return undefined;
 
+    const updatedAt =
+      document.updatedAt instanceof Date
+        ? document.updatedAt.getTime()
+        : typeof document.updatedAt === "number"
+          ? document.updatedAt
+          : Date.now();
+
+    const channelType =
+      document.channelType === "DirectMessage" ||
+      document.channelType === "Group"
+        ? document.channelType
+        : undefined;
+
+    const isExpiredRinging =
+      document.status === "Ringing" && Date.now() - updatedAt >= RING_TIMEOUT_MS;
+
     return {
       channelId: String(document.channelId ?? ""),
       callId: String(document.callId ?? ""),
-      status: String(document.status ?? ""),
-      updatedAt:
-        document.updatedAt instanceof Date
-          ? document.updatedAt.getTime()
-          : typeof document.updatedAt === "number"
-            ? document.updatedAt
-            : Date.now(),
+      status: isExpiredRinging ? "Ended" : String(document.status ?? ""),
+      updatedAt,
       startedById:
         typeof document.startedById === "string"
           ? document.startedById
@@ -64,6 +77,7 @@ export function createCallStateStore({
         typeof document.updatedById === "string"
           ? document.updatedById
           : undefined,
+      channelType,
     };
   }
 
@@ -71,9 +85,39 @@ export function createCallStateStore({
     const target = ensureCollection();
     if (!target) return undefined;
 
-    const updatedAt = new Date(
-      typeof item.updatedAt === "number" ? item.updatedAt : Date.now(),
+    const nextUpdatedAt =
+      typeof item.updatedAt === "number" && Number.isFinite(item.updatedAt)
+        ? item.updatedAt
+        : Date.now();
+    const updatedAt = new Date(nextUpdatedAt);
+
+    const existing = normalizeDocument(
+      await target.findOne(
+        {
+          channelId: item.channelId,
+          callId: item.callId,
+        },
+        {
+          projection: {
+            _id: 0,
+            channelId: 1,
+            callId: 1,
+            status: 1,
+            updatedAt: 1,
+            startedById: 1,
+            updatedById: 1,
+            channelType: 1,
+          },
+        },
+      ),
     );
+
+    if (existing && existing.updatedAt > nextUpdatedAt) {
+      return {
+        item: existing,
+        changed: false,
+      };
+    }
 
     const setPayload = {
       channelId: item.channelId,
@@ -90,6 +134,10 @@ export function createCallStateStore({
       setPayload.updatedById = item.updatedById;
     }
 
+    if (item.channelType === "DirectMessage" || item.channelType === "Group") {
+      setPayload.channelType = item.channelType;
+    }
+
     await target.updateOne(
       {
         channelId: item.channelId,
@@ -103,9 +151,28 @@ export function createCallStateStore({
       },
     );
 
-    return {
+    const persisted = {
       ...item,
       updatedAt: updatedAt.getTime(),
+    };
+
+    if (
+      existing &&
+      existing.status === persisted.status &&
+      existing.updatedAt === persisted.updatedAt &&
+      existing.startedById === persisted.startedById &&
+      existing.updatedById === persisted.updatedById &&
+      existing.channelType === persisted.channelType
+    ) {
+      return {
+        item: persisted,
+        changed: false,
+      };
+    }
+
+    return {
+      item: persisted,
+      changed: true,
     };
   }
 
@@ -128,6 +195,7 @@ export function createCallStateStore({
             updatedAt: 1,
             startedById: 1,
             updatedById: 1,
+            channelType: 1,
           },
         },
       ),
@@ -150,6 +218,7 @@ export function createCallStateStore({
             updatedAt: 1,
             startedById: 1,
             updatedById: 1,
+            channelType: 1,
           },
         },
       )
@@ -176,6 +245,7 @@ export function createCallStateStore({
             updatedAt: 1,
             startedById: 1,
             updatedById: 1,
+            channelType: 1,
           },
         },
       )

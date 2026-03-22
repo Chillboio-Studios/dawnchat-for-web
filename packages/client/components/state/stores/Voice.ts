@@ -16,6 +16,7 @@ const NoiseSuppresionStates: NoiseSuppresionState[] = [
 export interface TypeVoice {
   preferredAudioInputDevice?: string;
   preferredAudioOutputDevice?: string;
+  screenShareWithAudio: boolean;
 
   echoCancellation: boolean;
   noiseSupression: NoiseSuppresionState;
@@ -52,6 +53,7 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
    */
   default(): TypeVoice {
     return {
+      screenShareWithAudio: false,
       echoCancellation: true,
       noiseSupression: "browser",
       autoGainControl: true,
@@ -74,6 +76,10 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
 
     if (typeof input.preferredAudioOutputDevice === "string") {
       data.preferredAudioOutputDevice = input.preferredAudioOutputDevice;
+    }
+
+    if (typeof input.screenShareWithAudio === "boolean") {
+      data.screenShareWithAudio = input.screenShareWithAudio;
     }
 
     if (typeof input.echoCancellation === "boolean") {
@@ -175,6 +181,13 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
   }
 
   /**
+   * Set whether screenshare should include audio when available
+   */
+  set screenShareWithAudio(value: boolean) {
+    this.set("screenShareWithAudio", value);
+  }
+
+  /**
    * Set echo cancellation
    */
   set echoCancellation(value: boolean) {
@@ -221,6 +234,13 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
    */
   get preferredAudioOutputDevice(): string | undefined {
     return this.get().preferredAudioInputDevice;
+  }
+
+  /**
+   * Get whether screenshare should include audio
+   */
+  get screenShareWithAudio(): boolean {
+    return this.get().screenShareWithAudio;
   }
 
   /**

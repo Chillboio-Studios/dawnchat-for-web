@@ -69,20 +69,36 @@ export function ProfileBanner(props: {
               props.user.username
             }
           >
-            <span class={css({ fontWeight: 600 })}>
-              {props.member?.displayName ?? props.user.displayName}
-            </span>
+            <Row align gap="xs">
+              <span class={css({ fontWeight: 600 })}>
+                {props.member?.displayName ?? props.user.displayName}
+              </span>
+              <Show when={props.user.bot}>
+                <BotTag>{t`Bot`}</BotTag>
+              </Show>
+            </Row>
           </Show>
           <Tooltip
             content={isCopied() ? t`Copied!` : t`Click to copy username`}
             placement="top"
           >
-            <span onClick={onUsernameClick}>
-              {props.user.username}
-              <span class={css({ fontWeight: 200 })}>
-                #{props.user.discriminator}
+            <Row align gap="xs">
+              <span onClick={onUsernameClick}>
+                {props.user.username}
+                <span class={css({ fontWeight: 200 })}>
+                  #{props.user.discriminator}
+                </span>
               </span>
-            </span>
+              <Show
+                when={
+                  props.user.bot &&
+                  (props.member?.displayName ?? props.user.displayName) ===
+                    props.user.username
+                }
+              >
+                <BotTag>{t`Bot`}</BotTag>
+              </Show>
+            </Row>
           </Tooltip>
         </UserShort>
       </Row>
@@ -139,5 +155,19 @@ const UserShort = styled("div", {
     _hover: {
       textDecoration: "underline",
     },
+  },
+});
+
+const BotTag = styled("span", {
+  base: {
+    paddingX: "6px",
+    lineHeight: "18px",
+    borderRadius: "999px",
+    fontSize: "11px",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    background: "rgba(255, 255, 255, 0.24)",
+    border: "1px solid rgba(255, 255, 255, 0.4)",
+    color: "white",
   },
 });

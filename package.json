@@ -1,10 +1,12 @@
 {
   "name": "stoat-for-web",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Stoat for Web: frontend software for Stoat",
   "scripts": {
     "build": "pnpm --filter client exec vite build",
-    "start": "node server/index.mjs"
+    "start": "node server/index.mjs",
+    "build-linux": "pnpm --filter client run build-desktop-linux",
+    "build-windows": "pnpm --filter client run build-desktop-windows"
   },
   "dependencies": {
     "dotenv": "^16.6.1",

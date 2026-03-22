@@ -48,7 +48,7 @@ export function Feedback() {
           </CategoryButton>
         </Link> */}
         <Link
-          href="https://github.com/Chillboio-Studios/otube-for-web/issues/new?labels=enhancement&title=%5BFeature%5D+"
+          href="https://github.com/Chillboio-Studios/dawnchat-for-web/issues/new?labels=enhancement&title=%5BFeature%5D+"
           target="_blank"
         >
           <CategoryButton
@@ -63,7 +63,7 @@ export function Feedback() {
           </CategoryButton>
         </Link>
         <Link
-          href="https://github.com/Chillboio-Studios/otube-for-web/issues/new?labels=feedback&title=%5BFeedback%5D+"
+          href="https://github.com/Chillboio-Studios/dawnchat-for-web/issues/new?labels=feedback&title=%5BFeedback%5D+"
           target="_blank"
         >
           <CategoryButton
@@ -76,7 +76,7 @@ export function Feedback() {
           </CategoryButton>
         </Link>
         <Link
-          href="https://github.com/Chillboio-Studios/otube-for-web/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug"
+          href="https://github.com/Chillboio-Studios/dawnchat-for-web/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug"
           target="_blank"
         >
           <CategoryButton

@@ -9,6 +9,7 @@ export type RemoteCallState = {
   updatedAt: number;
   startedById?: string;
   updatedById?: string;
+  channelType?: "DirectMessage" | "Group";
 };
 
 export type PresenceSnapshotUser = {
@@ -57,6 +58,9 @@ const [remoteCallStateByKey, setRemoteCallStateByKey] = createStore<
   Record<string, RemoteCallState>
 >({});
 
+const CALL_STATE_PUSH_MAX_ATTEMPTS = 3;
+const CALL_STATE_PUSH_RETRY_DELAY_MS = 500;
+
 let socketStarted = false;
 let reconnectTimer: number | undefined;
 const socketListeners = new Set<(message: ClientApiSocketMessage) => void>();
@@ -91,6 +95,7 @@ function normalizeRemoteCallState(
     updatedAt?: unknown;
     startedById?: unknown;
     updatedById?: unknown;
+    channelType?: unknown;
   };
 
   if (
@@ -98,6 +103,16 @@ function normalizeRemoteCallState(
     typeof data.callId !== "string" ||
     !isValidStatus(data.status)
   ) {
+    return undefined;
+  }
+
+  const normalizedChannelType =
+    data.channelType === "DirectMessage" || data.channelType === "Group"
+      ? data.channelType
+      : undefined;
+
+  // Ringing must always be scoped to DM or Group chats.
+  if (data.status === "Ringing" && !normalizedChannelType) {
     return undefined;
   }
 
@@ -110,12 +125,59 @@ function normalizeRemoteCallState(
       typeof data.startedById === "string" ? data.startedById : undefined,
     updatedById:
       typeof data.updatedById === "string" ? data.updatedById : undefined,
+    channelType: normalizedChannelType,
   };
 }
 
 function setRemoteCallState(item: RemoteCallState) {
   const key = createCallKey(item.channelId, item.callId);
+  const previous = remoteCallStateByKey[key];
+
+  // Ignore stale updates so delayed network/socket events cannot rewind state.
+  if (previous && previous.updatedAt > item.updatedAt) {
+    return;
+  }
+
   setRemoteCallStateByKey(key, item);
+}
+
+function wait(delayMs: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, delayMs);
+  });
+}
+
+async function postRemoteCallState(
+  body: Record<string, unknown>,
+): Promise<boolean> {
+  for (let attempt = 1; attempt <= CALL_STATE_PUSH_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch("/client-api/dm-ringing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (response.ok) {
+        return true;
+      }
+
+      // Request validation/auth failures are not retryable.
+      if (response.status >= 400 && response.status < 500) {
+        return false;
+      }
+    } catch {
+      // Retry transient network failures.
+    }
+
+    if (attempt < CALL_STATE_PUSH_MAX_ATTEMPTS) {
+      await wait(CALL_STATE_PUSH_RETRY_DELAY_MS * attempt);
+    }
+  }
+
+  return false;
 }
 
 function emitSocketMessage(message: ClientApiSocketMessage) {
@@ -244,14 +306,18 @@ export function ensureClientApiSocketConnected() {
 export async function fetchRemoteCallState(channelId: string, callId: string) {
   if (typeof window === "undefined") return;
 
-  const query = new URLSearchParams({ channelId, callId });
-  const response = await fetch(`/client-api/dm-ringing?${query.toString()}`);
+  try {
+    const query = new URLSearchParams({ channelId, callId });
+    const response = await fetch(`/client-api/dm-ringing?${query.toString()}`);
 
-  if (!response.ok) return;
+    if (!response.ok) return;
 
-  const payload = (await response.json()) as { item?: unknown };
-  const item = normalizeRemoteCallState(payload.item);
-  if (item) setRemoteCallState(item);
+    const payload = (await response.json()) as { item?: unknown };
+    const item = normalizeRemoteCallState(payload.item);
+    if (item) setRemoteCallState(item);
+  } catch {
+    // Ignore transient fetch failures; socket snapshots/updates will reconcile.
+  }
 }
 
 export async function pushRemoteCallState(
@@ -261,27 +327,42 @@ export async function pushRemoteCallState(
   metadata?: {
     startedById?: string;
     updatedById?: string;
+    channelType?: "DirectMessage" | "Group";
   },
 ) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") return false;
 
-  try {
-    await fetch("/client-api/dm-ringing", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        channelId,
-        callId,
-        status,
-        startedById: metadata?.startedById,
-        updatedById: metadata?.updatedById,
-      }),
-    });
-  } catch {
-    // Ignore transient network issues.
+  const updatedAt = Date.now();
+  const optimistic = normalizeRemoteCallState({
+    channelId,
+    callId,
+    status,
+    startedById: metadata?.startedById,
+    updatedById: metadata?.updatedById,
+    channelType: metadata?.channelType,
+    updatedAt,
+  });
+
+  if (optimistic) {
+    setRemoteCallState(optimistic);
   }
+
+  const ok = await postRemoteCallState({
+    channelId,
+    callId,
+    status,
+    startedById: metadata?.startedById,
+    updatedById: metadata?.updatedById,
+    channelType: metadata?.channelType,
+    updatedAt,
+  });
+
+  if (!ok) {
+    // Best-effort reconciliation when POST retries fail.
+    void fetchRemoteCallState(channelId, callId);
+  }
+
+  return ok;
 }
 
 export function getAllRemoteCallStates() {

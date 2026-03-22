@@ -160,7 +160,7 @@ export function HomePage() {
   const rightButtons = resolvedSplashButtons.filter(
     (button) => button.column === 2,
   );
-  const showNotFoundMessage = () => location.pathname !== "/";
+  const showNotFoundMessage = () => location.pathname !== "/app";
 
   const handleJoinLounge = () => {
     client()

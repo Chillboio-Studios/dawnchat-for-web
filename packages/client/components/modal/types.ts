@@ -222,6 +222,11 @@ export type Modals =
       contextMessage?: Message;
     }
   | {
+      type: "moderation_panel";
+      targetType?: "user" | "message" | "server" | "image";
+      targetId?: string;
+    }
+  | {
       type: "server_identity";
       member: ServerMember;
     }
@@ -241,6 +246,10 @@ export type Modals =
     }
   | {
       type: "signed_out";
+      reason?: "disabled" | "banned" | "suspended" | "invalid_session" | "unknown";
+      source?: "login" | "flags" | "socket";
+      userId?: string;
+      errorType?: string;
     }
   | {
       type: "sign_out_sessions";

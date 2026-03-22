@@ -18,15 +18,6 @@ export const EmojiBase = styled("img", {
 
     // hide alt text
     color: "transparent",
-
-    "&:before": {
-      content: "' '",
-      display: "block",
-      position: "absolute",
-      height: "50px",
-      width: "50px",
-      backgroundImage: "url(ishere.jpg)",
-    },
   },
 });
 

@@ -35,13 +35,16 @@ import "@revolt/ui/styles";
 
 import AuthPage from "./Auth";
 import Interface from "./Interface";
+import "./desktopUrlShim";
 import "./index.css";
 import { DevelopmentPage } from "./interface/Development";
 import { Discover } from "./interface/Discover";
 import { Friends } from "./interface/Friends";
 import { HomePage } from "./interface/Home";
+import { ModerationView } from "./interface/ModerationView";
 import { ServerHome } from "./interface/ServerHome";
 import { ChannelPage } from "./interface/channels/ChannelPage";
+import { ModerationEntityView } from "./interface/moderation/ModerationEntityView";
 import "./serviceWorkerInterface";
 
 attachDevtoolsOverlay();
@@ -159,6 +162,15 @@ render(
           <Route path="/settings" component={SettingsRedirect} />
           <Route path="/invite/:code" component={InviteRedirect} />
           <Route path="/bot/:code" component={BotRedirect} />
+          <Route
+            path="/moderation/view/:entityType/:entityId"
+            component={ModerationEntityView}
+          />
+          <Route
+            path="/moderation/:targetType/:targetId"
+            component={ModerationView}
+          />
+          <Route path="/moderation/*" component={ModerationView} />
           <Route path="/friends" component={Friends} />
           <Route path="/server/:server/*">
             <Route path="/channel/:channel/*" component={ChannelPage} />

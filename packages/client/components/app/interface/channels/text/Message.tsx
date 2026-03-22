@@ -108,16 +108,21 @@ export function Message(props: Props) {
       onHover={setIsHovering}
       username={
         <div use:floating={floatingUserMenusFromMessage(props.message)}>
-          <Username
-            username={
-              props.message.masquerade?.name ??
-              props.message.member?.nickname ??
-              props.message.author?.displayName ??
-              props.message.author?.username ??
-              props.message.username
-            }
-            colour={props.message.roleColour!}
-          />
+          <span class={usernameWithTag()}>
+            <Username
+              username={
+                props.message.masquerade?.name ??
+                props.message.member?.nickname ??
+                props.message.author?.displayName ??
+                props.message.author?.username ??
+                props.message.username
+              }
+              colour={props.message.roleColour!}
+            />
+            <Show when={props.message.author?.bot}>
+              <span class={botTag()}>{t`Bot`}</span>
+            </Show>
+          </span>
         </div>
       }
       avatar={
@@ -329,6 +334,28 @@ const avatarContainer = cva({
   base: {
     height: "fit-content",
     borderRadius: "var(--borderRadius-circle)",
+  },
+});
+
+const usernameWithTag = cva({
+  base: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+  },
+});
+
+const botTag = cva({
+  base: {
+    paddingX: "6px",
+    lineHeight: "16px",
+    borderRadius: "999px",
+    fontSize: "10px",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    background: "var(--md-sys-color-surface-container-highest)",
+    border: "1px solid var(--md-sys-color-outline-variant)",
+    color: "var(--md-sys-color-on-surface-variant)",
   },
 });
 

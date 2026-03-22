@@ -7,6 +7,9 @@ import {
   Show,
   Switch,
   createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
 } from "solid-js";
 
 import { useLingui } from "@lingui-solid/solid/macro";
@@ -91,6 +94,17 @@ type OrderingEvent =
  */
 export const ServerSidebar = (props: Props) => {
   const navigate = useNavigate();
+  const [isSmallScreen, setIsSmallScreen] = createSignal(false);
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsSmallScreen(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    onCleanup(() => mediaQuery.removeEventListener("change", update));
+  });
 
   // Users can manage certain parts of the server individually, regardless of their ManageServer Permission
   const canManageServer = () =>
@@ -146,7 +160,8 @@ export const ServerSidebar = (props: Props) => {
     }
   });
 
-  const noOrdering = () => !props.server.havePermission("ManageChannel");
+  const noOrdering = () =>
+    !props.server.havePermission("ManageChannel") || isSmallScreen();
 
   let heldEvent: OrderingEvent & { type: "category" } = null!;
   function handleOrdering(event: OrderingEvent) {
@@ -353,7 +368,9 @@ function Category(
             onClick={() => {
               state.layout.toggleSectionState(props.category.id, true);
             }}
-            {...createDragHandle(props.dragDisabled, props.setDragDisabled)}
+            {...(props.noOrdering()
+              ? {}
+              : createDragHandle(props.dragDisabled, props.setDragDisabled))}
           >
             {props.category.title}
             <MdChevronRight {...iconSize(12)} />

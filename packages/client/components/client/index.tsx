@@ -76,6 +76,22 @@ export function ClientContext(props: { state: State; children: JSXElement }) {
     ),
   );
 
+  createEffect(
+    on(
+      () => controller.lifecycle.signedOutNotice(),
+      (signedOutNotice) => {
+        if (!signedOutNotice) return;
+
+        openModal({
+          type: "signed_out",
+          ...signedOutNotice,
+        });
+
+        controller.lifecycle.clearSignedOutNotice();
+      },
+    ),
+  );
+
   return (
     <clientContext.Provider value={controller}>
       {props.children}

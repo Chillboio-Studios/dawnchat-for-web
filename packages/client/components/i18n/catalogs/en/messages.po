@@ -272,6 +272,10 @@ msgstr "Accept"
 msgid "Accept friend request"
 msgstr "Accept friend request"
 
+#: components/modal/modals/SignedOut.tsx
+msgid "Account ID:"
+msgstr "Account ID:"
+
 #: components/modal/modals/PolicyChange.tsx
 msgid "Acknowledge"
 msgstr "Acknowledge"
@@ -302,6 +306,10 @@ msgstr "Add new members to the group"
 #: src/interface/navigation/servers/UserMenu.tsx
 msgid "Add status text"
 msgstr "Add status text"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "Additional details"
+msgstr "Additional details"
 
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 msgid "Admin"
@@ -472,6 +480,10 @@ msgstr "Blocked"
 msgid "Blocked User"
 msgstr "Blocked User"
 
+#: src/interface/channels/text/MemberSidebar.tsx
+#: components/ui/components/features/profiles/ProfileBanner.tsx
+#: components/ui/components/features/profiles/ProfileBanner.tsx
+#: components/app/interface/channels/text/Message.tsx
 #: components/app/interface/channels/text/Message.tsx
 msgid "Bot"
 msgstr "Bot"
@@ -557,6 +569,10 @@ msgstr "Cannot delete account until servers are deleted or transferred"
 msgid "Cannot edit this message."
 msgstr "Cannot edit this message."
 
+#: components/app/interface/settings/server/ChannelOrdering.tsx
+msgid "Categories"
+msgstr "Categories"
+
 #: components/modal/modals/EditUsername.tsx
 #: components/modal/modals/EditPassword.tsx
 msgid "Change"
@@ -620,6 +636,10 @@ msgstr "Channel Info"
 msgid "Channel Name"
 msgstr "Channel Name"
 
+#: components/app/interface/settings/ServerSettings.tsx
+msgid "Channel Ordering"
+msgstr "Channel Ordering"
+
 #: src/interface/channels/ChannelHeader.tsx
 msgid "Channel Settings"
 msgstr "Channel Settings"
@@ -673,6 +693,7 @@ msgstr "Client Settings"
 #: components/modal/modals/UserProfileMutualFriends.tsx
 #: components/modal/modals/ServerInfo.tsx
 #: components/modal/modals/PolicyChange.tsx
+#: components/modal/modals/ModerationPanel.tsx
 #: components/modal/modals/LinkWarning.tsx
 #: components/modal/modals/JoinServer.tsx
 #: components/modal/modals/EmojiPreview.tsx
@@ -743,8 +764,8 @@ msgid "Connecting"
 msgstr "Connecting"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Content breaks one or more laws"
-msgstr "Content breaks one or more laws"
+#~ msgid "Content breaks one or more laws"
+#~ msgstr "Content breaks one or more laws"
 
 #: components/modal/modals/MFAEnableTOTP.tsx
 #: components/modal/modals/LinkWarning.tsx
@@ -890,12 +911,14 @@ msgstr "Create Bot"
 
 #: components/app/menus/ServerSidebarContextMenu.tsx
 #: components/app/menus/CategoryContextMenu.tsx
+#: components/app/interface/settings/server/ChannelOrdering.tsx
 msgid "Create category"
 msgstr "Create category"
 
 #: components/modal/modals/CreateChannel.tsx
 #: components/app/menus/ServerSidebarContextMenu.tsx
 #: components/app/menus/ChannelContextMenu.tsx
+#: components/app/interface/settings/server/ChannelOrdering.tsx
 msgid "Create channel"
 msgstr "Create channel"
 
@@ -1079,6 +1102,10 @@ msgstr "Description provided by {0}"
 msgid "Desktop"
 msgstr "Desktop"
 
+#: components/modal/modals/SignedOut.tsx
+msgid "Detected during:"
+msgstr "Detected during:"
+
 #: components/app/interface/settings/user/bots/MyBots.tsx
 msgid "Developer Documentation"
 msgstr "Developer Documentation"
@@ -1169,8 +1196,8 @@ msgid "Done"
 msgstr "Done"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Drugs or illegal goods"
-msgstr "Drugs or illegal goods"
+#~ msgid "Drugs or illegal goods"
+#~ msgstr "Drugs or illegal goods"
 
 #: components/ui/components/features/messaging/elements/SystemMessage.tsx
 msgid "Duration"
@@ -1312,17 +1339,33 @@ msgstr "Enter your invite code."
 msgid "Enter your preferred username."
 msgstr "Enter your preferred username."
 
+#: components/modal/modals/SignedOut.tsx
+msgid "Error code:"
+msgstr "Error code:"
+
 #: components/modal/modals/LinkWarning.tsx
 msgid "External links can be dangerous!"
 msgstr "External links can be dangerous!"
+
+#: components/modal/modals/ReportContent.tsx
+#~ msgid "Extortion"
+#~ msgstr "Extortion"
 
 #: components/modal/modals/ReportContent.tsx
 msgid "Extortion or blackmail"
 msgstr "Extortion or blackmail"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Extreme violence, gore or animal cruelty"
-msgstr "Extreme violence, gore or animal cruelty"
+#~ msgid "Extreme violence"
+#~ msgstr "Extreme violence"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "Extreme violence or gore"
+msgstr "Extreme violence or gore"
+
+#: components/modal/modals/ReportContent.tsx
+#~ msgid "Extreme violence, gore or animal cruelty"
+#~ msgstr "Extreme violence, gore or animal cruelty"
 
 #: components/i18n/errors.ts
 msgid "Failed to process the image you provided."
@@ -1419,8 +1462,8 @@ msgstr "Give feedback on DawnChat"
 #~ msgstr "Give feedback on Stoat"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Give us some detail"
-msgstr "Give us some detail"
+#~ msgid "Give us some detail"
+#~ msgstr "Give us some detail"
 
 #: components/auth/src/flows/FlowVerify.tsx
 #: components/auth/src/flows/FlowVerify.tsx
@@ -1464,8 +1507,16 @@ msgid "Group Name"
 msgstr "Group Name"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Harassment or cyberbullying"
-msgstr "Harassment or cyberbullying"
+#~ msgid "Harassment"
+#~ msgstr "Harassment"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "Harassment or bullying"
+msgstr "Harassment or bullying"
+
+#: components/modal/modals/ReportContent.tsx
+#~ msgid "Harassment or cyberbullying"
+#~ msgstr "Harassment or cyberbullying"
 
 #: components/app/interface/settings/user/Native.tsx
 msgid "Hardware Acceleration"
@@ -1522,8 +1573,24 @@ msgid "Idle"
 msgstr "Idle"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Illegal hacking or cracking"
-msgstr "Illegal hacking or cracking"
+msgid "Illegal content"
+msgstr "Illegal content"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "Illegal goods"
+msgstr "Illegal goods"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "Illegal hacking"
+msgstr "Illegal hacking"
+
+#: components/modal/modals/ReportContent.tsx
+#~ msgid "Illegal hacking or cracking"
+#~ msgstr "Illegal hacking or cracking"
+
+#: components/modal/modals/ReportContent.tsx
+#~ msgid "Illegal pornography"
+#~ msgstr "Illegal pornography"
 
 #: components/auth/src/AuthPage.tsx
 msgid "Image by @fakurian"
@@ -1532,6 +1599,14 @@ msgstr "Image by @fakurian"
 #: components/modal/modals/ReportContent.tsx
 msgid "Impersonation"
 msgstr "Impersonation"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "Inappropriate profile"
+msgstr "Inappropriate profile"
+
+#: components/app/interface/settings/user/voice/VoiceProcessingOptions.tsx
+msgid "Includes system audio when sharing your screen if the device and browser support it."
+msgstr "Includes system audio when sharing your screen if the device and browser support it."
 
 #: components/app/interface/settings/user/Native.tsx
 msgid "Instead of closing, DawnChat will hide in your tray."
@@ -1906,6 +1981,10 @@ msgstr "Minimise to Tray"
 msgid "Missing permission"
 msgstr "Missing permission"
 
+#: components/modal/modals/ModerationPanel.tsx
+msgid "Moderation Panel"
+msgstr "Moderation Panel"
+
 #: components/app/interface/settings/user/appearance/AppearanceMenu.tsx
 msgid "Monochrome"
 msgstr "Monochrome"
@@ -1917,6 +1996,10 @@ msgstr "Monospace Font"
 #: components/app/interface/settings/user/appearance/AppearanceMenu.tsx
 msgid "More Contrast"
 msgstr "More Contrast"
+
+#: components/app/interface/settings/server/ChannelOrdering.tsx
+msgid "Move categories and channels here. Reordering is disabled in the channel bar on small screens so scrolling stays smooth."
+msgstr "Move categories and channels here. Reordering is disabled in the channel bar on small screens so scrolling stays smooth."
 
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 msgid "Move Members"
@@ -2036,8 +2119,8 @@ msgid "Normal"
 msgstr "Normal"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Not of minimum age to use the platform"
-msgstr "Not of minimum age to use the platform"
+#~ msgid "Not of minimum age to use the platform"
+#~ msgstr "Not of minimum age to use the platform"
 
 #: components/app/menus/ServerContextMenu.tsx
 #: components/app/menus/shared/NotificationContextMenu.tsx
@@ -2126,6 +2209,11 @@ msgstr "Open server settings"
 msgid "Open settings"
 msgstr "Open settings"
 
+#: src/interface/moderation/ModerationEntityView.tsx
+msgid "Opening moderation target..."
+msgstr "Opening moderation target..."
+
+#: components/modal/modals/ReportContent.tsx
 #: components/modal/modals/ReportContent.tsx
 msgid "Other"
 msgstr "Other"
@@ -2182,6 +2270,10 @@ msgstr "Please enter your email."
 msgid "Please log in again."
 msgstr "Please log in again."
 
+#: components/modal/modals/ReportContent.tsx
+msgid "Please provide additional details when selecting Other."
+msgstr "Please provide additional details when selecting Other."
+
 #: components/modal/modals/MFARecovery.tsx
 msgid "Please save these to a safe location."
 msgstr "Please save these to a safe location."
@@ -2195,8 +2287,13 @@ msgid "Please select a method to authenticate your request."
 msgstr "Please select a method to authenticate your request."
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Please select a reason"
-msgstr "Please select a reason"
+#~ msgid "Please select a reason"
+#~ msgstr "Please select a reason"
+
+#: components/modal/modals/ReportContent.tsx
+#: components/i18n/errors.ts
+msgid "Please select a reason before submitting your report."
+msgstr "Please select a reason before submitting your report."
 
 #: components/app/interface/settings/user/voice/VoiceProcessingOptions.tsx
 msgid "Powered by RNNoise"
@@ -2227,8 +2324,16 @@ msgid "Provided email or password is wrong."
 msgstr "Provided email or password is wrong."
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Raid or spam attack"
-msgstr "Raid or spam attack"
+#~ msgid "Raid"
+#~ msgstr "Raid"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "Raid or coordinated spam"
+msgstr "Raid or coordinated spam"
+
+#: components/modal/modals/ReportContent.tsx
+#~ msgid "Raid or spam attack"
+#~ msgstr "Raid or spam attack"
 
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 msgid "React"
@@ -2415,8 +2520,12 @@ msgid "Retry sending"
 msgstr "Retry sending"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Revenge or underage pornography"
-msgstr "Revenge or underage pornography"
+#~ msgid "Revenge or underage pornography"
+#~ msgstr "Revenge or underage pornography"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "Revenge or underage sexual content"
+msgstr "Revenge or underage sexual content"
 
 #: components/modal/modals/PolicyChange.tsx
 msgid "Review policy changes"
@@ -2496,6 +2605,10 @@ msgstr "Select members to add"
 #: components/app/interface/settings/user/voice/VoiceProcessingOptions.tsx
 msgid "Select noise suppression"
 msgstr "Select noise suppression"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "Select the reason that best matches this report."
+msgstr "Select the reason that best matches this report."
 
 #: components/app/interface/settings/user/Language.tsx
 msgid "Select your language"
@@ -2619,6 +2732,10 @@ msgstr "Several people are typing…"
 msgid "Share camera or screen in voice call"
 msgstr "Share camera or screen in voice call"
 
+#: components/app/interface/settings/user/voice/VoiceProcessingOptions.tsx
+msgid "Share screen with audio"
+msgstr "Share screen with audio"
+
 #: components/app/interface/settings/user/Native.tsx
 msgid "Show corrections and suggestions as you type."
 msgstr "Show corrections and suggestions as you type."
@@ -2673,8 +2790,16 @@ msgid "Source Code"
 msgstr "Source Code"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Spam or similar platform abuse"
-msgstr "Spam or similar platform abuse"
+#~ msgid "Spam abuse"
+#~ msgstr "Spam abuse"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "Spam or platform abuse"
+msgstr "Spam or platform abuse"
+
+#: components/modal/modals/ReportContent.tsx
+#~ msgid "Spam or similar platform abuse"
+#~ msgstr "Spam or similar platform abuse"
 
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 msgid "Speak"
@@ -2821,9 +2946,25 @@ msgstr "The password is too short."
 msgid "Theme"
 msgstr "Theme"
 
+#: components/modal/modals/SignedOut.tsx
+msgid "This account has been banned and cannot access DawnChat."
+msgstr "This account has been banned and cannot access DawnChat."
+
+#: components/modal/modals/SignedOut.tsx
+msgid "This account has been disabled. Access is currently blocked."
+msgstr "This account has been disabled. Access is currently blocked."
+
 #: components/i18n/errors.ts
 msgid "This account is not activated! Please check your account's inbox and try again."
 msgstr "This account is not activated! Please check your account's inbox and try again."
+
+#: components/modal/modals/SignedOut.tsx
+msgid "This account is suspended and cannot be used right now."
+msgstr "This account is suspended and cannot be used right now."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This appears to be a scam or fraud attempt."
+msgstr "This appears to be a scam or fraud attempt."
 
 #: components/i18n/errors.ts
 msgid "This bot is private and can only be added by the creator."
@@ -2840,6 +2981,14 @@ msgstr "This channel is marked as mature."
 #: src/interface/channels/AgeGate.tsx
 msgid "This channel is not available in your region while we review options on legal compliance."
 msgstr "This channel is not available in your region while we review options on legal compliance."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This contains extreme violence, gore, or animal cruelty."
+msgstr "This contains extreme violence, gore, or animal cruelty."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This content appears to break one or more laws."
+msgstr "This content appears to break one or more laws."
 
 #: src/interface/channels/AgeGate.tsx
 msgid "This content is not available in your region."
@@ -2862,6 +3011,38 @@ msgstr "This group is too large, you can have up to {0} users."
 msgid "This has already been sent."
 msgstr "This has already been sent."
 
+#: components/modal/modals/ReportContent.tsx
+msgid "This includes extortion, threats, or blackmail."
+msgstr "This includes extortion, threats, or blackmail."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This includes harassment, bullying, or targeted abuse."
+msgstr "This includes harassment, bullying, or targeted abuse."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This includes illegal hacking, cracking, or exploit activity."
+msgstr "This includes illegal hacking, cracking, or exploit activity."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This includes malware, phishing, or malicious links/files."
+msgstr "This includes malware, phishing, or malicious links/files."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This includes revenge porn or underage sexual content."
+msgstr "This includes revenge porn or underage sexual content."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This involves drugs or other illegal goods."
+msgstr "This involves drugs or other illegal goods."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This is part of a raid or coordinated spam attack."
+msgstr "This is part of a raid or coordinated spam attack."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This is spam or another form of platform abuse."
+msgstr "This is spam or another form of platform abuse."
+
 #: components/ui/components/features/messaging/elements/ConversationStart.tsx
 msgid "This is the start of your conversation."
 msgstr "This is the start of your conversation."
@@ -2869,6 +3050,10 @@ msgstr "This is the start of your conversation."
 #: components/ui/components/features/messaging/elements/ConversationStart.tsx
 msgid "This is the start of your notes."
 msgstr "This is the start of your notes."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This is unsolicited advertising or repeated spam."
+msgstr "This is unsolicited advertising or repeated spam."
 
 #: components/i18n/errors.ts
 msgid "This message is already pinned."
@@ -2882,6 +3067,10 @@ msgstr "This message is empty and has not been sent."
 msgid "This password has previously appeared in security leaks, please use another password."
 msgstr "This password has previously appeared in security leaks, please use another password."
 
+#: components/modal/modals/ReportContent.tsx
+msgid "This promotes self-harm, violence, or dangerous behavior."
+msgstr "This promotes self-harm, violence, or dangerous behavior."
+
 #: src/interface/Discover.tsx
 msgid "This section is not available yet. Please check back soon."
 msgstr "This section is not available yet. Please check back soon."
@@ -2890,13 +3079,29 @@ msgstr "This section is not available yet. Please check back soon."
 msgid "This server is about..."
 msgstr "This server is about..."
 
+#: components/modal/modals/ReportContent.tsx
+msgid "This user appears to be below the minimum age for the platform."
+msgstr "This user appears to be below the minimum age for the platform."
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This user appears to be evading a previous ban."
+msgstr "This user appears to be evading a previous ban."
+
 #: components/i18n/errors.ts
 msgid "This user has blocked you."
 msgstr "This user has blocked you."
 
+#: components/modal/modals/ReportContent.tsx
+msgid "This user is impersonating another person, group, or brand."
+msgstr "This user is impersonating another person, group, or brand."
+
 #: components/modal/modals/BanNonMember.tsx
 msgid "This user is not part of the server and may already be banned"
 msgstr "This user is not part of the server and may already be banned"
+
+#: components/modal/modals/ReportContent.tsx
+msgid "This user's profile contains inappropriate content."
+msgstr "This user's profile contains inappropriate content."
 
 #: components/i18n/errors.ts
 msgid "This username is already taken."
@@ -2944,6 +3149,14 @@ msgstr "Uncaught DawnChat error: {0}"
 #~ msgid "Uncaught Stoat error: {0}"
 #~ msgstr "Uncaught Stoat error: {0}"
 
+#: components/modal/modals/ReportContent.tsx
+msgid "Underage account"
+msgstr "Underage account"
+
+#: components/modal/modals/ReportContent.tsx
+#~ msgid "Underage user"
+#~ msgstr "Underage user"
+
 #: components/markdown/plugins/anchors.tsx
 msgid "Unknown Server"
 msgstr "Unknown Server"
@@ -2977,8 +3190,16 @@ msgid "Unsent message"
 msgstr "Unsent message"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "Unsolicited advertising or spam"
-msgstr "Unsolicited advertising or spam"
+msgid "Unsolicited ads or spam"
+msgstr "Unsolicited ads or spam"
+
+#: components/modal/modals/ReportContent.tsx
+#~ msgid "Unsolicited advertising or spam"
+#~ msgstr "Unsolicited advertising or spam"
+
+#: components/modal/modals/ReportContent.tsx
+#~ msgid "Unsolicited spam"
+#~ msgstr "Unsolicited spam"
 
 #: components/app/menus/ServerContextMenu.tsx
 #: components/app/menus/shared/NotificationContextMenu.tsx
@@ -3039,8 +3260,8 @@ msgid "User Settings"
 msgstr "User Settings"
 
 #: components/modal/modals/ReportContent.tsx
-msgid "User's profile has inappropriate content"
-msgstr "User's profile has inappropriate content"
+#~ msgid "User's profile has inappropriate content"
+#~ msgstr "User's profile has inappropriate content"
 
 #: components/modal/modals/Onboarding.tsx
 #: components/modal/modals/EditUsername.tsx
@@ -3287,6 +3508,10 @@ msgstr "You don't have permission to send messages in this channel."
 msgid "You have been locked out for entering a wrong password multiple times. Please wait a couple minutes and try again."
 msgstr "You have been locked out for entering a wrong password multiple times. Please wait a couple minutes and try again."
 
+#: components/modal/modals/SignedOut.tsx
+msgid "You have been signed out. Please try logging in again. If this keeps happening, contact support."
+msgstr "You have been signed out. Please try logging in again. If this keeps happening, contact support."
+
 #: components/i18n/errors.ts
 msgid "You have this user blocked."
 msgstr "You have this user blocked."
@@ -3294,6 +3519,10 @@ msgstr "You have this user blocked."
 #: components/ui/components/features/voice/VoiceStatefulUserIcons.tsx
 msgid "You muted this user."
 msgstr "You muted this user."
+
+#: components/app/interface/settings/server/ChannelOrdering.tsx
+msgid "You need ManageChannel permission to reorder channels."
+msgstr "You need ManageChannel permission to reorder channels."
 
 #: components/auth/src/flows/FlowHome.tsx
 msgid "You were logged out!"
@@ -3330,8 +3559,12 @@ msgid "You've been invited to join this server.<0/>Would you like to join?"
 msgstr "You've been invited to join this server.<0/>Would you like to join?"
 
 #: components/modal/modals/SignedOut.tsx
-msgid "You've been signed out of DawnChat!"
-msgstr "You've been signed out of DawnChat!"
+#~ msgid "You've been signed out of DawnChat!"
+#~ msgstr "You've been signed out of DawnChat!"
+
+#: components/modal/modals/SignedOut.tsx
+msgid "You've been signed out of DawnChat."
+msgstr "You've been signed out of DawnChat."
 
 #: components/modal/modals/SignedOut.tsx
 #~ msgid "You've been signed out of Stoat!"
@@ -3354,6 +3587,18 @@ msgstr "Your account and all of your data (including your messages and friends l
 msgid "Your account has been verified!"
 msgstr "Your account has been verified!"
 
+#: components/modal/modals/SignedOut.tsx
+msgid "Your account is banned."
+msgstr "Your account is banned."
+
+#: components/modal/modals/SignedOut.tsx
+msgid "Your account is disabled."
+msgstr "Your account is disabled."
+
+#: components/modal/modals/SignedOut.tsx
+msgid "Your account is suspended."
+msgstr "Your account is suspended."
+
 #: components/i18n/errors.ts
 msgid "Your discriminator change has been ratelimited, please try again later."
 msgstr "Your discriminator change has been ratelimited, please try again later."
@@ -3362,6 +3607,10 @@ msgstr "Your discriminator change has been ratelimited, please try again later."
 msgid "Your message is too long, please remove some characters and try again."
 msgstr "Your message is too long, please remove some characters and try again."
 
+#: components/modal/modals/SignedOut.tsx
+msgid "Your previous session expired or was revoked. Please sign in again."
+msgstr "Your previous session expired or was revoked. Please sign in again."
+
 #: components/modal/modals/MFARecovery.tsx
 msgid "Your recovery codes"
 msgstr "Your recovery codes"
@@ -3369,6 +3618,10 @@ msgstr "Your recovery codes"
 #: components/i18n/errors.ts
 msgid "Your role ranking is too low to take this action."
 msgstr "Your role ranking is too low to take this action."
+
+#: components/modal/modals/SignedOut.tsx
+msgid "Your session is no longer valid."
+msgstr "Your session is no longer valid."
 
 #: components/i18n/errors.ts
 msgid "Your user has already been created? Try logging in again or refreshing the app."

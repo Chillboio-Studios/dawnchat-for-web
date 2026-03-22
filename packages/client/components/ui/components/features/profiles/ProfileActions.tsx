@@ -7,7 +7,6 @@ import { styled } from "styled-system/jsx";
 import { UserContextMenu } from "@revolt/app";
 import { useModals } from "@revolt/modal";
 
-import MdCancel from "@material-design-icons/svg/filled/cancel.svg?component-solid";
 import MdEdit from "@material-design-icons/svg/filled/edit.svg?component-solid";
 import MdMoreVert from "@material-design-icons/svg/filled/more_vert.svg?component-solid";
 
@@ -31,7 +30,10 @@ export function ProfileActions(props: {
    * Open direct message channel
    */
   function openDm() {
-    props.user.openDM().then((channel) => navigate(channel.url));
+    props.user.openDM().then((channel) => {
+      navigate(channel.url);
+      dismissFloatingElements();
+    });
   }
 
   /**
@@ -49,24 +51,22 @@ export function ProfileActions(props: {
 
   return (
     <Actions width={props.width}>
-      <Show when={props.user.relationship === "None" && !props.user.bot}>
-        <Button onPress={() => props.user.addFriend()}>Add Friend</Button>
-      </Show>
-      <Show when={props.user.relationship === "Incoming"}>
-        <Button onPress={() => props.user.addFriend()}>
-          Accept friend request
+      <Show
+        when={
+          !props.user.self &&
+          !props.user.bot &&
+          props.user.relationship !== "Blocked"
+        }
+      >
+        <Button
+          onPress={() =>
+            props.user.relationship === "Friend"
+              ? openDm()
+              : props.user.addFriend()
+          }
+        >
+          {props.user.relationship === "Friend" ? "Message" : "Add Friend"}
         </Button>
-        <IconButton onPress={() => props.user.removeFriend()}>
-          <MdCancel />
-        </IconButton>
-      </Show>
-      <Show when={props.user.relationship === "Outgoing"}>
-        <Button onPress={() => props.user.removeFriend()}>
-          Cancel friend request
-        </Button>
-      </Show>
-      <Show when={props.user.relationship === "Friend"}>
-        <Button onPress={openDm}>Message</Button>
       </Show>
 
       <Show

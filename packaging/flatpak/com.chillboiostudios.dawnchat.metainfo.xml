@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.chillboiostudios.dawnchat</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-only</project_license>
+  <name>DawnChat</name>
+  <summary>DawnChat desktop app</summary>
+  <description>
+    <p>Desktop distribution of DawnChat for web, packaged with Tauri.</p>
+  </description>
+  <launchable type="desktop-id">com.chillboiostudios.dawnchat.desktop</launchable>
+  <releases>
+    <release version="1.0.0" date="2026-03-22"/>
+  </releases>
+  <provides>
+    <binary>dawnchat</binary>
+  </provides>
+</component>

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DawnChat",
+  "version": "1.0.0",
+  "identifier": "chat.dawnchat.desktop",
+  "build": {
+    "frontendDist": "../dist",
+    "beforeBuildCommand": ""
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "DawnChat",
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["all"],
+    "category": "Network",
+    "shortDescription": "DawnChat Desktop",
+    "longDescription": "DawnChat desktop app built from the web client"
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/Chillboio-Studios/dawnchat-for-web/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "pubkey": "$TAURI_UPDATER_PUBLIC_KEY"
+    }
+  }
+}

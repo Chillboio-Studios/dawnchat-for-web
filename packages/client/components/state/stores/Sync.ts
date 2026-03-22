@@ -76,9 +76,19 @@ export class Sync extends AbstractStore<"sync", TypeSynchronisation> {
    * @param client Client
    */
   async initialSync(client: Client) {
-    const response = await client.api.post("/sync/settings/fetch", {
-      keys: STORE_KEYS,
-    });
+    let response: Record<string, [number, string]> | undefined;
+
+    try {
+      response = await client.api.post("/sync/settings/fetch", {
+        keys: STORE_KEYS,
+      });
+    } catch (error) {
+      // Some deployments disable sync or return 401 until authenticated; treat as optional.
+      if (import.meta.env.DEV) {
+        console.warn("[sync] initial settings sync skipped", error);
+      }
+      return;
+    }
 
     for (const key in response) {
       const [ts, data] = response[key];

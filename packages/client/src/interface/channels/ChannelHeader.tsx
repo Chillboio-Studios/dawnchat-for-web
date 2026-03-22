@@ -8,6 +8,11 @@ import { styled } from "styled-system/jsx";
 import { getEffectiveUserPresence, useClient } from "@revolt/client";
 import { TextWithEmoji } from "@revolt/markdown";
 import { useModals } from "@revolt/modal";
+import { useVoice } from "@revolt/rtc";
+import {
+  getAllRemoteCallStates,
+  pushRemoteCallState,
+} from "@revolt/common/lib/clientApiSocket";
 import { useState } from "@revolt/state";
 import { LAYOUT_SECTIONS } from "@revolt/state/stores/Layout";
 import {
@@ -53,8 +58,14 @@ interface Props {
 export function ChannelHeader(props: Props) {
   const { openModal } = useModals();
   const client = useClient();
+  const voice = useVoice();
   const { t } = useLingui();
   const state = useState();
+
+  const canUseVoiceHeaderButton = () =>
+    props.channel.isVoice && props.channel.havePermission("Connect");
+
+  const inThisCall = () => voice.channel()?.id === props.channel.id;
 
   const searchValue = () => {
     if (!props.sidebarState) return null;
@@ -184,6 +195,72 @@ export function ChannelHeader(props: Props) {
         </Button>
       </Show>
 
+      <Show when={canUseVoiceHeaderButton()}>
+        <IconButton
+          class={mobileCallButton}
+          onPress={async () => {
+            if (inThisCall()) {
+              voice.disconnect();
+              return;
+            }
+
+            const currentUserId = client().user?.id;
+            const channelType =
+              props.channel.type === "DirectMessage" ||
+              props.channel.type === "Group"
+                ? props.channel.type
+                : undefined;
+
+            const activeRingForCaller =
+              currentUserId && channelType
+                ? getAllRemoteCallStates().find(
+                    (item) =>
+                      item.channelId === props.channel.id &&
+                      item.status === "Ringing" &&
+                      item.startedById === currentUserId,
+                  )
+                : undefined;
+
+            const callId =
+              activeRingForCaller?.callId ??
+              `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+
+            try {
+              await voice.connect(props.channel);
+
+              // For DM/Group calls, publish a Ringing state immediately so recipients
+              // and late joiners receive it from websocket snapshots/updates.
+              if (currentUserId && channelType) {
+                await pushRemoteCallState(props.channel.id, callId, "Ringing", {
+                  startedById: currentUserId,
+                  updatedById: currentUserId,
+                  channelType,
+                });
+              }
+            } catch {
+              if (currentUserId && channelType) {
+                await pushRemoteCallState(props.channel.id, callId, "Ended", {
+                  startedById: currentUserId,
+                  updatedById: currentUserId,
+                  channelType,
+                });
+              }
+
+              // Ignore transient call connect errors; voice subsystem handles user feedback.
+            }
+          }}
+          use:floating={{
+            tooltip: {
+              placement: "bottom",
+              // Keep this plain text until catalogs are rebuilt for new i18n message IDs.
+              content: inThisCall() ? "Leave" : "Call",
+            },
+          }}
+        >
+          <Symbol>{inThisCall() ? "call_end" : "call"}</Symbol>
+        </IconButton>
+      </Show>
+
       <Show when={props.sidebarState}>
         <IconButton
           use:floating={{
@@ -303,4 +380,11 @@ const Divider = styled("div", {
  */
 const descriptionLink = css({
   minWidth: 0,
+});
+
+const mobileCallButton = css({
+  display: "none",
+  "@media (max-width: 768px)": {
+    display: "inline-flex",
+  },
 });

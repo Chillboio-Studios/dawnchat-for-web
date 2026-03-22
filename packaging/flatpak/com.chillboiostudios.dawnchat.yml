@@ -1,0 +1,29 @@
+app-id: com.chillboiostudios.dawnchat
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+command: dawnchat
+finish-args:
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --socket=pulseaudio
+  - --device=dri
+  - --talk-name=org.freedesktop.Notifications
+modules:
+  - name: dawnchat-desktop
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 dawnchat_desktop /app/bin/dawnchat
+      - install -Dm644 com.chillboiostudios.dawnchat.desktop /app/share/applications/com.chillboiostudios.dawnchat.desktop
+      - install -Dm644 com.chillboiostudios.dawnchat.metainfo.xml /app/share/metainfo/com.chillboiostudios.dawnchat.metainfo.xml
+      - install -Dm644 com.chillboiostudios.dawnchat.svg /app/share/icons/hicolor/scalable/apps/com.chillboiostudios.dawnchat.svg
+    sources:
+      - type: file
+        path: ../../packages/client/src-tauri/target/release/dawnchat_desktop
+      - type: file
+        path: com.chillboiostudios.dawnchat.desktop
+      - type: file
+        path: com.chillboiostudios.dawnchat.metainfo.xml
+      - type: file
+        path: com.chillboiostudios.dawnchat.svg

@@ -35,6 +35,21 @@ export function VoiceProcessingOptions() {
         >
           <Trans>Automatic Gain Control</Trans>
         </CategoryButton>
+        <CategoryButton
+          icon="blank"
+          action={<Checkbox checked={state.voice.screenShareWithAudio} />}
+          onClick={() =>
+            (state.voice.screenShareWithAudio = !state.voice.screenShareWithAudio)
+          }
+          description={
+            <Trans>
+              Includes system audio when sharing your screen if the device and
+              browser support it.
+            </Trans>
+          }
+        >
+          <Trans>Share screen with audio</Trans>
+        </CategoryButton>
       </CategoryButton.Group>
     </Column>
   );

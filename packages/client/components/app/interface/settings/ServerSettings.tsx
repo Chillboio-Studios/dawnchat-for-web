@@ -19,6 +19,7 @@ import { ColouredText } from "@revolt/ui";
 import { SettingsConfiguration } from ".";
 import { ChannelPermissionsEditor } from "./channel/permissions/ChannelPermissionsEditor";
 import Overview from "./server/Overview";
+import ChannelOrdering from "./server/ChannelOrdering";
 import { ListServerBans } from "./server/bans/ListBans";
 import { EmojiList } from "./server/emojis/EmojiList";
 import { ListServerInvites } from "./server/invites/ListServerInvites";
@@ -74,6 +75,8 @@ const Config: SettingsConfiguration<Server> = {
         return <EmojiList server={server} />;
       case "roles":
         return <ServerRoleOverview context={server} />;
+      case "channels":
+        return <ChannelOrdering server={server} />;
       case "invites":
         return <ListServerInvites server={server} />;
       case "bans":
@@ -149,6 +152,12 @@ const Config: SettingsConfiguration<Server> = {
               id: "bans",
               icon: <BiSolidUserX size={20} />,
               title: <Trans>Bans</Trans>,
+            },
+            {
+              hidden: !server.havePermission("ManageChannel"),
+              id: "channels",
+              icon: <BiSolidGroup size={20} />,
+              title: <Trans>Channel Ordering</Trans>,
             },
           ],
         },

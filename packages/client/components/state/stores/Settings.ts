@@ -16,6 +16,11 @@ interface SettingsDefinition {
   // "notifications:desktop": boolean;
 
   /**
+   * Whether incoming call ringing is enabled
+   */
+  "notifications:ringing_enabled": boolean;
+
+  /**
    * Customise notification sounds
    * TODO: implement
    */
@@ -89,6 +94,7 @@ type ValueType<T extends keyof SettingsDefinition> =
  * If we cannot validate the value as a primitive, clean it up using a function.
  */
 const EXPECTED_TYPES: { [K in keyof SettingsDefinition]: ValueType<K> } = {
+  "notifications:ringing_enabled": "boolean",
   "appearance:unicode_emoji": "string",
   "appearance:show_send_button": "boolean",
   "appearance:compact_mode": "boolean",
@@ -131,6 +137,7 @@ export class Settings extends AbstractStore<"settings", TypeSettings> {
    */
   default(): TypeSettings {
     return {
+      "notifications:ringing_enabled": true,
       "appearance:unicode_emoji": "fluent-3d",
       "appearance:show_send_button": true,
       "appearance:compact_mode": false,

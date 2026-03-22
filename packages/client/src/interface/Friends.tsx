@@ -45,7 +45,22 @@ const Base = styled("div", {
     display: "flex",
     flexDirection: "column",
 
+    "& .FriendsLayout": {
+      display: "flex",
+      minHeight: 0,
+      height: "100%",
+      width: "100%",
+    },
+
+    "& mdui-navigation-rail": {
+      flexShrink: 0,
+      position: "relative",
+      zIndex: 0,
+    },
+
     "& .FriendsList": {
+      flex: 1,
+      minWidth: 0,
       height: "100%",
       paddingInline: "var(--gap-lg)",
     },
@@ -112,12 +127,7 @@ export function Friends() {
       </Header>
 
       <main class={main()}>
-        <div
-          style={{
-            position: "relative",
-            "min-height": 0,
-          }}
-        >
+        <div class="FriendsLayout">
           <NavigationRail contained value={page} onValue={setPage}>
             <div style={{ "margin-top": "6px", "margin-bottom": "12px" }}>
               <IconButton
