@@ -83,7 +83,10 @@ function createRingtoneController() {
     let ringOn = true;
     stopTimer = setInterval(() => {
       if (!gainNode || !currentContext) return;
-      gainNode.gain.setValueAtTime(ringOn ? 0.06 : 0.0001, currentContext.currentTime);
+      gainNode.gain.setValueAtTime(
+        ringOn ? 0.06 : 0.0001,
+        currentContext.currentTime,
+      );
       ringOn = !ringOn;
     }, 500);
   }
