@@ -48,7 +48,7 @@ export function Feedback() {
           </CategoryButton>
         </Link> */}
         <Link
-          href="https://github.com/orgs/stoatchat/discussions/categories/feature-suggestions"
+          href="https://github.com/Chillboio-Studios/otube-for-web/issues/new?labels=enhancement&title=%5BFeature%5D+"
           target="_blank"
         >
           <CategoryButton
@@ -56,14 +56,14 @@ export function Feedback() {
             icon={<MdStar {...iconSize(22)} />}
             onClick={() => void 0}
             description={
-              <Trans>Suggest new Stoat features on GitHub discussions.</Trans>
+              <Trans>Suggest new features for DawnChat on GitHub.</Trans>
             }
           >
             <Trans>Submit feature suggestion</Trans>
           </CategoryButton>
         </Link>
         <Link
-          href="https://github.com/orgs/stoatchat/discussions/categories/feedback"
+          href="https://github.com/Chillboio-Studios/otube-for-web/issues/new?labels=feedback&title=%5BFeedback%5D+"
           target="_blank"
         >
           <CategoryButton
@@ -76,7 +76,7 @@ export function Feedback() {
           </CategoryButton>
         </Link>
         <Link
-          href="https://github.com/stoatchat/for-web/issues?q=is%3Aissue%20state%3Aopen%20type%3ABug"
+          href="https://github.com/Chillboio-Studios/otube-for-web/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug"
           target="_blank"
         >
           <CategoryButton
@@ -103,7 +103,7 @@ export function Feedback() {
               }
               icon={<MdGroups3 />}
             >
-              <Trans>Go to the Stoat Lounge</Trans>
+              <Trans>Go to the DawnChat Lounge</Trans>
             </CategoryButton>
           </Match>
           <Match when={showLoungeButton && !isInLounge}>
@@ -122,7 +122,7 @@ export function Feedback() {
               }
               icon={<MdGroups3 />}
             >
-              <Trans>Join the Stoat Lounge</Trans>
+              <Trans>Join the DawnChat Lounge</Trans>
             </CategoryButton>
           </Match>
         </Switch>

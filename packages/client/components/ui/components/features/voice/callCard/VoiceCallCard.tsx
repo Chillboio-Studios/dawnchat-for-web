@@ -9,6 +9,7 @@ import {
   createSignal,
   on,
   onCleanup,
+  onMount,
   useContext,
 } from "solid-js";
 import { Portal } from "solid-js/web";
@@ -19,6 +20,8 @@ import { css } from "styled-system/css";
 import { styled } from "styled-system/jsx";
 
 import { InRoom, useVoice } from "@revolt/rtc";
+import { useState } from "@revolt/state";
+import { LAYOUT_SECTIONS } from "@revolt/state/stores/Layout";
 
 import { VoiceCallCardActiveRoom } from "./VoiceCallCardActiveRoom";
 import { VoiceCallCardPiP } from "./VoiceCallCardPiP";
@@ -46,6 +49,19 @@ const callCardContext = createContext<(state?: NewState) => void>(null!);
  */
 export function VoiceCallCardContext(props: { children: JSX.Element }) {
   const voice = useVoice();
+  const stateStore = useState();
+
+  const [isMobile, setIsMobile] = createSignal(false);
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    onCleanup(() => mediaQuery.removeEventListener("change", update));
+  });
 
   const [state, setState] = createSignal<State>({
     type: "floating",
@@ -57,14 +73,38 @@ export function VoiceCallCardContext(props: { children: JSX.Element }) {
 
   function position() {
     const position = state();
+    const primarySidebarOpen = stateStore.layout.getSectionState(
+      LAYOUT_SECTIONS.PRIMARY_SIDEBAR,
+      !isMobile(),
+    );
+    const memberSidebarOpen = stateStore.layout.getSectionState(
+      LAYOUT_SECTIONS.MEMBER_SIDEBAR,
+      !isMobile(),
+    );
+
+    const safeServerListLeft = "56px";
+    const safeLeft =
+      isMobile() && primarySidebarOpen
+        ? "100vw"
+        : !isMobile() && primarySidebarOpen
+          ? "calc(56px + var(--layout-width-channel-sidebar))"
+          : safeServerListLeft;
+    const safeRight =
+      isMobile() && memberSidebarOpen
+        ? "100vw"
+        : !isMobile() && memberSidebarOpen
+        ? "var(--layout-width-channel-sidebar)"
+        : "0px";
 
     switch (position.type) {
       case "fixed":
         return {
-          transform: `translate(${position.x}px, ${position.y}px)`,
-          // top: position.y + "px",
-          // left: position.x + "px",
-          width: position.width + "px",
+          "--safe-left": safeLeft,
+          "--safe-right": safeRight,
+          "--fixed-x": `${position.x}px`,
+          top: `${position.y}px`,
+          left: `max(var(--safe-left), min(var(--fixed-x), calc(100vw - var(--safe-right) - ${position.width}px)))`,
+          width: `min(${position.width}px, calc(100vw - var(--safe-left) - var(--safe-right)))`,
           height: "40vh",
         };
       case "floating":
@@ -73,10 +113,12 @@ export function VoiceCallCardContext(props: { children: JSX.Element }) {
           "--height": "158px",
           "--padding-x": "32px",
           "--padding-y": "96px",
+          "--safe-left": safeLeft,
+          "--safe-right": safeRight,
           transform: `translate(${
             position.corner === "top-left" || position.corner === "bottom-left"
-              ? "calc(var(--padding-x) + var(--offset-x))"
-              : "calc(100vw - var(--padding-x) - var(--width) + var(--offset-x))"
+              ? "calc(var(--padding-x) + var(--safe-left) + var(--offset-x))"
+              : "calc(100vw - var(--padding-x) - var(--safe-right) - var(--width) + var(--offset-x))"
           }, ${
             position.corner === "top-left" || position.corner === "top-right"
               ? "calc(var(--padding-y) + var(--offset-y))"

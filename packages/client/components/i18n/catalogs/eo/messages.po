@@ -201,8 +201,8 @@ msgid "<0/> started a call"
 msgstr ""
 
 #: components/ui/components/features/messaging/elements/SystemMessage.tsx
-msgid "<0/> started a call that lasted "
-msgstr ""
+#~ msgid "<0/> started a call that lasted "
+#~ msgstr ""
 
 #: components/ui/components/features/messaging/elements/SystemMessage.tsx
 msgid "<0/> transferred group ownership to <1/>"
@@ -241,6 +241,10 @@ msgstr ""
 #: components/app/interface/settings/user/Language.tsx
 #: components/app/interface/settings/user/Language.tsx
 msgid "24 hours"
+msgstr ""
+
+#: src/interface/Home.tsx
+msgid "404 page could not be found"
 msgstr ""
 
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
@@ -390,6 +394,10 @@ msgstr "Atribui rolojn"
 msgid "Authenticator App"
 msgstr "Aŭtentiga apo"
 
+#: components/app/interface/settings/user/voice/VoiceProcessingOptions.tsx
+msgid "Automatic Gain Control"
+msgstr ""
+
 #: components/app/interface/settings/user/profile/UserProfileEditor.tsx
 msgid "Avatar"
 msgstr "Uzantobildo"
@@ -401,6 +409,10 @@ msgstr "Uzantobildo"
 #: components/auth/src/flows/FlowCreate.tsx
 #: components/auth/src/flows/FlowCheck.tsx
 msgid "Back"
+msgstr ""
+
+#: src/interface/Discover.tsx
+msgid "Back to Home"
 msgstr ""
 
 #: components/ui/components/features/profiles/ProfileBadges.tsx
@@ -493,6 +505,14 @@ msgstr ""
 
 #: components/modal/modals/CreateServer.tsx
 msgid "By creating this server, you agree to the <0>Acceptable Use Policy</0>."
+msgstr ""
+
+#: components/ui/components/features/messaging/elements/SystemMessage.tsx
+msgid "Call"
+msgstr ""
+
+#: components/ui/components/features/voice/callCard/VoiceCallCardActions.tsx
+msgid "Camera is not supported on this device"
 msgstr ""
 
 #: components/modal/modals/SignOutSessions.tsx
@@ -945,6 +965,26 @@ msgstr ""
 msgid "Database error, please contact support. ({0})"
 msgstr ""
 
+#: components/ui/components/features/profiles/ProfileBadges.tsx
+msgid "DawnChat Developer"
+msgstr ""
+
+#: components/app/interface/settings/user/Native.tsx
+msgid "DawnChat for Desktop"
+msgstr ""
+
+#: components/ui/components/features/profiles/ProfileBadges.tsx
+msgid "DawnChat Founder"
+msgstr ""
+
+#: components/auth/src/flows/FlowHome.tsx
+msgid "DawnChat is one of the best ways to stay connected with your friends and community, anywhere, anytime."
+msgstr ""
+
+#: components/app/interface/settings/user/Native.tsx
+msgid "DawnChat will start in the system tray."
+msgstr ""
+
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 msgid "Deafen lower-ranking members in voice call"
@@ -1069,8 +1109,16 @@ msgid "Discord RPC"
 msgstr ""
 
 #: src/interface/Home.tsx
-msgid "Discover Stoat"
+msgid "Discover DawnChat"
 msgstr ""
+
+#: src/interface/Home.tsx
+msgid "Discover is coming soon for DawnChat."
+msgstr ""
+
+#: src/interface/Home.tsx
+#~ msgid "Discover Stoat"
+#~ msgstr ""
 
 #: components/app/interface/settings/user/appearance/AppearanceMenu.tsx
 msgid "Display & Text"
@@ -1097,16 +1145,24 @@ msgid "Don't notify others that you've left"
 msgstr ""
 
 #: components/app/interface/settings/UserSettings.tsx
-msgid "Donate"
-msgstr ""
+#~ msgid "Donate"
+#~ msgstr ""
 
 #: src/interface/Home.tsx
-msgid "Donate to Stoat"
+#~ msgid "Donate to DawnChat"
+#~ msgstr ""
+
+#: src/interface/Home.tsx
+#~ msgid "Donate to Stoat"
+#~ msgstr ""
+
+#: components/ui/components/features/profiles/ProfileBadges.tsx
+msgid "Donated to DawnChat"
 msgstr ""
 
 #: components/ui/components/features/profiles/ProfileBadges.tsx
-msgid "Donated to Stoat"
-msgstr ""
+#~ msgid "Donated to Stoat"
+#~ msgstr ""
 
 #: components/modal/modals/MFARecovery.tsx
 msgid "Done"
@@ -1114,6 +1170,10 @@ msgstr "Farite"
 
 #: components/modal/modals/ReportContent.tsx
 msgid "Drugs or illegal goods"
+msgstr ""
+
+#: components/ui/components/features/messaging/elements/SystemMessage.tsx
+msgid "Duration"
 msgstr ""
 
 #. placeholder {0}: props.member.displayName
@@ -1282,8 +1342,8 @@ msgid "Feedback"
 msgstr "Prikomentoj"
 
 #: src/interface/Home.tsx
-msgid "Find a community based on your hobbies or interests."
-msgstr "Trovu komunumon baze sur viaj ŝatokupoj aŭ interesoj."
+#~ msgid "Find a community based on your hobbies or interests."
+#~ msgstr "Trovu komunumon baze sur viaj ŝatokupoj aŭ interesoj."
 
 #: components/auth/src/flows/FlowHome.tsx
 msgid "Find your com<0/>munity,<1/>connect with the world."
@@ -1351,8 +1411,12 @@ msgid "Get active recovery codes"
 msgstr ""
 
 #: src/interface/Home.tsx
-msgid "Give feedback on Stoat"
+msgid "Give feedback on DawnChat"
 msgstr ""
+
+#: src/interface/Home.tsx
+#~ msgid "Give feedback on Stoat"
+#~ msgstr ""
 
 #: components/modal/modals/ReportContent.tsx
 msgid "Give us some detail"
@@ -1372,8 +1436,13 @@ msgstr ""
 
 #: src/interface/Home.tsx
 #: components/app/interface/settings/user/Feedback.tsx
-msgid "Go to the Stoat Lounge"
+msgid "Go to the DawnChat Lounge"
 msgstr ""
+
+#: src/interface/Home.tsx
+#: components/app/interface/settings/user/Feedback.tsx
+#~ msgid "Go to the Stoat Lounge"
+#~ msgstr ""
 
 #: src/interface/Home.tsx
 #: src/interface/Home.tsx
@@ -1416,8 +1485,12 @@ msgid "Help contribute to an existing or new language"
 msgstr ""
 
 #: components/ui/components/features/profiles/ProfileBadges.tsx
-msgid "Helped translate Stoat"
+msgid "Helped translate DawnChat"
 msgstr ""
+
+#: components/ui/components/features/profiles/ProfileBadges.tsx
+#~ msgid "Helped translate Stoat"
+#~ msgstr ""
 
 #. placeholder {0}: link()
 #: components/modal/modals/CreateInvite.tsx
@@ -1461,8 +1534,12 @@ msgid "Impersonation"
 msgstr ""
 
 #: components/app/interface/settings/user/Native.tsx
-msgid "Instead of closing, Stoat will hide in your tray."
+msgid "Instead of closing, DawnChat will hide in your tray."
 msgstr ""
+
+#: components/app/interface/settings/user/Native.tsx
+#~ msgid "Instead of closing, Stoat will hide in your tray."
+#~ msgstr ""
 
 #: components/app/interface/settings/user/appearance/AppearanceMenu.tsx
 msgid "Interface Font"
@@ -1524,9 +1601,22 @@ msgstr ""
 #~ msgstr ""
 
 #: src/interface/Home.tsx
-#: components/app/interface/settings/user/Feedback.tsx
-msgid "Join the Stoat Lounge"
+msgid "Join Official DawnChat"
 msgstr ""
+
+#: src/interface/Home.tsx
+#: components/app/interface/settings/user/Feedback.tsx
+msgid "Join the DawnChat Lounge"
+msgstr ""
+
+#: src/interface/Home.tsx
+msgid "Join the official DawnChat server invite."
+msgstr ""
+
+#: src/interface/Home.tsx
+#: components/app/interface/settings/user/Feedback.tsx
+#~ msgid "Join the Stoat Lounge"
+#~ msgstr ""
 
 #: components/ui/components/features/voice/callCard/VoiceCallCardPreview.tsx
 msgid "Join the voice channel"
@@ -1583,12 +1673,20 @@ msgid "Latest"
 msgstr "Plej laste"
 
 #: components/app/interface/settings/user/Native.tsx
-msgid "Launch Stoat when you log into your computer."
+msgid "Launch DawnChat when you log into your computer."
+msgstr ""
+
+#: components/app/interface/settings/user/Native.tsx
+#~ msgid "Launch Stoat when you log into your computer."
+#~ msgstr ""
+
+#: components/app/interface/settings/user/bots/MyBots.tsx
+msgid "Learn more about how to create bots on DawnChat."
 msgstr ""
 
 #: components/app/interface/settings/user/bots/MyBots.tsx
-msgid "Learn more about how to create bots on Stoat."
-msgstr ""
+#~ msgid "Learn more about how to create bots on Stoat."
+#~ msgstr ""
 
 #: components/modal/modals/LeaveServer.tsx
 #: components/modal/modals/DeleteChannel.tsx
@@ -1611,8 +1709,12 @@ msgid "Leave server"
 msgstr "Forlasi servilon"
 
 #: components/app/interface/settings/user/Native.tsx
-msgid "Let Stoat use its own custom titlebar."
+msgid "Let DawnChat use its own custom titlebar."
 msgstr ""
+
+#: components/app/interface/settings/user/Native.tsx
+#~ msgid "Let Stoat use its own custom titlebar."
+#~ msgstr ""
 
 #: src/interface/Home.tsx
 msgid "Let us know how we can improve our app by giving us feedback."
@@ -1799,6 +1901,8 @@ msgstr ""
 
 #: components/ui/components/features/voice/callCard/VoiceCallCardActions.tsx
 #: components/ui/components/features/voice/callCard/VoiceCallCardActions.tsx
+#: components/ui/components/features/voice/callCard/VoiceCallCardActions.tsx
+#: components/ui/components/features/voice/callCard/VoiceCallCardActions.tsx
 msgid "Missing permission"
 msgstr ""
 
@@ -1898,8 +2002,12 @@ msgid "New Password"
 msgstr "Nova pasvorto"
 
 #: components/app/interface/channels/text/Message.tsx
-msgid "New to Stoat"
+msgid "New to DawnChat"
 msgstr ""
+
+#: components/app/interface/channels/text/Message.tsx
+#~ msgid "New to Stoat"
+#~ msgstr ""
 
 #: components/app/interface/channels/text/Message.tsx
 msgid "New to the server"
@@ -2230,8 +2338,12 @@ msgid "Rename Session"
 msgstr ""
 
 #: components/app/interface/settings/user/Native.tsx
-msgid "Rep Stoat using Discord rich presence."
+msgid "Rep DawnChat using Discord rich presence."
 msgstr ""
+
+#: components/app/interface/settings/user/Native.tsx
+#~ msgid "Rep Stoat using Discord rich presence."
+#~ msgstr ""
 
 #: components/app/menus/MessageContextMenu.tsx
 msgid "Reply"
@@ -2350,6 +2462,10 @@ msgstr "Konservitaj notoj"
 
 #: components/modal/modals/ReportContent.tsx
 msgid "Scams or fraud"
+msgstr ""
+
+#: components/ui/components/features/voice/callCard/VoiceCallCardActions.tsx
+msgid "Screen share is not supported on this device"
 msgstr ""
 
 #: components/modal/modals/AddBot.tsx
@@ -2512,8 +2628,12 @@ msgid "Show send message button"
 msgstr ""
 
 #: components/auth/src/flows/FlowLogin.tsx
-msgid "Sign into Stoat"
+msgid "Sign into DawnChat"
 msgstr ""
+
+#: components/auth/src/flows/FlowLogin.tsx
+#~ msgid "Sign into Stoat"
+#~ msgstr ""
 
 #: components/auth/src/flows/FlowHome.tsx
 msgid "Sign Up"
@@ -2585,24 +2705,24 @@ msgstr ""
 #~ msgstr ""
 
 #: components/ui/components/features/profiles/ProfileBadges.tsx
-msgid "Stoat Developer"
-msgstr ""
+#~ msgid "Stoat Developer"
+#~ msgstr ""
 
 #: components/app/interface/settings/user/Native.tsx
-msgid "Stoat for Desktop"
-msgstr ""
+#~ msgid "Stoat for Desktop"
+#~ msgstr ""
 
 #: components/ui/components/features/profiles/ProfileBadges.tsx
-msgid "Stoat Founder"
-msgstr ""
+#~ msgid "Stoat Founder"
+#~ msgstr ""
 
 #: components/auth/src/flows/FlowHome.tsx
-msgid "Stoat is one of the best ways to stay connected with your friends and community, anywhere, anytime."
-msgstr ""
+#~ msgid "Stoat is one of the best ways to stay connected with your friends and community, anywhere, anytime."
+#~ msgstr ""
 
 #: components/app/interface/settings/user/Native.tsx
-msgid "Stoat will start in the system tray."
-msgstr ""
+#~ msgid "Stoat will start in the system tray."
+#~ msgstr ""
 
 #: components/app/interface/settings/user/Feedback.tsx
 msgid "Submit feature suggestion"
@@ -2621,12 +2741,20 @@ msgid "Subscriptions"
 msgstr ""
 
 #: components/app/interface/settings/user/Feedback.tsx
-msgid "Suggest new Stoat features on GitHub discussions."
+msgid "Suggest new features for DawnChat on GitHub."
 msgstr ""
 
+#: components/app/interface/settings/user/Feedback.tsx
+#~ msgid "Suggest new features for OTube on GitHub."
+#~ msgstr ""
+
+#: components/app/interface/settings/user/Feedback.tsx
+#~ msgid "Suggest new Stoat features on GitHub discussions."
+#~ msgstr ""
+
 #: src/interface/Home.tsx
-msgid "Support the project by donating - thank you!"
-msgstr "Subtenu la projekton per donaco - dankon!"
+#~ msgid "Support the project by donating - thank you!"
+#~ msgstr "Subtenu la projekton per donaco - dankon!"
 
 #: components/ui/components/features/voice/callCard/VoiceCallCardPreview.tsx
 msgid "Switch to this voice channel"
@@ -2754,6 +2882,10 @@ msgstr ""
 msgid "This password has previously appeared in security leaks, please use another password."
 msgstr ""
 
+#: src/interface/Discover.tsx
+msgid "This section is not available yet. Please check back soon."
+msgstr ""
+
 #: components/app/interface/settings/server/Overview.tsx
 msgid "This server is about..."
 msgstr ""
@@ -2805,8 +2937,12 @@ msgstr "Malbloki uzanton"
 
 #. placeholder {0}: err.type
 #: components/i18n/errors.ts
-msgid "Uncaught Stoat error: {0}"
+msgid "Uncaught DawnChat error: {0}"
 msgstr ""
+
+#: components/i18n/errors.ts
+#~ msgid "Uncaught Stoat error: {0}"
+#~ msgstr ""
 
 #: components/markdown/plugins/anchors.tsx
 msgid "Unknown Server"
@@ -3005,6 +3141,10 @@ msgstr ""
 msgid "Want to change username?"
 msgstr ""
 
+#: src/interface/Discover.tsx
+msgid "We are working on Discover"
+msgstr ""
+
 #: components/auth/src/flows/FlowCheck.tsx
 msgid "We've sent you a verification email. Please allow up to 10 minutes for it to arrive."
 msgstr "Ni sendis al vi konfirman retpoŝton. Bonvolu atendi ĝis 10 minutoj por ĝia alveno."
@@ -3190,8 +3330,12 @@ msgid "You've been invited to join this server.<0/>Would you like to join?"
 msgstr ""
 
 #: components/modal/modals/SignedOut.tsx
-msgid "You've been signed out of Stoat!"
+msgid "You've been signed out of DawnChat!"
 msgstr ""
+
+#: components/modal/modals/SignedOut.tsx
+#~ msgid "You've been signed out of Stoat!"
+#~ msgstr ""
 
 #: components/i18n/errors.ts
 msgid "You've reached your personal bot limit."

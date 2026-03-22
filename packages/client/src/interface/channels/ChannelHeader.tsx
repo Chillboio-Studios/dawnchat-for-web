@@ -209,21 +209,43 @@ export function ChannelHeader(props: Props) {
       <Show when={props.sidebarState && props.channel.type !== "SavedMessages"}>
         <IconButton
           onPress={() => {
-            if (props.sidebarState!().state === "default") {
-              state.layout.toggleSectionState(
-                LAYOUT_SECTIONS.MEMBER_SIDEBAR,
-                true,
-              );
-            } else {
+            const mobileViewport =
+              typeof window !== "undefined" &&
+              window.matchMedia("(max-width: 768px)").matches;
+
+            const defaultOpen = !mobileViewport;
+
+            if (props.sidebarState!().state !== "default") {
               state.layout.setSectionState(
                 LAYOUT_SECTIONS.MEMBER_SIDEBAR,
                 true,
-                true,
+                defaultOpen,
               );
 
               props.setSidebarState!({
                 state: "default",
               });
+
+              return;
+            }
+
+            const isOpen = state.layout.getSectionState(
+              LAYOUT_SECTIONS.MEMBER_SIDEBAR,
+              defaultOpen,
+            );
+
+            state.layout.setSectionState(
+              LAYOUT_SECTIONS.MEMBER_SIDEBAR,
+              !isOpen,
+              defaultOpen,
+            );
+
+            if (mobileViewport && !isOpen) {
+              state.layout.setSectionState(
+                LAYOUT_SECTIONS.PRIMARY_SIDEBAR,
+                false,
+                false,
+              );
             }
           }}
           use:floating={{

@@ -28,6 +28,8 @@ type State =
   | "CONNECTED"
   | "RECONNECTING";
 
+const CONNECT_TIMEOUT_MS = 15000;
+
 class Voice {
   #settings: VoiceSettings;
 
@@ -125,15 +127,41 @@ class Voice {
         });
     });
 
+    room.addListener("reconnecting", () => this.#setState("RECONNECTING"));
+    room.addListener("reconnected", () => this.#setState("CONNECTED"));
+
+    room.addListener("localTrackPublished", () => {
+      this.#setVideo(room.localParticipant.isCameraEnabled);
+      this.#setScreenshare(room.localParticipant.isScreenShareEnabled);
+    });
+
+    room.addListener("localTrackUnpublished", () => {
+      this.#setVideo(room.localParticipant.isCameraEnabled);
+      this.#setScreenshare(room.localParticipant.isScreenShareEnabled);
+    });
+
     room.addListener("disconnected", () => this.#setState("DISCONNECTED"));
 
-    if (!auth) {
-      auth = await channel.joinCall("worldwide");
-    }
+    try {
+      if (!auth) {
+        auth = await channel.joinCall("worldwide");
+      }
 
-    await room.connect(auth.url, auth.token, {
-      autoSubscribe: false,
-    });
+      await Promise.race([
+        room.connect(auth.url, auth.token, {
+          autoSubscribe: false,
+        }),
+        new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error("Voice connection timed out"));
+          }, CONNECT_TIMEOUT_MS);
+        }),
+      ]);
+    } catch (error) {
+      console.error("[rtc] failed to connect", error);
+      this.disconnect();
+      throw error;
+    }
   }
 
   disconnect() {
@@ -147,6 +175,9 @@ class Voice {
       this.#setState("READY");
       this.#setRoom(undefined);
       this.#setChannel(undefined);
+      this.#setMicrophone(false);
+      this.#setVideo(false);
+      this.#setScreenshare(false);
     });
   }
 
@@ -167,21 +198,37 @@ class Voice {
   async toggleCamera() {
     const room = this.room();
     if (!room) throw "invalid state";
-    await room.localParticipant.setCameraEnabled(
-      !room.localParticipant.isCameraEnabled,
-    );
+    if (!this.canUseCamera) throw "camera unsupported";
+    if (!this.videoPermission) throw "missing video permission";
 
-    this.#setVideo(room.localParticipant.isCameraEnabled);
+    try {
+      await room.localParticipant.setCameraEnabled(
+        !room.localParticipant.isCameraEnabled,
+      );
+      this.#setVideo(room.localParticipant.isCameraEnabled);
+    } catch (error) {
+      console.error("[rtc] failed to toggle camera", error);
+      this.#setVideo(room.localParticipant.isCameraEnabled);
+      throw error;
+    }
   }
 
   async toggleScreenshare() {
     const room = this.room();
     if (!room) throw "invalid state";
-    await room.localParticipant.setScreenShareEnabled(
-      !room.localParticipant.isScreenShareEnabled,
-    );
+    if (!this.canScreenShare) throw "screen share unsupported";
+    if (!this.videoPermission) throw "missing video permission";
 
-    this.#setScreenshare(room.localParticipant.isScreenShareEnabled);
+    try {
+      await room.localParticipant.setScreenShareEnabled(
+        !room.localParticipant.isScreenShareEnabled,
+      );
+      this.#setScreenshare(room.localParticipant.isScreenShareEnabled);
+    } catch (error) {
+      console.error("[rtc] failed to toggle screenshare", error);
+      this.#setScreenshare(room.localParticipant.isScreenShareEnabled);
+      throw error;
+    }
   }
 
   getConnectedUser(userId: string) {
@@ -194,6 +241,24 @@ class Voice {
 
   get speakingPermission() {
     return !!this.channel()?.havePermission("Speak");
+  }
+
+  get videoPermission() {
+    return !!this.channel()?.havePermission("Video");
+  }
+
+  get canUseCamera() {
+    return (
+      typeof navigator !== "undefined" &&
+      typeof navigator.mediaDevices?.getUserMedia === "function"
+    );
+  }
+
+  get canScreenShare() {
+    return (
+      typeof navigator !== "undefined" &&
+      typeof navigator.mediaDevices?.getDisplayMedia === "function"
+    );
   }
 }
 

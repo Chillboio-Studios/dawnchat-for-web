@@ -1,0 +1,18 @@
+[
+  {
+    "id": "create",
+    "column": 1
+  },
+  {
+    "id": "official_invite",
+    "column": 1
+  },
+  {
+    "id": "feedback",
+    "column": 2
+  },
+  {
+    "id": "settings",
+    "column": 2
+  }
+]

@@ -54,7 +54,7 @@ const ChangelogPosts: ChangelogPost[] = [
     icon: "voice_chat",
     date: new Date("2025-11-08T14:00:00.000Z"),
     link: "https://stoat.chat/updates/web-0013",
-    title: "Stoat for Web: 0.0.13",
+    title: "DawnChat for Web: 0.0.13",
     content: [
       `This update brings a host of improvements to voice chats along with an improved messaging experience.
 

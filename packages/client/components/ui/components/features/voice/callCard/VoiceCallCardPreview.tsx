@@ -28,8 +28,14 @@ export function VoiceCallCardPreview(props: { channel: Channel }) {
     return names.length ? t`With ${names.join(", ")}` : t`Start the call`;
   }
 
+  function joinVoice() {
+    void voice.connect(props.channel).catch((error) => {
+      console.error("[rtc] join voice failed", error);
+    });
+  }
+
   return (
-    <Preview onClick={() => voice.connect(props.channel)}>
+    <Preview onClick={joinVoice}>
       <Ripple />
       <Row>
         <For each={users()} fallback={<Symbol size={24}>voice_chat</Symbol>}>

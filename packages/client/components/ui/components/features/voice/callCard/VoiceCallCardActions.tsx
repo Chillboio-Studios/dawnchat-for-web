@@ -3,7 +3,6 @@ import { Show } from "solid-js";
 import { useLingui } from "@lingui-solid/solid/macro";
 import { styled } from "styled-system/jsx";
 
-import { CONFIGURATION } from "@revolt/common";
 import { useVoice } from "@revolt/rtc";
 import { Button, IconButton } from "@revolt/ui/components/design";
 import { Symbol } from "@revolt/ui/components/utils/Symbol";
@@ -11,10 +10,6 @@ import { Symbol } from "@revolt/ui/components/utils/Symbol";
 export function VoiceCallCardActions(props: { size: "xs" | "sm" }) {
   const voice = useVoice();
   const { t } = useLingui();
-
-  function isVideoEnabled() {
-    return CONFIGURATION.ENABLE_VIDEO;
-  }
 
   return (
     <Actions>
@@ -66,39 +61,55 @@ export function VoiceCallCardActions(props: { size: "xs" | "sm" }) {
       </IconButton>
       <IconButton
         size={props.size}
-        variant={isVideoEnabled() && voice.video() ? "filled" : "tonal"}
-        onPress={() => {
-          if (isVideoEnabled()) voice.toggleCamera();
+        variant={voice.video() ? "filled" : "tonal"}
+        onPress={async () => {
+          if (voice.canUseCamera && voice.videoPermission) {
+            try {
+              await voice.toggleCamera();
+            } catch (error) {
+              console.error("[voice] camera toggle failed", error);
+            }
+          }
         }}
         use:floating={{
-          tooltip: {
-            placement: "top",
-            content: isVideoEnabled()
-              ? voice.video()
-                ? "Stop Camera"
-                : "Start Camera"
-              : "Coming soon! 👀",
-          },
+          tooltip: !voice.canUseCamera
+            ? {
+                placement: "top",
+                content: t`Camera is not supported on this device`,
+              }
+            : !voice.videoPermission
+              ? {
+                  placement: "top",
+                  content: t`Missing permission`,
+                }
+              : {
+                  placement: "top",
+                  content: voice.video() ? "Stop Camera" : "Start Camera",
+                },
         }}
-        isDisabled={!isVideoEnabled()}
+        isDisabled={!voice.canUseCamera || !voice.videoPermission}
       >
         <Symbol>camera_video</Symbol>
       </IconButton>
       <IconButton
         size={props.size}
-        variant={isVideoEnabled() && voice.screenshare() ? "filled" : "tonal"}
-        onPress={() => {
-          if (isVideoEnabled() && voice.speakingPermission) {
-            voice.toggleScreenshare();
+        variant={voice.screenshare() ? "filled" : "tonal"}
+        onPress={async () => {
+          if (voice.canScreenShare && voice.videoPermission) {
+            try {
+              await voice.toggleScreenshare();
+            } catch (error) {
+              console.error("[voice] screenshare toggle failed", error);
+            }
           }
         }}
         use:floating={{
-          tooltip: !isVideoEnabled()
+          tooltip: !voice.canScreenShare
             ? {
                 placement: "top",
-                content: "Coming soon! 👀",
+                content: t`Screen share is not supported on this device`,
               }
-            : !voice.speakingPermission
+            : !voice.videoPermission
               ? {
                   placement: "top",
                   content: t`Missing permission`,
@@ -108,13 +119,10 @@ export function VoiceCallCardActions(props: { size: "xs" | "sm" }) {
                   content: voice.screenshare() ? "Stop Sharing" : "Share Screen",
                 },
         }}
-        isDisabled={!isVideoEnabled() || !voice.speakingPermission}
+        isDisabled={!voice.canScreenShare || !voice.videoPermission}
       >
-        <Show
-          when={!isVideoEnabled() || voice.screenshare()}
-          fallback={<Symbol>stop_screen_share</Symbol>}
-        >
-          <Symbol>screen_share</Symbol>
+        <Show when={voice.screenshare()} fallback={<Symbol>screen_share</Symbol>}>
+          <Symbol>stop_screen_share</Symbol>
         </Show>
       </IconButton>
       <Button

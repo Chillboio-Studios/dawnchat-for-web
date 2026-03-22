@@ -1,5 +1,9 @@
-import { BiRegularChevronLeft, BiRegularChevronRight } from "solid-icons/bi";
-import { JSX, Match, Switch } from "solid-js";
+import {
+  BiRegularChevronLeft,
+  BiRegularChevronRight,
+  BiRegularMenu,
+} from "solid-icons/bi";
+import { JSX, Match, Switch, createSignal, onCleanup, onMount } from "solid-js";
 
 import { useLingui } from "@lingui-solid/solid/macro";
 import { css } from "styled-system/css";
@@ -15,12 +19,30 @@ import { LAYOUT_SECTIONS } from "@revolt/state/stores/Layout";
 export function HeaderIcon(props: { children: JSX.Element }) {
   const state = useState();
   const { t } = useLingui();
+  const [isMobile, setIsMobile] = createSignal(false);
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    onCleanup(() => mediaQuery.removeEventListener("change", update));
+  });
+
+  const sidebarOpen = () =>
+    state.layout.getSectionState(LAYOUT_SECTIONS.PRIMARY_SIDEBAR, !isMobile());
 
   return (
     <div
       class={container}
       onClick={() =>
-        state.layout.toggleSectionState(LAYOUT_SECTIONS.PRIMARY_SIDEBAR, true)
+        state.layout.setSectionState(
+          LAYOUT_SECTIONS.PRIMARY_SIDEBAR,
+          !sidebarOpen(),
+          !isMobile(),
+        )
       }
       use:floating={{
         tooltip: {
@@ -30,12 +52,10 @@ export function HeaderIcon(props: { children: JSX.Element }) {
       }}
     >
       <Switch fallback={<BiRegularChevronRight size={20} />}>
-        <Match
-          when={state.layout.getSectionState(
-            LAYOUT_SECTIONS.PRIMARY_SIDEBAR,
-            true,
-          )}
-        >
+        <Match when={isMobile()}>
+          <BiRegularMenu size={20} />
+        </Match>
+        <Match when={sidebarOpen()}>
           <BiRegularChevronLeft size={20} />
         </Match>
       </Switch>

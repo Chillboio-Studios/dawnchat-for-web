@@ -218,7 +218,7 @@ export function Message(props: Props) {
             }
           >
             <NewUser>
-              <Tooltip content={t`New to Stoat`} placement="top">
+              <Tooltip content={t`New to DawnChat`} placement="top">
                 <Symbol size={16} fill>
                   spa
                 </Symbol>
@@ -260,6 +260,8 @@ export function Message(props: Props) {
       <Show when={props.message.systemMessage}>
         <SystemMessage
           systemMessage={props.message.systemMessage!}
+          channelId={props.message.channelId}
+          messageId={props.message.id}
           menuGenerator={(user) =>
             user
               ? floatingUserMenus(

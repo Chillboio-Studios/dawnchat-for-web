@@ -22,12 +22,14 @@ import { LAYOUT_SECTIONS } from "@revolt/state/stores/Layout";
 import {
   BelowFloatingHeader,
   Header,
+  IconButton,
   NewMessages,
   Text,
   TypingIndicator,
   main,
 } from "@revolt/ui";
 import { VoiceChannelCallCardMount } from "@revolt/ui/components/features/voice/callCard/VoiceCallCard";
+import { Symbol } from "@revolt/ui/components/utils/Symbol";
 
 import { ChannelHeader } from "../ChannelHeader";
 import { ChannelPageProps } from "../ChannelPage";
@@ -168,6 +170,22 @@ export function TextChannel(props: ChannelPageProps) {
     ),
   );
 
+  const memberSidebarOpen = () =>
+    state.layout.getSectionState(LAYOUT_SECTIONS.MEMBER_SIDEBAR, !isMobile());
+
+  const showSidebar = () =>
+    (memberSidebarOpen() && props.channel.type !== "SavedMessages") ||
+    sidebarState().state !== "default";
+
+  function closeSidebar() {
+    if (sidebarState().state !== "default") {
+      setSidebarState({ state: "default" });
+      return;
+    }
+
+    state.layout.setSectionState(LAYOUT_SECTIONS.MEMBER_SIDEBAR, false, false);
+  }
+
   return (
     <>
       <Header placement="primary">
@@ -178,6 +196,13 @@ export function TextChannel(props: ChannelPageProps) {
         />
       </Header>
       <Content>
+        <Show when={isMobile() && showSidebar()}>
+          <MobileSidebarScrim
+            onClick={closeSidebar}
+            aria-label="Close members sidebar"
+          />
+        </Show>
+
         <main class={main()}>
           <Show
             when={canConnect()}
@@ -223,31 +248,29 @@ export function TextChannel(props: ChannelPageProps) {
             onMessageSend={() => jumpToBottomRef?.()}
           />
         </main>
-        <Show
-          when={
-            (state.layout.getSectionState(
-              LAYOUT_SECTIONS.MEMBER_SIDEBAR,
-              !isMobile(),
-            ) &&
-              props.channel.type !== "SavedMessages") ||
-            sidebarState().state !== "default"
-          }
-        >
+        <Show when={showSidebar()}>
           <div
             ref={sidebarScrollTargetElement}
             use:scrollable={{
               direction: "y",
               showOnHover: true,
-              class: sidebar(),
-            }}
-            style={{
-              width: isMobile()
-                ? "100vw"
-                : sidebarState().state !== "default"
-                  ? "360px"
-                  : "",
+              class: sidebar({
+                mobileOpen: showSidebar(),
+                expanded: sidebarState().state !== "default",
+              }),
             }}
           >
+            <Show when={isMobile()}>
+              <MobileSidebarHeader>
+                <Text class="label" size="large">
+                  Members
+                </Text>
+                <IconButton onPress={closeSidebar} aria-label="Close members">
+                  <Symbol>close</Symbol>
+                </IconButton>
+              </MobileSidebarHeader>
+            </Show>
+
             <Switch
               fallback={
                 <MemberSidebar
@@ -305,6 +328,7 @@ export function TextChannel(props: ChannelPageProps) {
 const Content = styled("div", {
   base: {
     display: "flex",
+    position: "relative",
     flexDirection: "row",
     flexGrow: 1,
     minWidth: 0,
@@ -319,10 +343,77 @@ const sidebar = cva({
   base: {
     flexShrink: 0,
     width: "var(--layout-width-channel-sidebar)",
+    background: "var(--md-sys-color-surface-container-low)",
     // margin: "var(--gap-md)",
     borderRadius: "var(--borderRadius-lg)",
     // color: "var(--colours-sidebar-channels-foreground)",
     // background: "var(--colours-sidebar-channels-background)",
+
+    mdDown: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 20,
+      width: "min(100vw, 360px)",
+      maxWidth: "100vw",
+      borderRadius: 0,
+      boxShadow: "-16px 0 32px rgba(0, 0, 0, 0.25)",
+      transition: "transform 0.2s ease",
+    },
+  },
+  variants: {
+    expanded: {
+      true: {
+        width: "360px",
+      },
+    },
+    mobileOpen: {
+      true: {
+        mdDown: {
+          transform: "translateX(0)",
+          pointerEvents: "auto",
+        },
+      },
+      false: {
+        mdDown: {
+          transform: "translateX(calc(100% + 8px))",
+          pointerEvents: "none",
+        },
+      },
+    },
+  },
+});
+
+const MobileSidebarScrim = styled("button", {
+  base: {
+    border: "none",
+    padding: "0",
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 19,
+    cursor: "pointer",
+    background: "rgba(15, 23, 42, 0.5)",
+  },
+});
+
+const MobileSidebarHeader = styled("div", {
+  base: {
+    display: "none",
+    mdDown: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "var(--gap-md)",
+      borderBottom: "1px solid var(--md-sys-color-outline-variant)",
+      background: "var(--md-sys-color-surface-container-low)",
+      position: "sticky",
+      top: 0,
+      zIndex: 1,
+    },
   },
 });
 

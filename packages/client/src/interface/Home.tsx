@@ -1,4 +1,4 @@
-import { Match, Show, Switch } from "solid-js";
+import { For, Show } from "solid-js";
 
 import { Trans } from "@lingui-solid/solid/macro";
 import { PublicChannelInvite } from "stoat.js";
@@ -8,7 +8,7 @@ import { styled } from "styled-system/jsx";
 import { IS_DEV, useClient } from "@revolt/client";
 import { CONFIGURATION } from "@revolt/common";
 import { useModals } from "@revolt/modal";
-import { useNavigate } from "@revolt/routing";
+import { useLocation, useNavigate } from "@revolt/routing";
 import {
   Button,
   CategoryButton,
@@ -22,13 +22,52 @@ import MdAddCircle from "@material-design-icons/svg/filled/add_circle.svg?compon
 import MdExplore from "@material-design-icons/svg/filled/explore.svg?component-solid";
 import MdGroups3 from "@material-design-icons/svg/filled/groups_3.svg?component-solid";
 import MdHome from "@material-design-icons/svg/filled/home.svg?component-solid";
-import MdPayments from "@material-design-icons/svg/filled/payments.svg?component-solid";
 import MdRateReview from "@material-design-icons/svg/filled/rate_review.svg?component-solid";
 import MdSettings from "@material-design-icons/svg/filled/settings.svg?component-solid";
 
 import Wordmark from "../../public/assets/web/wordmark.svg?component-solid";
+import splashButtons from "./homeSplashButtons.json";
 
 import { HeaderIcon } from "./common/CommonHeader";
+
+type SplashButtonId =
+  | "create"
+  | "community"
+  | "official_invite"
+  | "feedback"
+  | "settings";
+
+type SplashButtonConfig = {
+  id: SplashButtonId;
+  column: 1 | 2;
+};
+
+const isValidSplashButtonId = (id: unknown): id is SplashButtonId =>
+  id === "create" ||
+  id === "community" ||
+  id === "official_invite" ||
+  id === "feedback" ||
+  id === "settings";
+
+const isValidSplashButtonConfig = (
+  item: unknown,
+): item is SplashButtonConfig => {
+  if (typeof item !== "object" || item === null) return false;
+
+  const config = item as { id?: unknown; column?: unknown };
+  return (
+    isValidSplashButtonId(config.id) &&
+    (config.column === 1 || config.column === 2)
+  );
+};
+
+// Resolve splash buttons at module load so config is ready before first render.
+const resolvedSplashButtons = (Array.isArray(splashButtons) ? splashButtons : [])
+  .filter(isValidSplashButtonConfig)
+  .map((button) => ({
+    id: button.id,
+    column: button.column,
+  }));
 
 /**
  * Base layout of the home page (i.e. the header/background)
@@ -87,18 +126,163 @@ const SeparatedColumn = styled(Column, {
   },
 });
 
+const NotFoundNotice = styled("div", {
+  base: {
+    width: "100%",
+    maxWidth: "560px",
+    borderRadius: "var(--borderRadius-md)",
+    border: "1px solid var(--md-sys-color-error)",
+    background: "var(--md-sys-color-error-container)",
+    color: "var(--md-sys-color-on-error-container)",
+    padding: "10px 12px",
+    textAlign: "center",
+    fontWeight: 600,
+  },
+});
+
 /**
  * Home page
  */
 export function HomePage() {
   const { openModal } = useModals();
   const navigate = useNavigate();
+  const location = useLocation();
   const client = useClient();
 
   // check if we're stoat.chat; if so, check if the user is in the Lounge
   const showLoungeButton = CONFIGURATION.IS_STOAT;
   const isInLounge =
     client()!.servers.get("01F7ZSBSFHQ8TA81725KQCSDDP") !== undefined;
+
+  const leftButtons = resolvedSplashButtons.filter(
+    (button) => button.column === 1,
+  );
+  const rightButtons = resolvedSplashButtons.filter(
+    (button) => button.column === 2,
+  );
+  const showNotFoundMessage = () => location.pathname !== "/";
+
+  const handleJoinLounge = () => {
+    client()
+      .api.get("/invites/Testers")
+      .then((invite) => PublicChannelInvite.from(client(), invite))
+      .then((invite) => openModal({ type: "invite", invite }));
+  };
+
+  const renderButton = (button: SplashButtonConfig) => {
+    switch (button.id) {
+      case "create":
+        return (
+          <CategoryButton
+            onClick={() =>
+              openModal({
+                type: "create_group_or_server",
+                client: client()!,
+              })
+            }
+            description={
+              <Trans>
+                Invite all of your friends, some cool bots, and throw a big
+                party.
+              </Trans>
+            }
+            icon={<MdAddCircle />}
+          >
+            <Trans>Create a group or server</Trans>
+          </CategoryButton>
+        );
+      case "community":
+        if (showLoungeButton && isInLounge) {
+          return (
+            <CategoryButton
+              onClick={() => navigate("/server/01F7ZSBSFHQ8TA81725KQCSDDP")}
+              description={
+                <Trans>
+                  You can report issues and discuss improvements with us
+                  directly here.
+                </Trans>
+              }
+              icon={<MdGroups3 />}
+            >
+              <Trans>Go to the DawnChat Lounge</Trans>
+            </CategoryButton>
+          );
+        }
+
+        if (showLoungeButton) {
+          return (
+            <CategoryButton
+              onClick={handleJoinLounge}
+              description={
+                <Trans>
+                  You can report issues and discuss improvements with us
+                  directly here.
+                </Trans>
+              }
+              icon={<MdGroups3 />}
+            >
+              <Trans>Join the DawnChat Lounge</Trans>
+            </CategoryButton>
+          );
+        }
+
+        return (
+          <CategoryButton
+            disabled
+            description={
+              <Trans>Discover is coming soon for DawnChat.</Trans>
+            }
+            icon={<MdExplore />}
+          >
+            <Trans>Discover DawnChat</Trans>
+          </CategoryButton>
+        );
+      case "official_invite":
+        return (
+          <CategoryButton
+            onClick={() => navigate("/invite/official")}
+            description={
+              <Trans>Join the official DawnChat server invite.</Trans>
+            }
+            icon={<MdGroups3 />}
+          >
+            <Trans>Join Official DawnChat</Trans>
+          </CategoryButton>
+        );
+      case "feedback":
+        return (
+          <CategoryButton
+            onClick={() =>
+              openModal({
+                type: "settings",
+                config: "user",
+                context: { page: "feedback" },
+              })
+            }
+            description={
+              <Trans>
+                Let us know how we can improve our app by giving us feedback.
+              </Trans>
+            }
+            icon={<MdRateReview {...iconSize(22)} />}
+          >
+            <Trans>Give feedback on DawnChat</Trans>
+          </CategoryButton>
+        );
+      case "settings":
+        return (
+          <CategoryButton
+            onClick={() => openModal({ type: "settings", config: "user" })}
+            description={
+              <Trans>You can also click the gear icon in the bottom left.</Trans>
+            }
+            icon={<MdSettings />}
+          >
+            <Trans>Open settings</Trans>
+          </CategoryButton>
+        );
+    }
+  };
 
   return (
     <Base>
@@ -109,6 +293,11 @@ export function HomePage() {
         <Trans>Home</Trans>
       </Header>
       <div use:scrollable={{ class: content() }}>
+        <Show when={showNotFoundMessage()}>
+          <NotFoundNotice>
+            <Trans>404 page could not be found</Trans>
+          </NotFoundNotice>
+        </Show>
         <Column>
           <Wordmark
             class={css({
@@ -119,117 +308,10 @@ export function HomePage() {
         </Column>
         <Buttons>
           <SeparatedColumn>
-            <CategoryButton
-              onClick={() =>
-                openModal({
-                  type: "create_group_or_server",
-                  client: client()!,
-                })
-              }
-              description={
-                <Trans>
-                  Invite all of your friends, some cool bots, and throw a big
-                  party.
-                </Trans>
-              }
-              icon={<MdAddCircle />}
-            >
-              <Trans>Create a group or server</Trans>
-            </CategoryButton>
-            <Switch fallback={null}>
-              <Match when={showLoungeButton && isInLounge}>
-                <CategoryButton
-                  onClick={() => navigate("/server/01F7ZSBSFHQ8TA81725KQCSDDP")}
-                  description={
-                    <Trans>
-                      You can report issues and discuss improvements with us
-                      directly here.
-                    </Trans>
-                  }
-                  icon={<MdGroups3 />}
-                >
-                  <Trans>Go to the Stoat Lounge</Trans>
-                </CategoryButton>
-              </Match>
-              <Match when={showLoungeButton && !isInLounge}>
-                <CategoryButton
-                  onClick={() => {
-                    client()
-                      .api.get("/invites/Testers")
-                      .then((invite) =>
-                        PublicChannelInvite.from(client(), invite),
-                      )
-                      .then((invite) => openModal({ type: "invite", invite }));
-                  }}
-                  description={
-                    <Trans>
-                      You can report issues and discuss improvements with us
-                      directly here.
-                    </Trans>
-                  }
-                  icon={<MdGroups3 />}
-                >
-                  <Trans>Join the Stoat Lounge</Trans>
-                </CategoryButton>
-              </Match>
-            </Switch>
-            <CategoryButton
-              variant="tertiary"
-              onClick={() =>
-                window.open(
-                  "https://wiki.revolt.chat/notes/project/financial-support/",
-                )
-              }
-              description={
-                <Trans>Support the project by donating - thank you!</Trans>
-              }
-              icon={<MdPayments />}
-            >
-              <Trans>Donate to Stoat</Trans>
-            </CategoryButton>
+            <For each={leftButtons}>{(button) => renderButton(button)}</For>
           </SeparatedColumn>
           <SeparatedColumn>
-            <Show when={CONFIGURATION.IS_STOAT}>
-              <CategoryButton
-                onClick={() => navigate("/discover")}
-                description={
-                  <Trans>
-                    Find a community based on your hobbies or interests.
-                  </Trans>
-                }
-                icon={<MdExplore />}
-              >
-                <Trans>Discover Stoat</Trans>
-              </CategoryButton>
-            </Show>
-            <CategoryButton
-              onClick={() =>
-                openModal({
-                  type: "settings",
-                  config: "user",
-                  context: { page: "feedback" },
-                })
-              }
-              description={
-                <Trans>
-                  Let us know how we can improve our app by giving us feedback.
-                </Trans>
-              }
-              icon={<MdRateReview {...iconSize(22)} />}
-            >
-              <Trans>Give feedback on Stoat</Trans>
-            </CategoryButton>
-            <CategoryButton
-              onClick={() => openModal({ type: "settings", config: "user" })}
-              description={
-                <Trans>
-                  You can also click the gear icon in the bottom left.
-                </Trans>
-              }
-              icon={<MdSettings />}
-            >
-              <Trans>Open settings</Trans>
-            </CategoryButton>
+            <For each={rightButtons}>{(button) => renderButton(button)}</For>
           </SeparatedColumn>
         </Buttons>
         <Show when={IS_DEV}>

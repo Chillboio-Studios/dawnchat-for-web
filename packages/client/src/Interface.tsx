@@ -15,6 +15,7 @@ import { styled } from "styled-system/jsx";
 import { ChannelContextMenu, ServerContextMenu } from "@revolt/app";
 import { MessageCache } from "@revolt/app/interface/channels/text/MessageCache";
 import { Titlebar } from "@revolt/app/interface/desktop/Titlebar";
+import { IncomingCallOverlay } from "@revolt/client/IncomingCallOverlay";
 import { PresenceWorker, useClient, useClientLifecycle } from "@revolt/client";
 import { State } from "@revolt/client/Controller";
 import { NotificationsWorker } from "@revolt/client/NotificationsWorker";
@@ -103,7 +104,10 @@ const Interface = (props: { children: JSX.Element }) => {
               <Show
                 when={
                   isMobile() &&
-                  state.layout.getSectionState(LAYOUT_SECTIONS.PRIMARY_SIDEBAR)
+                  state.layout.getSectionState(
+                    LAYOUT_SECTIONS.PRIMARY_SIDEBAR,
+                    !isMobile(),
+                  )
                 }
               >
                 <MobileSidebarScrim
@@ -146,6 +150,7 @@ const Interface = (props: { children: JSX.Element }) => {
 
         <NotificationsWorker />
         <PresenceWorker />
+        <IncomingCallOverlay />
       </div>
     </MessageCache>
   );

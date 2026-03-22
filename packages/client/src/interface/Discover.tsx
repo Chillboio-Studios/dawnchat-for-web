@@ -1,104 +1,74 @@
-import { createSignal, onCleanup } from "solid-js";
-
-import { PublicBot, PublicChannelInvite } from "stoat.js";
 import { styled } from "styled-system/jsx";
 
-import { useClient } from "@revolt/client";
-import { useModals } from "@revolt/modal";
-import { paramsFromPathname, useLocation, useNavigate } from "@revolt/routing";
-import { useState } from "@revolt/state";
+import { Trans } from "@lingui-solid/solid/macro";
+import { useNavigate } from "@revolt/routing";
+import { Button } from "@revolt/ui";
 
 /**
- * stt.gg wrapper
+ * Discover placeholder
  */
 export function Discover() {
-  const state = useState();
-  const client = useClient();
-  const location = useLocation();
   const navigate = useNavigate();
-  const { openModal } = useModals();
-  const [ref, setRef] = createSignal<HTMLIFrameElement>();
 
-  async function onMessage(message: MessageEvent) {
-    const frame = ref();
-    if (!frame) return;
-
-    const url = new URL(message.origin);
-    if (url.origin !== "https://stt.gg") return;
-
-    const data = JSON.parse(message.data);
-    console.info(data);
-    if (data.source === "discover") {
-      switch (data.type) {
-        case "init": {
-          frame.contentWindow?.postMessage(
-            JSON.stringify({
-              source: "revolt",
-              type: "theme",
-              theme: {},
-            }),
-            "*",
-          );
-          break;
-        }
-        case "path": {
-          if (data.path.endsWith("?")) {
-            data.path = data.path.substring(0, data.path.length - 1);
-          }
-
-          navigate(data.path);
-          state.layout.setLastActivePath(data.path);
-          break;
-        }
-        case "navigate": {
-          const url = new URL(data.url);
-          const params = paramsFromPathname(url.pathname);
-
-          if (params.inviteId) {
-            const invite = await client()
-              .api.get(`/invites/${params.inviteId as ""}`)
-              .then((invite) => PublicChannelInvite.from(client(), invite));
-
-            openModal({
-              type: "invite",
-              invite,
-            });
-          } else if (params.botId) {
-            client()
-              .api.get(`/bots/${params.botId as ""}/invite`)
-              .then((bot) => new PublicBot(client(), bot))
-              .then((bot) => openModal({ type: "add_bot", invite: bot }));
-          } else {
-            alert("Missing handler for " + data.url);
-          }
-
-          break;
-        }
-        case "applyTheme": {
-          alert("revite themes are not supported!");
-          break;
-        }
-      }
-    }
-  }
-
-  window.addEventListener("message", onMessage);
-  onCleanup(() => window.removeEventListener("message", onMessage));
-
-  // Render the URL once, update path in browser through messaging
-  const query = new URLSearchParams(location.query as Record<string, string>);
-  query.set("embedded", "true");
-  const src = `https://stt.gg/${location.pathname}?${query}`;
-
-  return <Base ref={setRef} src={src} />;
+  return (
+    <Base>
+      <Card>
+        <Title>
+          <Trans>We are working on Discover</Trans>
+        </Title>
+        <Description>
+          <Trans>
+            This section is not available yet. Please check back soon.
+          </Trans>
+        </Description>
+        <Button onPress={() => navigate("/")}>
+          <Trans>Back to Home</Trans>
+        </Button>
+      </Card>
+    </Base>
+  );
 }
 
-const Base = styled("iframe", {
+const Base = styled("div", {
   base: {
-    minWidth: 0,
+    width: "100%",
+    minHeight: "100%",
     flexGrow: 1,
     display: "flex",
-    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "24px",
+  },
+});
+
+const Card = styled("div", {
+  base: {
+    width: "100%",
+    maxWidth: "560px",
+    padding: "28px",
+    borderRadius: "var(--borderRadius-lg)",
+    background: "var(--md-sys-color-surface-container)",
+    border: "1px solid var(--md-sys-color-outline-variant)",
+    display: "flex",
     flexDirection: "column",
+    gap: "12px",
+    alignItems: "flex-start",
+  },
+});
+
+const Title = styled("h1", {
+  base: {
+    margin: 0,
+    fontSize: "24px",
+    lineHeight: 1.2,
+    color: "var(--md-sys-color-on-surface)",
+  },
+});
+
+const Description = styled("p", {
+  base: {
+    margin: 0,
+    color: "var(--md-sys-color-on-surface-variant)",
+    lineHeight: 1.5,
   },
 });

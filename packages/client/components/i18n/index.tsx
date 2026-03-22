@@ -4,7 +4,7 @@ import { I18nProvider as LinguiProvider } from "@lingui-solid/solid";
 import { i18n } from "@lingui/core";
 
 import { type LocaleOptions, Language, Languages } from "./Languages";
-import { messages as en } from "./catalogs/en/messages";
+import { messages as en } from "./catalogs/en/messages.ts";
 import { initTime, loadTimeLocale } from "./dayjs";
 
 export function I18nProvider(props: { children: JSX.Element }) {

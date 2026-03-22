@@ -23,6 +23,8 @@ import { useModals } from "@revolt/modal";
 import { useLocation, useParams, useSmartParams } from "@revolt/routing";
 import { useState } from "@revolt/state";
 import { LAYOUT_SECTIONS } from "@revolt/state/stores/Layout";
+import { IconButton } from "@revolt/ui";
+import { Symbol } from "@revolt/ui/components/utils/Symbol";
 
 import { HomeSidebar, ServerList, ServerSidebar } from "./navigation";
 
@@ -59,6 +61,20 @@ export const Sidebar = (props: {
 
   return (
     <div class={drawer({ mobileOpen: mobileSidebarOpen() })}>
+      <Show when={isMobile() && mobileSidebarOpen()}>
+        <IconButton
+          class={mobileCloseButton()}
+          onPress={() =>
+            state.layout.setSectionState(
+              LAYOUT_SECTIONS.PRIMARY_SIDEBAR,
+              false,
+            )
+          }
+          aria-label="Close sidebar"
+        >
+          <Symbol>close</Symbol>
+        </IconButton>
+      </Show>
       <ServerList
         orderedServers={state.ordering.orderedServers(client())}
         setServerOrder={state.ordering.setServerOrder}
@@ -125,6 +141,21 @@ const drawer = cva({
           pointerEvents: "none",
         },
       },
+    },
+  },
+});
+
+const mobileCloseButton = cva({
+  base: {
+    display: "none",
+    mdDown: {
+      display: "inline-flex",
+      position: "absolute",
+      top: "8px",
+      right: "8px",
+      zIndex: 25,
+      background: "var(--md-sys-color-surface-container-highest)",
+      borderRadius: "var(--borderRadius-circle)",
     },
   },
 });

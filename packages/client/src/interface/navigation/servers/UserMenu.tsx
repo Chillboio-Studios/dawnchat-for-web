@@ -22,7 +22,7 @@ import {
   ContextMenuDivider,
   ContextMenuItem,
 } from "@revolt/app/menus/ContextMenu";
-import { useClient, useUser } from "@revolt/client";
+import { getEffectiveUserStatus, useClient, useUser } from "@revolt/client";
 import { useModals } from "@revolt/modal";
 import { useState } from "@revolt/state";
 import { Avatar, Column, Row, Text, UserStatus, iconSize } from "@revolt/ui";
@@ -91,6 +91,8 @@ export function UserMenu(props: Props) {
   const setPresence = (
     presence: (API.DataEditUser["status"] & {})["presence"],
   ) => user()?.edit({ status: { presence } });
+
+  const effectiveStatusText = () => getEffectiveUserStatus(user())?.text;
 
   function copyId() {
     navigator.clipboard.writeText(user()!.id);
@@ -212,7 +214,7 @@ export function UserMenu(props: Props) {
               <ContextMenuDivider />
 
               <Show
-                when={user()?.status?.text}
+                when={effectiveStatusText()}
                 fallback={
                   <ContextMenuButton
                     icon={MdEditNote}
@@ -231,9 +233,7 @@ export function UserMenu(props: Props) {
                   }
                   _titleCase={false}
                 >
-                  <TruncatedStatusText>
-                    {user()!.status!.text}
-                  </TruncatedStatusText>
+                  <TruncatedStatusText>{effectiveStatusText()}</TruncatedStatusText>
                 </ContextMenuButton>
                 <ContextMenuButton
                   icon={MdDelete}
