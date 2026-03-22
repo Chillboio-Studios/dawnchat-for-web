@@ -31,6 +31,15 @@ export default {
     (import.meta.env.VITE_WS_URL as string) ??
     "wss://stoat.chat/events",
   /**
+   * Optional dedicated presence stream URL.
+   */
+  DEFAULT_PRESENCE_WS_URL:
+    (import.meta.env.DEV
+      ? (import.meta.env.VITE_DEV_PRESENCE_WS_URL as string)
+      : undefined) ??
+    (import.meta.env.VITE_PRESENCE_WS_URL as string) ??
+    "",
+  /**
    * What media server to connect to by default.
    */
   DEFAULT_MEDIA_URL:

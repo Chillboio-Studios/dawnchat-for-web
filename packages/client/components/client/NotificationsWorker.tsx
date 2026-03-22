@@ -15,6 +15,7 @@ import {
 import { useNavigate, useSmartParams } from "@revolt/routing";
 import { useState } from "@revolt/state";
 
+import { getEffectiveUserPresence } from "./presenceState";
 import { useClient } from ".";
 
 /**
@@ -33,6 +34,7 @@ export function NotificationsWorker() {
    */
   function onMessage(message: Message) {
     const us = client().user!;
+    const effectivePresence = getEffectiveUserPresence(us);
 
     // Ignore if we are currently looking at the channel
     if (params().channelId === message.channelId && document.hasFocus()) return;
@@ -56,8 +58,8 @@ export function NotificationsWorker() {
 
     // Ignore if we're busy or focused
     if (
-      us.status?.presence === "Busy" ||
-      (us.status?.presence === "Focus" && !message.mentioned)
+      effectivePresence === "Busy" ||
+      (effectivePresence === "Focus" && !message.mentioned)
     )
       return;
 

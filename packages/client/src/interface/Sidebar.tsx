@@ -1,6 +1,17 @@
-import { Component, JSX, Match, Show, Switch, createMemo } from "solid-js";
+import {
+  Component,
+  JSX,
+  Match,
+  Show,
+  Switch,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 
 import { Channel, Server as ServerI } from "stoat.js";
+import { cva } from "styled-system/css";
 
 import {
   CategoryContextMenu,
@@ -31,9 +42,23 @@ export const Sidebar = (props: {
 
   const params = useParams<{ server: string }>();
   const location = useLocation();
+  const [isMobile, setIsMobile] = createSignal(false);
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    onCleanup(() => mediaQuery.removeEventListener("change", update));
+  });
+
+  const mobileSidebarOpen = () =>
+    state.layout.getSectionState(LAYOUT_SECTIONS.PRIMARY_SIDEBAR, !isMobile());
 
   return (
-    <div style={{ display: "flex", "flex-shrink": 0 }}>
+    <div class={drawer({ mobileOpen: mobileSidebarOpen() })}>
       <ServerList
         orderedServers={state.ordering.orderedServers(client())}
         setServerOrder={state.ordering.setServerOrder}
@@ -55,7 +80,7 @@ export const Sidebar = (props: {
       />
       <Show
         when={
-          state.layout.getSectionState(LAYOUT_SECTIONS.PRIMARY_SIDEBAR, true) &&
+          mobileSidebarOpen() &&
           !location.pathname.startsWith("/discover")
         }
       >
@@ -68,6 +93,41 @@ export const Sidebar = (props: {
     </div>
   );
 };
+
+const drawer = cva({
+  base: {
+    display: "flex",
+    flexShrink: 0,
+
+    mdDown: {
+      maxWidth: "calc(100% - 56px)",
+      height: "100%",
+      position: "absolute",
+      top: 0,
+      left: 0,
+      zIndex: 20,
+      transition: "transform 0.2s ease",
+      background: "var(--md-sys-color-surface-container-low)",
+      boxShadow: "0 16px 32px rgba(0, 0, 0, 0.25)",
+    },
+  },
+  variants: {
+    mobileOpen: {
+      true: {
+        mdDown: {
+          transform: "translateX(0)",
+          pointerEvents: "auto",
+        },
+      },
+      false: {
+        mdDown: {
+          transform: "translateX(calc(-100% - 8px))",
+          pointerEvents: "none",
+        },
+      },
+    },
+  },
+});
 
 /**
  * Render sidebar for home

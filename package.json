@@ -2,6 +2,16 @@
   "name": "stoat-for-web",
   "version": "0.3.0",
   "description": "Stoat for Web: frontend software for Stoat",
+  "scripts": {
+    "build": "pnpm --filter client exec vite build",
+    "start": "node server/index.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "mongodb": "^6.15.0",
+    "ws": "^8.18.3"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "eslint": "^9.26.0",

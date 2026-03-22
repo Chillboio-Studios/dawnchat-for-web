@@ -5,7 +5,7 @@ import { Channel, Server, User } from "stoat.js";
 import { cva } from "styled-system/css";
 import { styled } from "styled-system/jsx";
 
-import { useClient } from "@revolt/client";
+import { getEffectiveUserPresence, useClient } from "@revolt/client";
 import { CONFIGURATION } from "@revolt/common";
 import { KeybindAction, createKeybind } from "@revolt/keybinds";
 import { useModals } from "@revolt/modal";
@@ -149,7 +149,7 @@ export const ServerList = (props: Props) => {
             <Column>
               <span>{props.user.username}</span>
               <Text class="label" size="small">
-                {props.user.presence}
+                {getEffectiveUserPresence(props.user)}
               </Text>
             </Column>
           )}
@@ -160,7 +160,11 @@ export const ServerList = (props: Props) => {
               size={42}
               src={props.user.avatarURL}
               holepunch={"bottom-right"}
-              overlay={<UserStatus.Graphic status={props.user.presence} />}
+              overlay={
+                <UserStatus.Graphic
+                  status={getEffectiveUserPresence(props.user)}
+                />
+              }
               interactive
             />
           </a>

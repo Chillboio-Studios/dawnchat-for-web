@@ -6,6 +6,7 @@ import {
   createSignal,
   on,
   onCleanup,
+  onMount,
 } from "solid-js";
 
 import { cva } from "styled-system/css";
@@ -147,6 +148,17 @@ export function TextChannel(props: ChannelPageProps) {
   const [sidebarState, setSidebarState] = createSignal<SidebarState>({
     state: "default",
   });
+  const [isMobile, setIsMobile] = createSignal(false);
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    onCleanup(() => mediaQuery.removeEventListener("change", update));
+  });
 
   // todo: in the future maybe persist per ID?
   createEffect(
@@ -215,7 +227,7 @@ export function TextChannel(props: ChannelPageProps) {
           when={
             (state.layout.getSectionState(
               LAYOUT_SECTIONS.MEMBER_SIDEBAR,
-              true,
+              !isMobile(),
             ) &&
               props.channel.type !== "SavedMessages") ||
             sidebarState().state !== "default"
@@ -229,7 +241,11 @@ export function TextChannel(props: ChannelPageProps) {
               class: sidebar(),
             }}
             style={{
-              width: sidebarState().state !== "default" ? "360px" : "",
+              width: isMobile()
+                ? "100vw"
+                : sidebarState().state !== "default"
+                  ? "360px"
+                  : "",
             }}
           >
             <Switch

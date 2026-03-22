@@ -19,6 +19,13 @@ import { CHANGELOG_MODAL_CONST } from "@revolt/modal/modals/Changelog";
 import ClientController from "./Controller";
 
 export type { default as ClientController } from "./Controller";
+export { PresenceWorker } from "./PresenceWorker";
+export {
+  applyPresenceEvent,
+  getEffectiveUserPresence,
+  getEffectiveUserStatus,
+  replacePresenceSnapshot,
+} from "./presenceState";
 
 const clientContext = createContext(null! as ClientController);
 

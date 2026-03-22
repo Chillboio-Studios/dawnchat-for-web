@@ -6,6 +6,7 @@ import { styled } from "styled-system/jsx";
 
 import { useLingui } from "@lingui-solid/solid/macro";
 import { Tooltip } from "@revolt/ui";
+import { getEffectiveUserPresence } from "@revolt/client";
 import { Avatar, Ripple, UserStatus, typography } from "../../design";
 import { Row } from "../../layout";
 
@@ -57,7 +58,9 @@ export function ProfileBanner(props: {
           holepunch="bottom-right"
           onClick={props.onClickAvatar}
           interactive={props.user.avatar && !!props.onClickAvatar}
-          overlay={<UserStatus.Graphic status={props.user.presence} />}
+          overlay={
+            <UserStatus.Graphic status={getEffectiveUserPresence(props.user)} />
+          }
         />
         <UserShort>
           <Show

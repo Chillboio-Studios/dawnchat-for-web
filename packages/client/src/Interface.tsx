@@ -1,4 +1,13 @@
-import { JSX, Match, Switch, createEffect } from "solid-js";
+import {
+  JSX,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 
 import { Server } from "stoat.js";
 import { styled } from "styled-system/jsx";
@@ -6,7 +15,7 @@ import { styled } from "styled-system/jsx";
 import { ChannelContextMenu, ServerContextMenu } from "@revolt/app";
 import { MessageCache } from "@revolt/app/interface/channels/text/MessageCache";
 import { Titlebar } from "@revolt/app/interface/desktop/Titlebar";
-import { useClient, useClientLifecycle } from "@revolt/client";
+import { PresenceWorker, useClient, useClientLifecycle } from "@revolt/client";
 import { State } from "@revolt/client/Controller";
 import { NotificationsWorker } from "@revolt/client/NotificationsWorker";
 import { useModals } from "@revolt/modal";
@@ -26,6 +35,17 @@ const Interface = (props: { children: JSX.Element }) => {
   const { openModal } = useModals();
   const { isLoggedIn, lifecycle } = useClientLifecycle();
   const { pathname } = useLocation();
+  const [isMobile, setIsMobile] = createSignal(false);
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    onCleanup(() => mediaQuery.removeEventListener("change", update));
+  });
 
   useBeforeLeave((e) => {
     if (!e.defaultPrevented) {
@@ -80,6 +100,23 @@ const Interface = (props: { children: JSX.Element }) => {
               }}
               onDrop={(e) => e.preventDefault()}
             >
+              <Show
+                when={
+                  isMobile() &&
+                  state.layout.getSectionState(LAYOUT_SECTIONS.PRIMARY_SIDEBAR)
+                }
+              >
+                <MobileSidebarScrim
+                  onClick={() =>
+                    state.layout.setSectionState(
+                      LAYOUT_SECTIONS.PRIMARY_SIDEBAR,
+                      false,
+                    )
+                  }
+                  aria-label="Close sidebar"
+                />
+              </Show>
+
               <Sidebar
                 menuGenerator={(target) => ({
                   contextMenu: () => {
@@ -98,7 +135,7 @@ const Interface = (props: { children: JSX.Element }) => {
               <Content
                 sidebar={state.layout.getSectionState(
                   LAYOUT_SECTIONS.PRIMARY_SIDEBAR,
-                  true,
+                  !isMobile(),
                 )}
               >
                 {props.children}
@@ -108,6 +145,7 @@ const Interface = (props: { children: JSX.Element }) => {
         </Switch>
 
         <NotificationsWorker />
+        <PresenceWorker />
       </div>
     </MessageCache>
   );
@@ -121,6 +159,7 @@ const Layout = styled("div", {
     display: "flex",
     height: "100%",
     minWidth: 0,
+    position: "relative",
   },
   variants: {
     disconnected: {
@@ -153,8 +192,28 @@ const Content = styled("div", {
         borderTopLeftRadius: "var(--borderRadius-lg)",
         borderBottomLeftRadius: "var(--borderRadius-lg)",
         overflow: "hidden",
+
+        mdDown: {
+          borderTopLeftRadius: "0",
+          borderBottomLeftRadius: "0",
+        },
       },
     },
+  },
+});
+
+const MobileSidebarScrim = styled("button", {
+  base: {
+    border: "none",
+    padding: "0",
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 9,
+    cursor: "pointer",
+    background: "rgba(15, 23, 42, 0.5)",
   },
 });
 

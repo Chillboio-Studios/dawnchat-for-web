@@ -15,7 +15,7 @@ import type { User } from "stoat.js";
 import { styled } from "styled-system/jsx";
 
 import { UserContextMenu } from "@revolt/app";
-import { useClient } from "@revolt/client";
+import { getEffectiveUserPresence, useClient } from "@revolt/client";
 import { useModals } from "@revolt/modal";
 import {
   Avatar,
@@ -298,7 +298,7 @@ function Entry(
           overlay={
             <Show when={props.user.relationship === "Friend"}>
               <UserStatus.Graphic
-                status={props.user.status?.presence ?? "Online"}
+                status={getEffectiveUserPresence(props.user)}
               />
             </Show>
           }

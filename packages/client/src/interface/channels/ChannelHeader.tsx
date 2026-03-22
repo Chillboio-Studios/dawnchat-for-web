@@ -5,7 +5,7 @@ import { Channel } from "stoat.js";
 import { css } from "styled-system/css";
 import { styled } from "styled-system/jsx";
 
-import { useClient } from "@revolt/client";
+import { getEffectiveUserPresence, useClient } from "@revolt/client";
 import { TextWithEmoji } from "@revolt/markdown";
 import { useModals } from "@revolt/modal";
 import { useState } from "@revolt/state";
@@ -122,7 +122,10 @@ export function ChannelHeader(props: Props) {
             <Symbol>alternate_email</Symbol>
           </HeaderIcon>
           <TextWithEmoji content={props.channel.recipient?.username} />
-          <UserStatus status={props.channel.recipient?.presence} size="8px" />
+          <UserStatus
+            status={getEffectiveUserPresence(props.channel.recipient)}
+            size="8px"
+          />
         </Match>
         <Match when={props.channel.type === "SavedMessages"}>
           <HeaderIcon>
