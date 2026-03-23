@@ -84,6 +84,21 @@ const Description = styled("div", {
 export function TextEmbed(props: { embed: TextEmbedClass | WebsiteEmbed }) {
   const { openModal } = useModals();
 
+  const website = () =>
+    props.embed.type === "Website" ? (props.embed as WebsiteEmbed) : undefined;
+
+  const iconSrc = () => website()?.proxiedIconURL || website()?.iconUrl;
+
+  const websiteVideoSrc = () => {
+    const media = website()?.video;
+    return media?.proxiedURL || media?.url;
+  };
+
+  const websiteImageSrc = () => {
+    const media = website()?.image;
+    return media?.proxiedURL || media?.url;
+  };
+
   return (
     <Base style={{ "border-color": props.embed.colour }}>
       <Content gap="md" grow>
@@ -98,8 +113,21 @@ export function TextEmbed(props: { embed: TextEmbedClass | WebsiteEmbed }) {
               <Favicon
                 loading="lazy"
                 draggable={false}
-                src={props.embed.proxiedIconURL}
-                onError={(e) => (e.currentTarget.style.display = "none")}
+                src={iconSrc()}
+                onError={(e) => {
+                  const fallback = website()?.iconUrl;
+                  if (!fallback) {
+                    e.currentTarget.style.display = "none";
+                    return;
+                  }
+
+                  if (e.currentTarget.src !== fallback) {
+                    e.currentTarget.src = fallback;
+                    return;
+                  }
+
+                  e.currentTarget.style.display = "none";
+                }}
               />
             </Show>
             <OverflowingText>
@@ -154,7 +182,15 @@ export function TextEmbed(props: { embed: TextEmbedClass | WebsiteEmbed }) {
                 <video
                   controls
                   preload="metadata"
-                  src={(props.embed as WebsiteEmbed).video!.proxiedURL}
+                  src={websiteVideoSrc()}
+                  onError={(e) => {
+                    const fallback = website()?.video?.url;
+                    if (!fallback) return;
+
+                    if (e.currentTarget.src !== fallback) {
+                      e.currentTarget.src = fallback;
+                    }
+                  }}
                 />
               </SizedContent>
             </Match>
@@ -164,9 +200,17 @@ export function TextEmbed(props: { embed: TextEmbedClass | WebsiteEmbed }) {
                 height={(props.embed as WebsiteEmbed).image!.height}
               >
                 <img
-                  src={(props.embed as WebsiteEmbed).image!.proxiedURL}
+                  src={websiteImageSrc()}
                   loading="lazy"
                   class={css({ cursor: "pointer" })}
+                  onError={(e) => {
+                    const fallback = website()?.image?.url;
+                    if (!fallback) return;
+
+                    if (e.currentTarget.src !== fallback) {
+                      e.currentTarget.src = fallback;
+                    }
+                  }}
                   onClick={() =>
                     openModal({
                       type: "image_viewer",
@@ -188,8 +232,16 @@ export function TextEmbed(props: { embed: TextEmbedClass | WebsiteEmbed }) {
         }
       >
         <PreviewImage
-          src={(props.embed as WebsiteEmbed).image!.proxiedURL}
+          src={websiteImageSrc()}
           loading="lazy"
+          onError={(e) => {
+            const fallback = website()?.image?.url;
+            if (!fallback) return;
+
+            if (e.currentTarget.src !== fallback) {
+              e.currentTarget.src = fallback;
+            }
+          }}
         />
       </Show>
     </Base>
