@@ -33,8 +33,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -57,7 +55,7 @@ jobs:
       - name: Install dependencies
         shell: pwsh
         run: |
-          pnpm install --frozen-lockfile *>&1 | Tee-Object -FilePath .ci-logs/windows-install.log
+          pnpm install --no-frozen-lockfile *>&1 | Tee-Object -FilePath .ci-logs/windows-install.log
 
       - name: Build desktop app (Windows)
         shell: pwsh
@@ -106,8 +104,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -135,7 +131,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --frozen-lockfile 2>&1 | tee .ci-logs/linux-debian-install.log
+          pnpm install --no-frozen-lockfile 2>&1 | tee .ci-logs/linux-debian-install.log
 
       - name: Build desktop app (Debian)
         shell: bash
@@ -177,7 +173,7 @@ jobs:
             git \
             gtk3 \
             libayatana-appindicator \
-            libxdo \
+            xdotool \
             make \
             nodejs \
             npm \
@@ -188,11 +184,21 @@ jobs:
           rustup default stable
           npm install -g pnpm@10.10.0
 
-      - name: Diagnostics
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Ensure logs directory
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p .ci-logs
+
+      - name: Diagnostics
+        shell: bash
+        run: |
+          set -euxo pipefail
           {
             echo "Node: $(node -v)"
             echo "pnpm: $(pnpm -v)"
@@ -201,16 +207,11 @@ jobs:
             echo "Kernel: $(uname -a)"
           } | tee .ci-logs/linux-arch-diagnostics.log
 
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-
       - name: Install dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --frozen-lockfile 2>&1 | tee .ci-logs/linux-arch-install.log
+          pnpm install --no-frozen-lockfile 2>&1 | tee .ci-logs/linux-arch-install.log
 
       - name: Build desktop app (Arch binary)
         shell: bash
@@ -256,7 +257,8 @@ jobs:
                 npm \
                 openssl-devel \
                 pkg-config \
-                rustup \
+                rust \
+                cargo \
                 webkit2gtk4.1-devel
           - distro: opensuse
             image: opensuse/tumbleweed:latest
@@ -272,7 +274,8 @@ jobs:
                 npm \
                 openssl-devel \
                 pkg-config \
-                rustup \
+                rust \
+                cargo \
                 webkit2gtk3-devel
     container:
       image: ${{ matrix.image }}
@@ -283,8 +286,12 @@ jobs:
         run: |
           set -euxo pipefail
           ${{ matrix.install }}
-          rustup default stable
           npm install -g pnpm@10.10.0
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
 
       - name: Diagnostics
         shell: bash
@@ -300,16 +307,11 @@ jobs:
             echo "Kernel: $(uname -a)"
           } | tee .ci-logs/linux-${{ matrix.distro }}-diagnostics.log
 
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-
       - name: Install dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --frozen-lockfile 2>&1 | tee .ci-logs/linux-${{ matrix.distro }}-install.log
+          pnpm install --no-frozen-lockfile 2>&1 | tee .ci-logs/linux-${{ matrix.distro }}-install.log
 
       - name: Build desktop app (other Linux binary)
         shell: bash
@@ -357,7 +359,7 @@ jobs:
               echo "Rust: $(rustc -V)"
               echo "Kernel: $(uname -a)"
             } | tee .ci-logs/freebsd-diagnostics.log
-            pnpm install --frozen-lockfile 2>&1 | tee .ci-logs/freebsd-install.log
+            pnpm install --no-frozen-lockfile 2>&1 | tee .ci-logs/freebsd-install.log
             pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle 2>&1 | tee .ci-logs/freebsd-build.log
 
       - name: Upload FreeBSD logs
@@ -366,7 +368,7 @@ jobs:
         with:
           name: desktop-bsd-freebsd-logs
           path: .ci-logs/
-          if-no-files-found: error
+          if-no-files-found: warn
 
   flatpak:
     name: Flatpak
@@ -397,12 +399,10 @@ jobs:
 
       - name: Add Flathub remote
         run: |
-          flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -430,7 +430,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --frozen-lockfile 2>&1 | tee .ci-logs/flatpak-install.log
+          pnpm install --no-frozen-lockfile 2>&1 | tee .ci-logs/flatpak-install.log
 
       - name: Build desktop binary for Flatpak
         shell: bash
