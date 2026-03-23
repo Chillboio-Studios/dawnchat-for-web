@@ -222,8 +222,6 @@ jobs:
                 npm \
                 openssl-devel \
                 pkg-config \
-                rust \
-                cargo \
                 webkit2gtk4.1-devel
           - distro: opensuse
             image: opensuse/tumbleweed:latest
@@ -240,8 +238,6 @@ jobs:
                 npm \
                 openssl-devel \
                 pkg-config \
-                rust \
-                cargo \
                 webkit2gtk3-devel
     container:
       image: ${{ matrix.image }}
@@ -252,6 +248,8 @@ jobs:
         run: |
           set -euxo pipefail
           ${{ matrix.install }}
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           npm install -g pnpm@10.10.0
 
       - name: Checkout (manual git clone)
