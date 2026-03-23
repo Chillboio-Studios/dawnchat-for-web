@@ -267,6 +267,9 @@ jobs:
           flatpak build-update-repo --generate-static-deltas --prune "public/${FLATPAK_OTA_APP_PATH}/repo"
 
           REPO_URL="${FLATPAK_OTA_BASE_URL}/${FLATPAK_OTA_APP_PATH}/repo/"
+          HOMEPAGE_URL="https://github.com/Chillboio-Studios/otube-for-web"
+          ICON_URL="${FLATPAK_OTA_BASE_URL}/apps/dawnchat/icon.png"
+          GPG_KEY_BASE64="${{ secrets.FLATPAK_REPO_GPG_KEY_BASE64 }}"
 
           mkdir -p "public/${FLATPAK_OTA_APP_PATH}"
 
@@ -279,8 +282,16 @@ jobs:
           Url=${REPO_URL}
           RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
           SuggestRemoteName=dawnchat
-          NoGPGVerify=true
+          Homepage=${HOMEPAGE_URL}
+          Icon=${ICON_URL}
           EOF
+
+          if [ -n "${GPG_KEY_BASE64}" ]; then
+            echo "GPGKey=${GPG_KEY_BASE64}" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.flatpakref"
+            echo "NoGPGVerify=false" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.flatpakref"
+          else
+            echo "NoGPGVerify=true" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.flatpakref"
+          fi
 
           cat > "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.aarch64.flatpakref" <<EOF
           [Flatpak Ref]
@@ -291,8 +302,16 @@ jobs:
           Url=${REPO_URL}
           RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
           SuggestRemoteName=dawnchat
-          NoGPGVerify=true
+          Homepage=${HOMEPAGE_URL}
+          Icon=${ICON_URL}
           EOF
+
+          if [ -n "${GPG_KEY_BASE64}" ]; then
+            echo "GPGKey=${GPG_KEY_BASE64}" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.aarch64.flatpakref"
+            echo "NoGPGVerify=false" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.aarch64.flatpakref"
+          else
+            echo "NoGPGVerify=true" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.aarch64.flatpakref"
+          fi
 
       - name: Upload Flatpak remote artifact
         uses: actions/upload-artifact@v4
