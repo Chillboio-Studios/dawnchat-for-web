@@ -58,6 +58,15 @@ jobs:
           pnpm --filter @lingui-solid/babel-plugin-extract-messages build
           pnpm --filter client exec lingui compile --typescript
 
+      - name: Ensure Windows icon exists
+        shell: pwsh
+        run: |
+          $iconPath = "packages/client/src-tauri/icons/icon.ico"
+          if (!(Test-Path $iconPath)) {
+            New-Item -ItemType Directory -Force -Path "packages/client/src-tauri/icons" | Out-Null
+            Copy-Item "packages/client/assets/web/icon.ico" $iconPath -Force
+          }
+
       - name: Build desktop app (Windows)
         shell: pwsh
         run: pnpm build-windows

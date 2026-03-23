@@ -24,6 +24,10 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "icon": [
+      "icons/icon.png",
+      "icons/icon.ico"
+    ],
     "category": "SocialNetworking",
     "shortDescription": "DawnChat Desktop",
     "longDescription": "DawnChat desktop app built from the web client"
