@@ -20,6 +20,10 @@ import { TextEmbed } from "./TextEmbed";
 export function Embed(props: { embed: MessageEmbed }) {
   const { openModal } = useModals();
 
+  const isIOS = () =>
+    typeof navigator !== "undefined" &&
+    /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+
   /**
    * Whether the embed is a GIF
    */
@@ -69,8 +73,9 @@ export function Embed(props: { embed: MessageEmbed }) {
           <video
             loop={isGIF()}
             muted={isGIF()}
-            autoplay={isGIF()}
+            autoplay={isGIF() && !isIOS()}
             playsinline
+            webkit-playsinline
             controls={!isGIF()}
             disablePictureInPicture={isGIF()}
             controlsList={isGIF() ? "nofullscreen noremoteplayback" : undefined}

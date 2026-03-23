@@ -3,7 +3,7 @@
  */
 import "./sentry";
 
-import { JSX, onMount } from "solid-js";
+import { ErrorBoundary, JSX, onMount } from "solid-js";
 import { render } from "solid-js/web";
 
 import { attachDevtoolsOverlay } from "@solid-devtools/overlay";
@@ -45,9 +45,47 @@ import { ModerationView } from "./interface/ModerationView";
 import { ServerHome } from "./interface/ServerHome";
 import { ChannelPage } from "./interface/channels/ChannelPage";
 import { ModerationEntityView } from "./interface/moderation/ModerationEntityView";
+import { captureClientError } from "./sentry";
 import "./serviceWorkerInterface";
 
 attachDevtoolsOverlay();
+
+function renderFatalErrorBanner(message: string) {
+  const existing = document.getElementById("fatal-error-banner");
+  if (existing) return;
+
+  const banner = document.createElement("div");
+  banner.id = "fatal-error-banner";
+  banner.setAttribute("role", "alert");
+  banner.style.position = "fixed";
+  banner.style.top = "0";
+  banner.style.left = "0";
+  banner.style.right = "0";
+  banner.style.zIndex = "2147483647";
+  banner.style.padding = "12px 16px";
+  banner.style.background = "#7f1d1d";
+  banner.style.color = "#ffffff";
+  banner.style.fontFamily = "monospace";
+  banner.style.fontSize = "13px";
+  banner.textContent = message;
+
+  document.body.appendChild(banner);
+}
+
+function installGlobalErrorHandling() {
+  window.addEventListener("error", (event) => {
+    captureClientError(event.error ?? event.message, "window.error");
+    renderFatalErrorBanner("A runtime error occurred. The app entered safe mode.");
+  });
+
+  window.addEventListener("unhandledrejection", (event) => {
+    captureClientError(event.reason, "window.unhandledrejection");
+    renderFatalErrorBanner(
+      "An async runtime error occurred. The app entered safe mode.",
+    );
+    event.preventDefault();
+  });
+}
 
 /**
  * Redirect PWA start to the last active path
@@ -139,51 +177,123 @@ function MountContext(props: { children?: JSX.Element }) {
   );
 }
 
+function FatalAppFallback(props: { error: unknown; reset: () => void }) {
+  captureClientError(props.error, "solid.error-boundary");
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        "place-items": "center",
+        "min-height": "100vh",
+        padding: "24px",
+        "background-color": "#111827",
+        color: "#f9fafb",
+      }}
+    >
+      <div
+        style={{
+          width: "min(640px, 100%)",
+          padding: "20px",
+          border: "1px solid #374151",
+          "border-radius": "12px",
+          "background-color": "#1f2937",
+        }}
+      >
+        <h1 style={{ margin: "0 0 12px", "font-size": "20px" }}>
+          The desktop client hit an unexpected error.
+        </h1>
+        <p style={{ margin: "0 0 16px", opacity: 0.92 }}>
+          Error details were captured. You can try recovering without restarting.
+        </p>
+        <div style={{ display: "flex", gap: "10px", "flex-wrap": "wrap" }}>
+          <button
+            type="button"
+            onClick={props.reset}
+            style={{
+              padding: "10px 14px",
+              border: "1px solid #4b5563",
+              "border-radius": "8px",
+              "background-color": "#2563eb",
+              color: "#ffffff",
+              cursor: "pointer",
+            }}
+          >
+            Try Recover
+          </button>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "10px 14px",
+              border: "1px solid #4b5563",
+              "border-radius": "8px",
+              "background-color": "transparent",
+              color: "#f9fafb",
+              cursor: "pointer",
+            }}
+          >
+            Reload App
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+installGlobalErrorHandling();
+
 render(
   () => (
-    <StateContext>
-      <Router root={MountContext}>
-        <Route path="/login" component={AuthPage as never}>
-          <Route path="/delete/:token" component={FlowDeleteAccount} />
-          <Route path="/check" component={FlowCheck} />
-          <Route path="/create" component={FlowCreate} />
-          <Route path="/create/:code" component={FlowCreate} />
-          <Route path="/auth" component={FlowLogin} />
-          <Route path="/resend" component={FlowResend} />
-          <Route path="/reset" component={FlowReset} />
-          <Route path="/verify/:token" component={FlowVerify} />
-          <Route path="/reset/:token" component={FlowConfirmReset} />
-          <Route path="/*" component={FlowHome} />
-        </Route>
-        <Route path="/" component={Interface as never}>
-          <Route path="/pwa" component={PWARedirect} />
-          <Route path="/dev" component={DevelopmentPage} />
-          <Route path="/discover/*" component={Discover} />
-          <Route path="/settings" component={SettingsRedirect} />
-          <Route path="/invite/:code" component={InviteRedirect} />
-          <Route path="/bot/:code" component={BotRedirect} />
-          <Route
-            path="/moderation/view/:entityType/:entityId"
-            component={ModerationEntityView}
-          />
-          <Route
-            path="/moderation/:targetType/:targetId"
-            component={ModerationView}
-          />
-          <Route path="/moderation/*" component={ModerationView} />
-          <Route path="/friends" component={Friends} />
-          <Route path="/server/:server/*">
-            <Route path="/channel/:channel/*" component={ChannelPage} />
-            <Route path="/*" component={ServerHome} />
+    <ErrorBoundary
+      fallback={(error, reset) => (
+        <FatalAppFallback error={error} reset={reset} />
+      )}
+    >
+      <StateContext>
+        <Router root={MountContext}>
+          <Route path="/login" component={AuthPage as never}>
+            <Route path="/delete/:token" component={FlowDeleteAccount} />
+            <Route path="/check" component={FlowCheck} />
+            <Route path="/create" component={FlowCreate} />
+            <Route path="/create/:code" component={FlowCreate} />
+            <Route path="/auth" component={FlowLogin} />
+            <Route path="/resend" component={FlowResend} />
+            <Route path="/reset" component={FlowReset} />
+            <Route path="/verify/:token" component={FlowVerify} />
+            <Route path="/reset/:token" component={FlowConfirmReset} />
+            <Route path="/*" component={FlowHome} />
           </Route>
-          <Route path="/channel/:channel/*" component={ChannelPage} />
-          <Route path="/*" component={HomePage} />
-        </Route>
-      </Router>
+          <Route path="/" component={Interface as never}>
+            <Route path="/pwa" component={PWARedirect} />
+            <Route path="/dev" component={DevelopmentPage} />
+            <Route path="/discover/*" component={Discover} />
+            <Route path="/settings" component={SettingsRedirect} />
+            <Route path="/invite/:code" component={InviteRedirect} />
+            <Route path="/bot/:code" component={BotRedirect} />
+            <Route
+              path="/moderation/view/:entityType/:entityId"
+              component={ModerationEntityView}
+            />
+            <Route
+              path="/moderation/:targetType/:targetId"
+              component={ModerationView}
+            />
+            <Route path="/moderation/*" component={ModerationView} />
+            <Route path="/friends" component={Friends} />
+            <Route path="/server/:server/*">
+              <Route path="/channel/:channel/*" component={ChannelPage} />
+              <Route path="/*" component={ServerHome} />
+            </Route>
+            <Route path="/channel/:channel/*" component={ChannelPage} />
+            <Route path="/*" component={HomePage} />
+          </Route>
+        </Router>
 
-      <LoadTheme />
-      {/* <ReportBug /> */}
-    </StateContext>
+        <LoadTheme />
+        {/* <ReportBug /> */}
+      </StateContext>
+    </ErrorBoundary>
   ),
   document.getElementById("root") as HTMLElement,
 );

@@ -36,6 +36,7 @@ import { AppearanceMenu } from "./user/appearance";
 import { MyBots, ViewBot } from "./user/bots";
 import { EditProfile } from "./user/profile";
 import { EditSubscription } from "./user/subscriptions";
+import { VideoOptions } from "./user/voice/VideoOptions";
 import { VoiceSettings } from "./user/voice/VoiceSettings";
 
 function getSettingsFooterVersionLabel() {
@@ -121,6 +122,8 @@ const Config: SettingsConfiguration<{ server: Server }> = {
         return <Native />;
       case "voice":
         return <VoiceSettings />;
+      case "video":
+        return <VideoOptions />;
       default:
         return null;
     }
@@ -235,6 +238,11 @@ const Config: SettingsConfiguration<{ server: Server }> = {
               id: "voice",
               icon: <MdMic {...iconSize(20)} />,
               title: <Trans>Voice</Trans>,
+            },
+            {
+              id: "video",
+              icon: <Symbol size={20}>videocam</Symbol>,
+              title: <Trans>Video</Trans>,
             },
             {
               id: "appearance",

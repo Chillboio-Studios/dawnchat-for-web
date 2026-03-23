@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { RoomContext } from "solid-livekit-components";
 
-import { Room } from "livekit-client";
+import { Room, RoomEvent, Track } from "livekit-client";
 import { DenoiseTrackProcessor } from "livekit-rnnoise-processor";
 import { Channel } from "stoat.js";
 
@@ -143,6 +143,42 @@ class Voice {
     });
 
     room.addListener("disconnected", () => this.#setState("DISCONNECTED"));
+
+    // Keep local UI state synchronized with low-level track mute changes.
+    room.on(RoomEvent.LocalTrackMuted, (publication) => {
+      if (publication.source === Track.Source.Microphone) {
+        this.#setMicrophone(false);
+      }
+
+      if (publication.source === Track.Source.Camera) {
+        this.#setVideo(false);
+      }
+
+      if (publication.source === Track.Source.ScreenShare) {
+        this.#setScreenshare(false);
+      }
+    });
+
+    room.on(RoomEvent.LocalTrackUnmuted, (publication) => {
+      if (publication.source === Track.Source.Microphone) {
+        this.#setMicrophone(true);
+      }
+
+      if (publication.source === Track.Source.Camera) {
+        this.#setVideo(true);
+      }
+
+      if (publication.source === Track.Source.ScreenShare) {
+        this.#setScreenshare(true);
+      }
+    });
+
+    // Avoid stale device state after media or permission interruptions.
+    room.on(RoomEvent.MediaDevicesError, (error) => {
+      console.error("[rtc] media devices error", error);
+      this.#setVideo(room.localParticipant.isCameraEnabled);
+      this.#setScreenshare(room.localParticipant.isScreenShareEnabled);
+    });
 
     try {
       if (!auth) {

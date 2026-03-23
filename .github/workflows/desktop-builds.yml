@@ -20,6 +20,7 @@ env:
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
   APP_API_URL: https://app.dawn-chat.com/api
   APP_CLIENT_API_URL: https://app.dawn-chat.com/client-api
+  VITE_SENTRY_DSN: https://82ee7c93f5675dc1c4bbb122807eea64@o4508026382712832.ingest.us.sentry.io/4511091575095296
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
