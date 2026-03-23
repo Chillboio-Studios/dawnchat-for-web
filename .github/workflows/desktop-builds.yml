@@ -184,7 +184,7 @@ jobs:
           set -euxo pipefail
           flatpak-builder --arch=${{ matrix.arch }} --default-branch=stable --force-clean --repo=repo flatpak-build-dir packaging/flatpak/com.chillboiostudios.dawnchat.yml
           flatpak build-update-repo --generate-static-deltas --prune repo
-          flatpak build-bundle --arch=${{ matrix.arch }} repo DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat
+          flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo repo DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat stable
 
       - name: Upload Flatpak
         uses: actions/upload-artifact@v4
@@ -256,16 +256,6 @@ jobs:
 
           mkdir -p "public/${FLATPAK_OTA_APP_PATH}"
 
-          cat > "public/${FLATPAK_OTA_APP_PATH}/dawnchat.flatpakrepo" <<EOF
-          [Flatpak Repo]
-          Title=DawnChat Flatpak Repository
-          Url=${REPO_URL}
-          Homepage=https://github.com/${{ github.repository }}
-          Comment=Official DawnChat Flatpak remote
-          Description=Install this remote to receive DawnChat Flatpak auto updates.
-          NoGPGVerify=true
-          EOF
-
           cat > "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.flatpakref" <<EOF
           [Flatpak Ref]
           Name=app/com.chillboiostudios.dawnchat/x86_64/stable
@@ -298,7 +288,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish Flatpak OTA to external repository
-        if: github.event_name == 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') || github.ref_name == github.event.repository.default_branch || github.ref_name == 'master'
         shell: bash
         env:
           OTA_REPO_TOKEN: ${{ secrets.FLATPAK_OTA_REPO_TOKEN }}
@@ -391,4 +381,3 @@ jobs:
             release-assets/**/DawnChat*.flatpak
             release-assets/**/com.chillboiostudios.dawnchat.flatpakref
             release-assets/**/com.chillboiostudios.dawnchat.aarch64.flatpakref
-            release-assets/**/dawnchat.flatpakrepo
