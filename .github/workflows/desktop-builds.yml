@@ -18,6 +18,9 @@ env:
   TAURI_UPDATER_PUBLIC_KEY: ${{ secrets.TAURI_UPDATER_PUBLIC_KEY }}
   TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+  FLATPAK_OTA_BASE_URL: https://flatpak-ota.chillboiostudios.com
+  FLATPAK_OTA_REPOSITORY: Chillboio-Studios/flatpak-ota
+  FLATPAK_OTA_APP_PATH: apps/dawnchat
   APP_API_URL: https://app.dawn-chat.com/api
   APP_CLIENT_API_URL: https://app.dawn-chat.com/client-api
   VITE_SENTRY_DSN: https://82ee7c93f5675dc1c4bbb122807eea64@o4508026382712832.ingest.us.sentry.io/4511091575095296
@@ -88,265 +91,17 @@ jobs:
           path: packages/client/src-tauri/target/release/bundle/
           if-no-files-found: error
 
-  linux-debian:
-    name: Linux-Debian
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-
-      - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            curl \
-            file \
-            libjavascriptcoregtk-4.1-dev \
-            libayatana-appindicator3-dev \
-            libgtk-3-dev \
-            librsvg2-dev \
-            libssl-dev \
-            libwebkit2gtk-4.1-dev \
-            patchelf \
-            pkg-config
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: |
-            pnpm-lock.yaml
-            packages/client/pnpm-lock.yaml
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Restore Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            packages/client/src-tauri -> target
-
-      - name: Install dependencies
-        shell: bash
-        run: |
-          set -euxo pipefail
-          pnpm install --frozen-lockfile --prefer-offline
-
-      - name: Build dependencies
-        shell: bash
-        run: |
-          set -euxo pipefail
-          pnpm --filter stoat.js build
-          pnpm --filter solid-livekit-components build
-          pnpm --filter @lingui-solid/babel-plugin-lingui-macro build
-          pnpm --filter @lingui-solid/babel-plugin-extract-messages build
-          pnpm --filter client exec lingui compile --typescript
-
-      - name: Build desktop app (Debian)
-        shell: bash
-        run: |
-          set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=debian pnpm build-linux
-
-      - name: Upload Debian bundles
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-linux-debian
-          path: packages/client/src-tauri/target/release/bundle/
-          if-no-files-found: error
-
-  linux-arch:
-    name: Linux-Arch
-    runs-on: ubuntu-latest
-    container:
-      image: archlinux:latest
-
-    steps:
-      - name: Install base dependencies
-        shell: bash
-        run: |
-          set -euxo pipefail
-          pacman -Syu --noconfirm
-          pacman -S --noconfirm \
-            base-devel \
-            curl \
-            file \
-            git \
-            gtk3 \
-            libayatana-appindicator \
-            xdotool \
-            make \
-            nodejs \
-            npm \
-            openssl \
-            pkgconf \
-            rustup \
-            webkit2gtk-4.1 \
-            zip
-          rustup default stable
-          npm install -g pnpm@10.10.0
-
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-
-      - name: Restore Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            packages/client/src-tauri -> target
-          key: arch
-
-      - name: Restore pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: /root/.pnpm-store
-          key: ${{ runner.os }}-arch-pnpm-${{ hashFiles('pnpm-lock.yaml', 'packages/client/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-arch-pnpm-
-
-      - name: Install dependencies
-        shell: bash
-        run: |
-          set -euxo pipefail
-          pnpm config set store-dir /root/.pnpm-store
-          pnpm install --frozen-lockfile --prefer-offline
-
-      - name: Build dependencies
-        shell: bash
-        run: |
-          set -euxo pipefail
-          pnpm --filter stoat.js build
-          pnpm --filter solid-livekit-components build
-          pnpm --filter @lingui-solid/babel-plugin-lingui-macro build
-          pnpm --filter @lingui-solid/babel-plugin-extract-messages build
-          pnpm --filter client exec lingui compile --typescript
-
-      - name: Build desktop app (Arch binary)
-        shell: bash
-        run: |
-          set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=arch pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
-
-      - name: Upload Arch build output
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-linux-arch
-          path: |
-            packages/client/src-tauri/target/release/dawnchat_desktop
-            packages/client/src-tauri/target/release/bundle/
-
-  linux-other:
-    name: Linux-Other (${{ matrix.distro }})
-    runs-on: ubuntu-latest
+  flatpak:
+    name: Flatpak (${{ matrix.arch }})
+    runs-on: ${{ matrix.runs_on }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - distro: fedora
-            image: fedora:40
-            install: |
-              dnf install -y \
-                gcc-c++ \
-                git \
-                glib2-devel \
-                gtk3-devel \
-                libappindicator-gtk3-devel \
-                libstdc++-static \
-                make \
-                curl \
-                nodejs \
-                npm \
-                openssl-devel \
-                pkg-config \
-                webkit2gtk4.1-devel
-    container:
-      image: ${{ matrix.image }}
-
-    steps:
-      - name: Install distro dependencies
-        shell: sh
-        run: |
-          set -eux
-          ${{ matrix.install }}
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-          npm install -g pnpm@10.10.0
-
-      - name: Checkout (manual git clone)
-        shell: sh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -eux
-          rm -rf "$GITHUB_WORKSPACE"
-          mkdir -p "$GITHUB_WORKSPACE"
-          cd "$GITHUB_WORKSPACE"
-          git init
-          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git fetch --depth=1 origin "$GITHUB_SHA"
-          git checkout --force FETCH_HEAD
-          git submodule sync --recursive
-          git submodule update --init --recursive
-
-      - name: Restore Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            packages/client/src-tauri -> target
-          key: other-${{ matrix.distro }}
-
-      - name: Restore pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: /root/.pnpm-store
-          key: ${{ runner.os }}-other-${{ matrix.distro }}-pnpm-${{ hashFiles('pnpm-lock.yaml', 'packages/client/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-other-${{ matrix.distro }}-pnpm-
-
-      - name: Install dependencies
-        shell: sh
-        run: |
-          set -eux
-          pnpm config set store-dir /root/.pnpm-store
-          pnpm install --frozen-lockfile --prefer-offline
-
-      - name: Build dependencies
-        shell: sh
-        run: |
-          set -eux
-          pnpm --filter stoat.js build
-          pnpm --filter solid-livekit-components build
-          pnpm --filter @lingui-solid/babel-plugin-lingui-macro build
-          pnpm --filter @lingui-solid/babel-plugin-extract-messages build
-          pnpm --filter client exec lingui compile --typescript
-
-      - name: Build desktop app (other Linux binary)
-        shell: sh
-        run: |
-          set -eux
-          OTUBE_LINUX_FLAVOR=${{ matrix.distro }} pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
-
-      - name: Upload other Linux build output
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-linux-${{ matrix.distro }}
-          path: packages/client/src-tauri/target/release/dawnchat_desktop
-          if-no-files-found: error
-
-  flatpak:
-    name: Flatpak
-    runs-on: ubuntu-latest
+          - arch: x86_64
+            runs_on: ubuntu-latest
+          - arch: aarch64
+            runs_on: ubuntu-24.04-arm
 
     steps:
       - name: Checkout
@@ -421,31 +176,184 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=flatpak pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
+          OTUBE_LINUX_FLAVOR=flatpak-${{ matrix.arch }} pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Build Flatpak bundle
         shell: bash
         run: |
           set -euxo pipefail
-          flatpak-builder --force-clean --repo=repo flatpak-build-dir packaging/flatpak/com.chillboiostudios.dawnchat.yml
-          flatpak build-bundle repo DawnChat.flatpak com.chillboiostudios.dawnchat
+          flatpak-builder --arch=${{ matrix.arch }} --default-branch=stable --force-clean --repo=repo flatpak-build-dir packaging/flatpak/com.chillboiostudios.dawnchat.yml
+          flatpak build-update-repo --generate-static-deltas --prune repo
+          flatpak build-bundle --arch=${{ matrix.arch }} repo DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat
 
       - name: Upload Flatpak
         uses: actions/upload-artifact@v4
         with:
-          name: desktop-flatpak
-          path: DawnChat.flatpak
+          name: desktop-flatpak-${{ matrix.arch }}
+          path: DawnChat-${{ matrix.arch }}.flatpak
           if-no-files-found: error
+
+      - name: Upload Flatpak OSTree repo
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-flatpak-repo-${{ matrix.arch }}
+          path: repo/
+          if-no-files-found: error
+
+  publish-flatpak-remote:
+    name: Publish Flatpak Remote
+    runs-on: ubuntu-latest
+    needs:
+      - flatpak
+
+    steps:
+      - name: Install publishing dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak ostree
+
+      - name: Download Flatpak repo artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: flatpak-repos
+          pattern: desktop-flatpak-repo-*
+          merge-multiple: false
+
+      - name: Compute OTA version tag
+        id: ota_meta
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            input_tag="${{ github.event.inputs.release_tag }}"
+            if [ -n "${input_tag}" ]; then
+              version_tag="${input_tag}"
+            else
+              version_tag="v${{ github.run_number }}"
+            fi
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            version_tag="${{ github.ref_name }}"
+          else
+            version_tag="beta-${{ github.run_number }}-${{ github.sha }}"
+          fi
+          echo "version_tag=${version_tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Merge architecture repos and create remote metadata
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          mkdir -p "public/${FLATPAK_OTA_APP_PATH}/repo"
+          ostree --repo="public/${FLATPAK_OTA_APP_PATH}/repo" init --mode=archive-z2
+
+          while IFS= read -r repo_dir; do
+            ostree --repo="public/${FLATPAK_OTA_APP_PATH}/repo" pull-local "${repo_dir}"
+          done < <(find flatpak-repos -mindepth 2 -maxdepth 2 -type d -name repo | sort)
+
+          flatpak build-update-repo --generate-static-deltas --prune "public/${FLATPAK_OTA_APP_PATH}/repo"
+
+          REPO_URL="${FLATPAK_OTA_BASE_URL}/${FLATPAK_OTA_APP_PATH}/repo/"
+
+          mkdir -p "public/${FLATPAK_OTA_APP_PATH}"
+
+          cat > "public/${FLATPAK_OTA_APP_PATH}/dawnchat.flatpakrepo" <<EOF
+          [Flatpak Repo]
+          Title=DawnChat Flatpak Repository
+          Url=${REPO_URL}
+          Homepage=https://github.com/${{ github.repository }}
+          Comment=Official DawnChat Flatpak remote
+          Description=Install this remote to receive DawnChat Flatpak auto updates.
+          NoGPGVerify=true
+          EOF
+
+          cat > "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.flatpakref" <<EOF
+          [Flatpak Ref]
+          Name=app/com.chillboiostudios.dawnchat/x86_64/stable
+          Branch=stable
+          Title=DawnChat
+          IsRuntime=false
+          Url=${REPO_URL}
+          RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
+          SuggestRemoteName=dawnchat
+          NoGPGVerify=true
+          EOF
+
+          cat > "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.aarch64.flatpakref" <<EOF
+          [Flatpak Ref]
+          Name=app/com.chillboiostudios.dawnchat/aarch64/stable
+          Branch=stable
+          Title=DawnChat
+          IsRuntime=false
+          Url=${REPO_URL}
+          RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
+          SuggestRemoteName=dawnchat
+          NoGPGVerify=true
+          EOF
+
+      - name: Upload Flatpak remote artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-flatpak-remote
+          path: public/${{ env.FLATPAK_OTA_APP_PATH }}/
+          if-no-files-found: error
+
+      - name: Publish Flatpak OTA to external repository
+        if: github.event_name == 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch
+        shell: bash
+        env:
+          OTA_REPO_TOKEN: ${{ secrets.FLATPAK_OTA_REPO_TOKEN }}
+          OTA_VERSION_TAG: ${{ steps.ota_meta.outputs.version_tag }}
+        run: |
+          set -euxo pipefail
+
+          if [ -z "${OTA_REPO_TOKEN}" ]; then
+            echo "FLATPAK_OTA_REPO_TOKEN is required to publish OTA content."
+            exit 1
+          fi
+
+          git clone --depth=1 "https://x-access-token:${OTA_REPO_TOKEN}@github.com/${FLATPAK_OTA_REPOSITORY}.git" ota-repo
+          cd ota-repo
+
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch origin gh-pages
+            git checkout -B gh-pages origin/gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . || true
+          fi
+
+          mkdir -p "${FLATPAK_OTA_APP_PATH}"
+          rsync -a --delete "../public/${FLATPAK_OTA_APP_PATH}/" "${FLATPAK_OTA_APP_PATH}/"
+
+          if [ ! -f CNAME ]; then
+            echo "flatpak-ota.chillboiostudios.com" > CNAME
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add "${FLATPAK_OTA_APP_PATH}" CNAME
+
+          if git diff --cached --quiet; then
+            echo "No OTA content changes to publish."
+            exit 0
+          fi
+
+          git commit -m "dawnchat ota ${OTA_VERSION_TAG}"
+
+          tag_name="dawnchat-${OTA_VERSION_TAG}"
+          git tag -f "${tag_name}"
+
+          git push origin gh-pages
+          git push origin "${tag_name}" --force
 
   publish-release:
     name: Publish GitHub Release
     runs-on: ubuntu-latest
     needs:
       - windows
-      - linux-debian
-      - linux-arch
-      - linux-other
       - flatpak
+      - publish-flatpak-remote
 
     steps:
       - name: Download build artifacts
@@ -480,7 +388,7 @@ jobs:
           files: |
             release-assets/**/DawnChat*.exe
             release-assets/**/DawnChat*.msi
-            release-assets/**/DawnChat*.deb
-            release-assets/**/DawnChat*.rpm
-            release-assets/**/DawnChat*.AppImage
             release-assets/**/DawnChat*.flatpak
+            release-assets/**/com.chillboiostudios.dawnchat.flatpakref
+            release-assets/**/com.chillboiostudios.dawnchat.aarch64.flatpakref
+            release-assets/**/dawnchat.flatpakrepo
