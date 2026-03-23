@@ -26,7 +26,9 @@ const parsed = existsSync(envFile)
   : {};
 
 const appApiUrl = (
-  process.env.APP_API_URL || parsed.APP_API_URL || "http://localhost:3000/api"
+  process.env.APP_API_URL ||
+  parsed.APP_API_URL ||
+  "http://localhost:3000/api"
 ).trim();
 const clientApiUrl = (
   process.env.APP_CLIENT_API_URL ||
