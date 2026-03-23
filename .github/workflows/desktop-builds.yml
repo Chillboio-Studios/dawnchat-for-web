@@ -304,11 +304,19 @@ jobs:
           git clone --depth=1 "https://x-access-token:${OTA_REPO_TOKEN}@github.com/${FLATPAK_OTA_REPOSITORY}.git" ota-repo
           cd ota-repo
 
-          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
-            git fetch origin gh-pages
-            git checkout -B gh-pages FETCH_HEAD
+          target_branch=""
+          if git ls-remote --exit-code --heads origin main >/dev/null 2>&1; then
+            target_branch="main"
+          elif git ls-remote --exit-code --heads origin master >/dev/null 2>&1; then
+            target_branch="master"
+          fi
+
+          if [ -n "${target_branch}" ]; then
+            git fetch origin "${target_branch}"
+            git checkout -B "${target_branch}" FETCH_HEAD
           else
-            git checkout --orphan gh-pages
+            target_branch="main"
+            git checkout --orphan "${target_branch}"
             git rm -rf . || true
           fi
 
@@ -334,8 +342,33 @@ jobs:
           tag_name="dawnchat-${OTA_VERSION_TAG}"
           git tag -f "${tag_name}"
 
-          git push origin gh-pages
+          git push origin "${target_branch}"
           git push origin "${tag_name}" --force
+
+      - name: Trigger OTA repository metadata rebuild
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') || github.ref_name == github.event.repository.default_branch || github.ref_name == 'master'
+        shell: bash
+        env:
+          OTA_REPO_TOKEN: ${{ secrets.FLATPAK_OTA_REPO_TOKEN }}
+        run: |
+          set -euxo pipefail
+
+          if [ -z "${OTA_REPO_TOKEN}" ]; then
+            echo "FLATPAK_OTA_REPO_TOKEN is required to trigger OTA metadata rebuild."
+            exit 1
+          fi
+
+          dispatch_ref="main"
+          if ! curl -fsSL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${OTA_REPO_TOKEN}" \
+            "https://api.github.com/repos/${FLATPAK_OTA_REPOSITORY}/branches/main" >/dev/null 2>&1; then
+            dispatch_ref="master"
+          fi
+
+          curl -fsSL -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${OTA_REPO_TOKEN}" \
+            "https://api.github.com/repos/${FLATPAK_OTA_REPOSITORY}/actions/workflows/build-main-remote.yml/dispatches" \
+            -d "{\"ref\":\"${dispatch_ref}\"}"
 
   publish-release:
     name: Publish GitHub Release
