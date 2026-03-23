@@ -43,32 +43,13 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Diagnostics
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Path .ci-logs -Force | Out-Null
-          "Node: $(node -v)" | Tee-Object -FilePath .ci-logs/windows-diagnostics.log
-          "pnpm: $(pnpm -v)" | Tee-Object -FilePath .ci-logs/windows-diagnostics.log -Append
-          "Rust: $(rustc -V)" | Tee-Object -FilePath .ci-logs/windows-diagnostics.log -Append
-          "Cargo: $(cargo -V)" | Tee-Object -FilePath .ci-logs/windows-diagnostics.log -Append
-
       - name: Install dependencies
         shell: pwsh
-        run: |
-          pnpm install --no-frozen-lockfile *>&1 | Tee-Object -FilePath .ci-logs/windows-install.log
+        run: pnpm install --no-frozen-lockfile --link-workspace-packages=false
 
       - name: Build desktop app (Windows)
         shell: pwsh
-        run: |
-          pnpm build-windows *>&1 | Tee-Object -FilePath .ci-logs/windows-build.log
-
-      - name: Upload Windows logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-windows-logs
-          path: .ci-logs/
-          if-no-files-found: error
+        run: pnpm build-windows
 
       - name: Upload Windows bundles
         uses: actions/upload-artifact@v4
@@ -114,38 +95,17 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Diagnostics
-        shell: bash
-        run: |
-          set -euxo pipefail
-          mkdir -p .ci-logs
-          {
-            echo "Node: $(node -v)"
-            echo "pnpm: $(pnpm -v)"
-            echo "Rust: $(rustc -V)"
-            echo "Cargo: $(cargo -V)"
-            echo "Kernel: $(uname -a)"
-          } | tee .ci-logs/linux-debian-diagnostics.log
-
       - name: Install dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --no-frozen-lockfile 2>&1 | tee .ci-logs/linux-debian-install.log
+          pnpm install --no-frozen-lockfile --link-workspace-packages=false
 
       - name: Build desktop app (Debian)
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=debian pnpm build-linux 2>&1 | tee .ci-logs/linux-debian-build.log
-
-      - name: Upload Debian logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-linux-debian-logs
-          path: .ci-logs/
-          if-no-files-found: error
+          OTUBE_LINUX_FLAVOR=debian pnpm build-linux
 
       - name: Upload Debian bundles
         uses: actions/upload-artifact@v4
@@ -189,43 +149,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Ensure logs directory
-        shell: bash
-        run: |
-          set -euxo pipefail
-          mkdir -p .ci-logs
-
-      - name: Diagnostics
-        shell: bash
-        run: |
-          set -euxo pipefail
-          {
-            echo "Node: $(node -v)"
-            echo "pnpm: $(pnpm -v)"
-            echo "Rust: $(rustc -V)"
-            echo "Cargo: $(cargo -V)"
-            echo "Kernel: $(uname -a)"
-          } | tee .ci-logs/linux-arch-diagnostics.log
-
       - name: Install dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --no-frozen-lockfile 2>&1 | tee .ci-logs/linux-arch-install.log
+          pnpm install --no-frozen-lockfile --link-workspace-packages=false
 
       - name: Build desktop app (Arch binary)
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=arch pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle 2>&1 | tee .ci-logs/linux-arch-build.log
-
-      - name: Upload Arch logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-linux-arch-logs
-          path: .ci-logs/
-          if-no-files-found: error
+          OTUBE_LINUX_FLAVOR=arch pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Upload Arch build output
         uses: actions/upload-artifact@v4
@@ -293,39 +227,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Diagnostics
-        shell: bash
-        run: |
-          set -euxo pipefail
-          mkdir -p .ci-logs
-          {
-            echo "Distro: ${{ matrix.distro }}"
-            echo "Node: $(node -v)"
-            echo "pnpm: $(pnpm -v)"
-            echo "Rust: $(rustc -V)"
-            echo "Cargo: $(cargo -V)"
-            echo "Kernel: $(uname -a)"
-          } | tee .ci-logs/linux-${{ matrix.distro }}-diagnostics.log
-
       - name: Install dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --no-frozen-lockfile 2>&1 | tee .ci-logs/linux-${{ matrix.distro }}-install.log
+          pnpm install --no-frozen-lockfile --link-workspace-packages=false
 
       - name: Build desktop app (other Linux binary)
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=${{ matrix.distro }} pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle 2>&1 | tee .ci-logs/linux-${{ matrix.distro }}-build.log
-
-      - name: Upload other Linux logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-linux-${{ matrix.distro }}-logs
-          path: .ci-logs/
-          if-no-files-found: error
+          OTUBE_LINUX_FLAVOR=${{ matrix.distro }} pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Upload other Linux build output
         uses: actions/upload-artifact@v4
@@ -352,23 +264,8 @@ jobs:
           run: |
             set -eux
             cd $GITHUB_WORKSPACE
-            mkdir -p .ci-logs
-            {
-              echo "Node: $(node -v)"
-              echo "pnpm: $(pnpm -v)"
-              echo "Rust: $(rustc -V)"
-              echo "Kernel: $(uname -a)"
-            } | tee .ci-logs/freebsd-diagnostics.log
-            pnpm install --no-frozen-lockfile 2>&1 | tee .ci-logs/freebsd-install.log
-            pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle 2>&1 | tee .ci-logs/freebsd-build.log
-
-      - name: Upload FreeBSD logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-bsd-freebsd-logs
-          path: .ci-logs/
-          if-no-files-found: warn
+            pnpm install --no-frozen-lockfile --link-workspace-packages=false
+            pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
   flatpak:
     name: Flatpak
@@ -413,45 +310,24 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Diagnostics
-        shell: bash
-        run: |
-          set -euxo pipefail
-          mkdir -p .ci-logs
-          {
-            echo "Node: $(node -v)"
-            echo "pnpm: $(pnpm -v)"
-            echo "Rust: $(rustc -V)"
-            echo "Cargo: $(cargo -V)"
-            echo "Flatpak: $(flatpak --version)"
-          } | tee .ci-logs/flatpak-diagnostics.log
-
       - name: Install dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --no-frozen-lockfile 2>&1 | tee .ci-logs/flatpak-install.log
+          pnpm install --no-frozen-lockfile --link-workspace-packages=false
 
       - name: Build desktop binary for Flatpak
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=flatpak pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle 2>&1 | tee .ci-logs/flatpak-binary-build.log
+          OTUBE_LINUX_FLAVOR=flatpak pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Build Flatpak bundle
         shell: bash
         run: |
           set -euxo pipefail
-          flatpak-builder --force-clean --repo=repo flatpak-build-dir packaging/flatpak/com.chillboiostudios.dawnchat.yml 2>&1 | tee .ci-logs/flatpak-builder.log
-          flatpak build-bundle repo DawnChat.flatpak com.chillboiostudios.dawnchat 2>&1 | tee .ci-logs/flatpak-bundle.log
-
-      - name: Upload Flatpak logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-flatpak-logs
-          path: .ci-logs/
-          if-no-files-found: error
+          flatpak-builder --force-clean --repo=repo flatpak-build-dir packaging/flatpak/com.chillboiostudios.dawnchat.yml
+          flatpak build-bundle repo DawnChat.flatpak com.chillboiostudios.dawnchat
 
       - name: Upload Flatpak
         uses: actions/upload-artifact@v4
