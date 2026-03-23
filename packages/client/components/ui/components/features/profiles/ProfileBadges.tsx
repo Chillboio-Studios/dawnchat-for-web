@@ -5,16 +5,16 @@ import { Trans, useLingui } from "@lingui-solid/solid/macro";
 import { User, UserBadges } from "stoat.js";
 import { styled } from "styled-system/jsx";
 
-import badgeJoke1 from "../../../../../public/assets/badges/amog.svg";
-import badgeJoke2 from "../../../../../public/assets/badges/amorbus.svg";
-import badgeDeveloper from "../../../../../public/assets/badges/developer.svg";
-import badgeEarlyAdopter from "../../../../../public/assets/badges/early_adopter.svg";
-import badgeFounder from "../../../../../public/assets/badges/founder.svg";
-import badgeModeration from "../../../../../public/assets/badges/moderation.svg";
-import badgePaw from "../../../../../public/assets/badges/paw.svg";
-import badgeRaccoon from "../../../../../public/assets/badges/raccoon.svg";
-import badgeSupporter from "../../../../../public/assets/badges/supporter.svg";
-import badgeTranslator from "../../../../../public/assets/badges/translator.svg";
+import badgeJoke1 from "../../../../../assets/badges/amog.svg";
+import badgeJoke2 from "../../../../../assets/badges/amorbus.svg";
+import badgeDeveloper from "../../../../../assets/badges/developer.svg";
+import badgeEarlyAdopter from "../../../../../assets/badges/early_adopter.svg";
+import badgeFounder from "../../../../../assets/badges/founder.svg";
+import badgeModeration from "../../../../../assets/badges/moderation.svg";
+import badgePaw from "../../../../../assets/badges/paw.svg";
+import badgeRaccoon from "../../../../../assets/badges/raccoon.svg";
+import badgeSupporter from "../../../../../assets/badges/supporter.svg";
+import badgeTranslator from "../../../../../assets/badges/translator.svg";
 import { Text } from "../../design";
 
 import { ProfileCard } from "./ProfileCard";
