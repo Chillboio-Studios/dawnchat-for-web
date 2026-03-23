@@ -1,9 +1,9 @@
-import { createEffect, createMemo } from "solid-js";
+import { createMemo } from "solid-js";
 import { AudioTrack, useTracks } from "solid-livekit-components";
 
 import { getTrackReferenceId, isLocal } from "@livekit/components-core";
 import { Key } from "@solid-primitives/keyed";
-import { RemoteTrackPublication, Track } from "livekit-client";
+import { Track } from "livekit-client";
 
 import { useState } from "@revolt/state";
 
@@ -17,11 +17,10 @@ export function RoomAudioManager() {
     [
       Track.Source.Microphone,
       Track.Source.ScreenShareAudio,
-      Track.Source.Unknown,
     ],
     {
       updateOnlyOn: [],
-      onlySubscribed: false,
+      onlySubscribed: true,
     },
   );
 
@@ -32,15 +31,6 @@ export function RoomAudioManager() {
         track.publication.kind === Track.Kind.Audio,
     ),
   );
-
-  createEffect(() => {
-    const tracks = filteredTracks();
-    console.info("[rtc] filtered tracks", filteredTracks());
-    for (const track of tracks) {
-      (track.publication as RemoteTrackPublication).setSubscribed(true);
-      console.info(track.publication);
-    }
-  });
 
   return (
     <div style={{ display: "none" }}>
@@ -54,9 +44,12 @@ export function RoomAudioManager() {
             }
             muted={
               state.voice.getUserMuted(track().participant.identity) ||
+              (track().source === Track.Source.ScreenShareAudio &&
+                state.voice.getUserScreenShareAudioMuted(
+                  track().participant.identity,
+                )) ||
               voice.deafen()
             }
-            enableBoosting
           />
         )}
       </Key>

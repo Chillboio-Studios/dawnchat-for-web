@@ -19,6 +19,7 @@ import { styled } from "styled-system/jsx";
 import { UserContextMenu } from "@revolt/app";
 import { useUser } from "@revolt/markdown/users";
 import { InRoom } from "@revolt/rtc";
+import { useState } from "@revolt/state";
 import { Avatar } from "@revolt/ui/components/design";
 import { OverflowingText } from "@revolt/ui/components/utils";
 import { Symbol } from "@revolt/ui/components/utils/Symbol";
@@ -226,6 +227,7 @@ const AvatarOnly = styled("div", {
  * Shown when the track source is a screenshare
  */
 function ScreenshareTile() {
+  const state = useState();
   const participant = useEnsureParticipant();
   const track = useMaybeTrackRefContext();
   const user = useUser(participant.identity);
@@ -234,6 +236,9 @@ function ScreenshareTile() {
     participant,
     source: Track.Source.ScreenShareAudio,
   });
+
+  const isMutedLocally = () =>
+    state.voice.getUserScreenShareAudioMuted(participant.identity);
 
   let videoRef: HTMLDivElement | undefined;
 
@@ -268,9 +273,25 @@ function ScreenshareTile() {
       <Overlay showOnHover>
         <OverlayInner>
           <OverflowingText>{user().username}</OverflowingText>
-          <Show when={isMuted()}>
-            <Symbol size={18}>no_sound</Symbol>
-          </Show>
+          <button
+            onClick={(event) => {
+              event.stopPropagation();
+              state.voice.setUserScreenShareAudioMuted(
+                participant.identity,
+                !isMutedLocally(),
+              );
+            }}
+            class={css({
+              display: "grid",
+              placeItems: "center",
+              cursor: "pointer",
+            })}
+            aria-label="Toggle local screenshare audio"
+          >
+            <Show when={isMuted() || isMutedLocally()} fallback={<Symbol size={18}>volume_up</Symbol>}>
+              <Symbol size={18}>no_sound</Symbol>
+            </Show>
+          </button>
           <Symbol size={18}>fullscreen</Symbol>
         </OverlayInner>
       </Overlay>

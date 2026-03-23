@@ -125,6 +125,34 @@ export function VoiceCallCardActions(props: { size: "xs" | "sm" }) {
           <Symbol>stop_screen_share</Symbol>
         </Show>
       </IconButton>
+      <Show when={voice.screenshare()}>
+        <IconButton
+          size={props.size}
+          variant={voice.isScreenshareAudioMutedForEveryone ? "tonal" : "filled"}
+          onPress={async () => {
+            try {
+              await voice.toggleScreenshareAudioForEveryone();
+            } catch (error) {
+              console.error("[voice] screenshare audio toggle failed", error);
+            }
+          }}
+          use:floating={{
+            tooltip: {
+              placement: "top",
+              content: voice.isScreenshareAudioMutedForEveryone
+                ? t`Unmute screenshare audio for everyone`
+                : t`Mute screenshare audio for everyone`,
+            },
+          }}
+        >
+          <Show
+            when={voice.isScreenshareAudioMutedForEveryone}
+            fallback={<Symbol>volume_up</Symbol>}
+          >
+            <Symbol>volume_off</Symbol>
+          </Show>
+        </IconButton>
+      </Show>
       <Button
         size={props.size}
         variant="_error"

@@ -90,6 +90,8 @@ class Voice {
     this.disconnect();
 
     const room = new Room({
+      adaptiveStream: this.#settings.videoAdaptiveStream,
+      dynacast: this.#settings.videoDynacast,
       audioCaptureDefaults: {
         deviceId: this.#settings.preferredAudioInputDevice,
         echoCancellation: this.#settings.echoCancellation,
@@ -149,7 +151,7 @@ class Voice {
 
       await Promise.race([
         room.connect(auth.url, auth.token, {
-          autoSubscribe: false,
+          autoSubscribe: true,
         }),
         new Promise((_, reject) => {
           setTimeout(() => {
@@ -311,6 +313,37 @@ class Voice {
       this.#setScreenshare(room.localParticipant.isScreenShareEnabled);
       throw error;
     }
+  }
+
+  async toggleScreenshareAudioForEveryone() {
+    const room = this.room();
+    if (!room) throw "invalid state";
+
+    const publication = room.localParticipant
+      .getTrackPublication(Track.Source.ScreenShareAudio)
+      ?.track;
+
+    if (!publication || publication.kind !== Track.Kind.Audio) {
+      return;
+    }
+
+    if (publication.isMuted) {
+      await publication.unmute();
+    } else {
+      await publication.mute();
+    }
+  }
+
+  get isScreenshareAudioMutedForEveryone() {
+    const track = this.room()
+      ?.localParticipant.getTrackPublication(Track.Source.ScreenShareAudio)
+      ?.track;
+
+    if (!track || track.kind !== Track.Kind.Audio) {
+      return false;
+    }
+
+    return track.isMuted;
   }
 
   getConnectedUser(userId: string) {

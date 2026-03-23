@@ -17,6 +17,8 @@ export interface TypeVoice {
   preferredAudioInputDevice?: string;
   preferredAudioOutputDevice?: string;
   screenShareWithAudio: boolean;
+  videoAdaptiveStream: boolean;
+  videoDynacast: boolean;
 
   echoCancellation: boolean;
   noiseSupression: NoiseSuppresionState;
@@ -27,6 +29,7 @@ export interface TypeVoice {
 
   userVolumes: Record<string, number>;
   userMutes: Record<string, boolean>;
+  userScreenShareAudioMutes: Record<string, boolean>;
 }
 
 /**
@@ -54,6 +57,8 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
   default(): TypeVoice {
     return {
       screenShareWithAudio: false,
+      videoAdaptiveStream: true,
+      videoDynacast: true,
       echoCancellation: true,
       noiseSupression: "browser",
       autoGainControl: true,
@@ -61,6 +66,7 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
       outputVolume: 1.0,
       userVolumes: {},
       userMutes: {},
+      userScreenShareAudioMutes: {},
     };
   }
 
@@ -80,6 +86,14 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
 
     if (typeof input.screenShareWithAudio === "boolean") {
       data.screenShareWithAudio = input.screenShareWithAudio;
+    }
+
+    if (typeof input.videoAdaptiveStream === "boolean") {
+      data.videoAdaptiveStream = input.videoAdaptiveStream;
+    }
+
+    if (typeof input.videoDynacast === "boolean") {
+      data.videoDynacast = input.videoDynacast;
     }
 
     if (typeof input.echoCancellation === "boolean") {
@@ -127,6 +141,14 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
         .forEach(([k, v]) => (data.userMutes[k] = v));
     }
 
+    if (typeof input.userScreenShareAudioMutes === "object") {
+      Object.entries(input.userScreenShareAudioMutes)
+        .filter(
+          ([userId, muted]) => typeof userId === "string" && muted === true,
+        )
+        .forEach(([k, v]) => (data.userScreenShareAudioMutes[k] = v));
+    }
+
     return data;
   }
 
@@ -158,12 +180,30 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
   }
 
   /**
+   * Set whether a user's shared screen audio is muted locally
+   * @param userId User ID
+   * @param muted Whether they should be muted locally
+   */
+  setUserScreenShareAudioMuted(userId: string, muted: boolean) {
+    this.set("userScreenShareAudioMutes", userId, muted);
+  }
+
+  /**
    * Get whether a user is muted
    * @param userId User ID
    * @returns Whether muted
    */
   getUserMuted(userId: string): boolean {
     return this.get().userMutes[userId] || false;
+  }
+
+  /**
+   * Get whether a user's shared screen audio is muted locally
+   * @param userId User ID
+   * @returns Whether muted
+   */
+  getUserScreenShareAudioMuted(userId: string): boolean {
+    return this.get().userScreenShareAudioMutes[userId] || false;
   }
 
   /**
@@ -185,6 +225,20 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
    */
   set screenShareWithAudio(value: boolean) {
     this.set("screenShareWithAudio", value);
+  }
+
+  /**
+   * Prefer adaptive stream for better call stability
+   */
+  set videoAdaptiveStream(value: boolean) {
+    this.set("videoAdaptiveStream", value);
+  }
+
+  /**
+   * Enable dynacast for better call stability
+   */
+  set videoDynacast(value: boolean) {
+    this.set("videoDynacast", value);
   }
 
   /**
@@ -233,7 +287,7 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
    * Get the preferred audio output device
    */
   get preferredAudioOutputDevice(): string | undefined {
-    return this.get().preferredAudioInputDevice;
+    return this.get().preferredAudioOutputDevice;
   }
 
   /**
@@ -241,6 +295,20 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
    */
   get screenShareWithAudio(): boolean {
     return this.get().screenShareWithAudio;
+  }
+
+  /**
+   * Get adaptive stream preference
+   */
+  get videoAdaptiveStream(): boolean {
+    return this.get().videoAdaptiveStream;
+  }
+
+  /**
+   * Get dynacast preference
+   */
+  get videoDynacast(): boolean {
+    return this.get().videoDynacast;
   }
 
   /**

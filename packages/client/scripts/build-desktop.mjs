@@ -21,17 +21,18 @@ if (!["linux", "linux-nobundle", "windows"].includes(target)) {
 
 const envFile =
   process.env.OTUBE_ENV_FILE || path.join(repoRoot, ".env.client");
-const parsed = dotenv.parse(readFileSync(envFile, "utf8"));
+const parsed = existsSync(envFile)
+  ? dotenv.parse(readFileSync(envFile, "utf8"))
+  : {};
 
-const appApiUrl = (parsed.APP_API_URL || "").trim();
-const clientApiUrl = (parsed.APP_CLIENT_API_URL || "").trim();
-
-if (!appApiUrl || !clientApiUrl) {
-  console.error(
-    "Missing APP_API_URL or APP_CLIENT_API_URL in .env.client (or OTUBE_ENV_FILE).",
-  );
-  process.exit(1);
-}
+const appApiUrl = (
+  process.env.APP_API_URL || parsed.APP_API_URL || "http://localhost:3000/api"
+).trim();
+const clientApiUrl = (
+  process.env.APP_CLIENT_API_URL ||
+  parsed.APP_CLIENT_API_URL ||
+  "http://localhost:3000"
+).trim();
 
 const normalizedApiUrl = appApiUrl.replace(/\/+$/, "");
 const normalizedClientApiUrl = clientApiUrl.replace(/\/+$/, "");

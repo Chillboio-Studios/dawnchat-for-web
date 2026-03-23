@@ -280,6 +280,10 @@ msgstr "Account ID:"
 msgid "Acknowledge"
 msgstr "Acknowledge"
 
+#: components/app/interface/settings/user/voice/VideoOptions.tsx
+msgid "Adaptive video stream"
+msgstr "Adaptive video stream"
+
 #: components/modal/modals/AddMembersToGroup.tsx
 #: components/modal/modals/AddBot.tsx
 msgid "Add"
@@ -1203,6 +1207,14 @@ msgstr "Oneday"
 msgid "Duration"
 msgstr "Duration"
 
+#: components/app/interface/settings/user/voice/VideoOptions.tsx
+msgid "Dynamic video layers (Dynacast)"
+msgstr "Dynamic video layers (Dynacast)"
+
+#: components/app/interface/settings/user/voice/VideoOptions.tsx
+msgid "Dynamically adjusts received video quality to reduce flicker and network instability."
+msgstr "Dynamically adjusts received video quality to reduce flicker and network instability."
+
 #. placeholder {0}: props.member.displayName
 #: components/modal/modals/UserProfileRoles.tsx
 msgid "Edit {0}'s roles"
@@ -2031,6 +2043,10 @@ msgstr "Mute lower-ranking members in voice call"
 msgid "Mute Members"
 msgstr "Utemay Embersmay"
 
+#: components/ui/components/features/voice/callCard/VoiceCallCardActions.tsx
+msgid "Mute screenshare audio for everyone"
+msgstr "Mute screenshare audio for everyone"
+
 #: components/app/menus/ServerContextMenu.tsx
 msgid "Mute Server"
 msgstr "Mute Server"
@@ -2849,6 +2865,10 @@ msgstr "Status"
 #~ msgid "Stoat will start in the system tray."
 #~ msgstr ""
 
+#: components/app/interface/settings/user/voice/VideoOptions.tsx
+msgid "Stops sending unnecessary high-quality layers to improve call stability."
+msgstr "Stops sending unnecessary high-quality layers to improve call stability."
+
 #: components/app/interface/settings/user/Feedback.tsx
 msgid "Submit feature suggestion"
 msgstr "Ubmitsay eaturefay uggestionsay"
@@ -3177,6 +3197,10 @@ msgstr "Unmark this channel as mature?"
 msgid "Unmute Channel"
 msgstr "Unmute Channel"
 
+#: components/ui/components/features/voice/callCard/VoiceCallCardActions.tsx
+msgid "Unmute screenshare audio for everyone"
+msgstr "Unmute screenshare audio for everyone"
+
 #: components/app/menus/ServerContextMenu.tsx
 msgid "Unmute Server"
 msgstr "Unmute Server"
@@ -3312,6 +3336,10 @@ msgstr "Version:"
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 msgid "Video"
 msgstr "Ideovay"
+
+#: components/app/interface/settings/user/voice/VideoOptions.tsx
+msgid "Video Settings"
+msgstr "Video Settings"
 
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 msgid "View Channel"

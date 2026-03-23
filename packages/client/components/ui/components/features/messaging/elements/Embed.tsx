@@ -70,7 +70,10 @@ export function Embed(props: { embed: MessageEmbed }) {
             loop={isGIF()}
             muted={isGIF()}
             autoplay={isGIF()}
+            playsinline
             controls={!isGIF()}
+            disablePictureInPicture={isGIF()}
+            controlsList={isGIF() ? "nofullscreen noremoteplayback" : undefined}
             preload="metadata"
             // bypass proxy for known GIF providers
             src={isGIF() ? video()!.url : video()!.proxiedURL}
