@@ -11,6 +11,10 @@ on:
     branches:
       - "**"
 
+concurrency:
+  group: desktop-builds-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -156,6 +160,16 @@ jobs:
           workspaces: |
             packages/client/src-tauri -> target
 
+      - name: Restore Flatpak builder cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .flatpak-builder/cache
+            .flatpak-builder/downloads
+          key: ${{ runner.os }}-flatpak-builder-${{ matrix.arch }}-${{ hashFiles('packaging/flatpak/com.chillboiostudios.dawnchat.yml', 'packages/client/src-tauri/tauri.conf.json', 'pnpm-lock.yaml', 'packages/client/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flatpak-builder-${{ matrix.arch }}-
+
       - name: Install dependencies
         shell: bash
         run: |
@@ -183,7 +197,7 @@ jobs:
         run: |
           set -euxo pipefail
           flatpak-builder --arch=${{ matrix.arch }} --default-branch=stable --force-clean --repo=repo flatpak-build-dir packaging/flatpak/com.chillboiostudios.dawnchat.yml
-          flatpak build-update-repo --generate-static-deltas --prune repo
+          flatpak build-update-repo --prune repo
           flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo repo DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat stable
 
       - name: Upload Flatpak
