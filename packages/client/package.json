@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "prepare": "panda codegen",
-    "build:web": "vite build",
+    "build:web": "node ./scripts/copyAssets.mjs && vite build",
     "build-desktop-linux": "node ./scripts/build-desktop.mjs linux",
     "build-desktop-windows": "node ./scripts/build-desktop.mjs windows"
   },

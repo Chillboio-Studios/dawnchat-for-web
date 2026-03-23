@@ -63,7 +63,7 @@ cd "${REPO_DIR}"
 
 echo "Adding Flathub remote and installing runtime..."
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-flatpak install --user -y flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08
+flatpak install --user -y flathub org.gnome.Platform//47 org.gnome.Sdk//47
 
 echo "Installing JS dependencies..."
 pnpm install --frozen-lockfile --prefer-offline

@@ -1,12 +1,13 @@
 app-id: com.chillboiostudios.dawnchat
-runtime: org.freedesktop.Platform
-runtime-version: "24.08"
-sdk: org.freedesktop.Sdk
+runtime: org.gnome.Platform
+runtime-version: "47"
+sdk: org.gnome.Sdk
 command: dawnchat
 finish-args:
   - --share=network
   - --share=ipc
   - --socket=x11
+  - --socket=fallback-x11
   - --socket=wayland
   - --socket=pulseaudio
   - --device=dri

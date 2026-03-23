@@ -59,7 +59,7 @@ export default {
   DEFAULT_GIFBOX_URL:
     (import.meta.env.DEV ? import.meta.env.VITE_DEV_GIFBOX_URL : undefined) ??
     (import.meta.env.VITE_GIFBOX_URL as string) ??
-    "https://api.gifbox.me",
+    "https://app.dawn-chat.com/gifbox",
   /**
    * hCaptcha site key to use if enabled
    */

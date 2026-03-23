@@ -7,7 +7,10 @@ type ErrorCaptureResult = {
   summary: string;
 };
 
-const sentryEnabled = Boolean(import.meta.env.VITE_SENTRY_DSN);
+const HARD_CODED_SENTRY_DSN =
+  "https://82ee7c93f5675dc1c4bbb122807eea64@o4508026382712832.ingest.us.sentry.io/4511091575095296";
+const sentryDsn = HARD_CODED_SENTRY_DSN;
+const sentryEnabled = Boolean(sentryDsn);
 
 const getRuntime = () => {
   try {
@@ -37,7 +40,7 @@ function toErrorSummary(error: unknown): string {
 
 if (sentryEnabled) {
   Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
+    dsn: sentryDsn,
     tunnel: import.meta.env.VITE_SENTRY_TUNNEL,
     release: `dawnchat-client@${version}`,
     environment: import.meta.env.MODE,

@@ -8,6 +8,7 @@ import { URL, fileURLToPath } from "node:url";
 
 import dotenv from "dotenv";
 import express from "express";
+import * as Sentry from "@sentry/node";
 import { WebSocketServer } from "ws";
 
 import { createCallStateStore } from "./callStateStore.mjs";
@@ -20,6 +21,27 @@ const rootDir = path.resolve(__dirname, "..");
 const distDir = path.resolve(rootDir, "packages/client/dist");
 
 dotenv.config({ path: path.resolve(rootDir, ".env") });
+
+const HARD_CODED_SENTRY_DSN =
+  "https://82ee7c93f5675dc1c4bbb122807eea64@o4508026382712832.ingest.us.sentry.io/4511091575095296";
+
+Sentry.init({
+  dsn: HARD_CODED_SENTRY_DSN,
+  release: `dawnchat-server@${process.env.npm_package_version || "dev"}`,
+  environment: process.env.NODE_ENV || "development",
+  tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE || 0),
+  normalizeDepth: 6,
+});
+
+function captureServerError(error, context, extras) {
+  Sentry.captureException(error, {
+    tags: {
+      context,
+      runtime: "server",
+    },
+    extra: extras,
+  });
+}
 
 const envPort = Number(process.env.SERVER_PORT);
 const port = Number.isInteger(envPort) && envPort > 0 ? envPort : 5000;
@@ -1534,6 +1556,7 @@ app.get("*", (req, res) => {
 
 app.use((err, _req, res, _next) => {
   console.error("[server] unhandled error", err);
+  captureServerError(err, "express_unhandled");
   sendErrorPage(
     res,
     500,
@@ -1861,6 +1884,16 @@ process.once("SIGINT", () => {
 });
 process.once("SIGTERM", () => {
   void shutdownOnce("SIGTERM");
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("[server] unhandled rejection", reason);
+  captureServerError(reason, "process_unhandled_rejection");
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("[server] uncaught exception", error);
+  captureServerError(error, "process_uncaught_exception");
 });
 
 function handleServerCommand(rawInput) {

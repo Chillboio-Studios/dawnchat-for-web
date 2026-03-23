@@ -137,7 +137,7 @@ jobs:
 
       - name: Install Flatpak runtime and SDK
         run: |
-          flatpak install --user -y flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08
+          flatpak install --user -y flathub org.gnome.Platform//47 org.gnome.Sdk//47
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
