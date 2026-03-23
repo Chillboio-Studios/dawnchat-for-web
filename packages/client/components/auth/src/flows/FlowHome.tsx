@@ -9,7 +9,7 @@ import { Navigate } from "@revolt/routing";
 import { Button, Column } from "@revolt/ui";
 
 import { useState } from "@revolt/state";
-import Wordmark from "../../../../public/assets/web/wordmark.svg?component-solid";
+import Wordmark from "../../../../assets/web/wordmark.svg?component-solid";
 
 /**
  * Flow for logging into an account

@@ -1,0 +1,14 @@
+/home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/deps/serde-8505cd1314ffa834.d: /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/build/serde-7427e6dbc4c14e1f/out/private.rs
+
+/home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/deps/libserde-8505cd1314ffa834.rlib: /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/build/serde-7427e6dbc4c14e1f/out/private.rs
+
+/home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/deps/libserde-8505cd1314ffa834.rmeta: /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/build/serde-7427e6dbc4c14e1f/out/private.rs
+
+/home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/build/serde-7427e6dbc4c14e1f/out/private.rs:
+
+# env-dep:OUT_DIR=/home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/build/serde-7427e6dbc4c14e1f/out

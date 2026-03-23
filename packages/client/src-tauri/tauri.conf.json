@@ -23,7 +23,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["all"],
+    "targets": "all",
     "category": "Network",
     "shortDescription": "DawnChat Desktop",
     "longDescription": "DawnChat desktop app built from the web client"

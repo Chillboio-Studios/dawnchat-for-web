@@ -19,7 +19,6 @@ env:
   TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  MISE_NODE_COMPILE: false
 
 jobs:
   windows:
@@ -32,23 +31,34 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Mise
-        uses: jdx/mise-action@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install dependencies
         shell: pwsh
-        run: mise install:frozen
+        run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
         shell: pwsh
-        run: mise build:deps
+        run: |
+          pnpm --filter stoat.js build
+          pnpm --filter solid-livekit-components build
+          pnpm --filter @lingui-solid/babel-plugin-lingui-macro build
+          pnpm --filter @lingui-solid/babel-plugin-extract-messages build
+          pnpm --filter client exec lingui compile --typescript
 
       - name: Build desktop app (Windows)
         shell: pwsh
-        run: mise exec -- pnpm build-windows
+        run: pnpm build-windows
 
       - name: Upload Windows bundles
         uses: actions/upload-artifact@v4
@@ -82,8 +92,14 @@ jobs:
             patchelf \
             pkg-config
 
-      - name: Setup Mise
-        uses: jdx/mise-action@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -92,19 +108,23 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          mise install:frozen
+          pnpm install --frozen-lockfile
 
       - name: Build dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          mise build:deps
+          pnpm --filter stoat.js build
+          pnpm --filter solid-livekit-components build
+          pnpm --filter @lingui-solid/babel-plugin-lingui-macro build
+          pnpm --filter @lingui-solid/babel-plugin-extract-messages build
+          pnpm --filter client exec lingui compile --typescript
 
       - name: Build desktop app (Debian)
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=debian mise exec -- pnpm build-linux
+          OTUBE_LINUX_FLAVOR=debian pnpm build-linux
 
       - name: Upload Debian bundles
         uses: actions/upload-artifact@v4
@@ -142,8 +162,7 @@ jobs:
             webkit2gtk-4.1 \
             zip
           rustup default stable
-          curl https://mise.run | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          npm install -g pnpm@10.10.0
 
       - name: Checkout
         uses: actions/checkout@v5
@@ -154,19 +173,23 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          mise install:frozen
+          pnpm install --frozen-lockfile
 
       - name: Build dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          mise build:deps
+          pnpm --filter stoat.js build
+          pnpm --filter solid-livekit-components build
+          pnpm --filter @lingui-solid/babel-plugin-lingui-macro build
+          pnpm --filter @lingui-solid/babel-plugin-extract-messages build
+          pnpm --filter client exec lingui compile --typescript
 
       - name: Build desktop app (Arch binary)
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=arch mise exec -- pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
+          OTUBE_LINUX_FLAVOR=arch pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Upload Arch build output
         uses: actions/upload-artifact@v4
@@ -229,8 +252,7 @@ jobs:
         run: |
           set -euxo pipefail
           ${{ matrix.install }}
-          curl https://mise.run | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          npm install -g pnpm@10.10.0
 
       - name: Checkout (manual git clone)
         shell: bash
@@ -252,19 +274,23 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          mise install:frozen
+          pnpm install --frozen-lockfile
 
       - name: Build dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          mise build:deps
+          pnpm --filter stoat.js build
+          pnpm --filter solid-livekit-components build
+          pnpm --filter @lingui-solid/babel-plugin-lingui-macro build
+          pnpm --filter @lingui-solid/babel-plugin-extract-messages build
+          pnpm --filter client exec lingui compile --typescript
 
       - name: Build desktop app (other Linux binary)
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=${{ matrix.distro }} mise exec -- pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
+          OTUBE_LINUX_FLAVOR=${{ matrix.distro }} pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Upload other Linux build output
         uses: actions/upload-artifact@v4
@@ -330,8 +356,14 @@ jobs:
         run: |
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-      - name: Setup Mise
-        uses: jdx/mise-action@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -340,19 +372,23 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          mise install:frozen
+          pnpm install --frozen-lockfile
 
       - name: Build dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          mise build:deps
+          pnpm --filter stoat.js build
+          pnpm --filter solid-livekit-components build
+          pnpm --filter @lingui-solid/babel-plugin-lingui-macro build
+          pnpm --filter @lingui-solid/babel-plugin-extract-messages build
+          pnpm --filter client exec lingui compile --typescript
 
       - name: Build desktop binary for Flatpak
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=flatpak mise exec -- pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
+          OTUBE_LINUX_FLAVOR=flatpak pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Build Flatpak bundle
         shell: bash

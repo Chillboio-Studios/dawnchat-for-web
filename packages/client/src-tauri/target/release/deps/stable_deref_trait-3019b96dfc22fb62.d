@@ -1,0 +1,7 @@
+/home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/deps/stable_deref_trait-3019b96dfc22fb62.d: /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stable_deref_trait-1.2.1/src/lib.rs
+
+/home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/deps/libstable_deref_trait-3019b96dfc22fb62.rlib: /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stable_deref_trait-1.2.1/src/lib.rs
+
+/home/fttristan/Repos/otube-for-web/packages/client/src-tauri/target/release/deps/libstable_deref_trait-3019b96dfc22fb62.rmeta: /home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stable_deref_trait-1.2.1/src/lib.rs
+
+/home/fttristan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/stable_deref_trait-1.2.1/src/lib.rs:
