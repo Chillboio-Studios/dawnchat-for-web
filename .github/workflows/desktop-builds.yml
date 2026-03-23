@@ -231,6 +231,7 @@ jobs:
             install: |
               zypper --non-interactive refresh
               zypper --non-interactive install \
+                bash \
                 gcc-c++ \
                 git \
                 gtk3-devel \
@@ -247,20 +248,20 @@ jobs:
 
     steps:
       - name: Install distro dependencies
-        shell: bash
+        shell: sh
         run: |
-          set -euxo pipefail
+          set -eux
           ${{ matrix.install }}
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           npm install -g pnpm@10.10.0
 
       - name: Checkout (manual git clone)
-        shell: bash
+        shell: sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euxo pipefail
+          set -eux
           rm -rf "$GITHUB_WORKSPACE"
           mkdir -p "$GITHUB_WORKSPACE"
           cd "$GITHUB_WORKSPACE"
@@ -272,15 +273,15 @@ jobs:
           git submodule update --init --recursive
 
       - name: Install dependencies
-        shell: bash
+        shell: sh
         run: |
-          set -euxo pipefail
+          set -eux
           pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        shell: bash
+        shell: sh
         run: |
-          set -euxo pipefail
+          set -eux
           pnpm --filter stoat.js build
           pnpm --filter solid-livekit-components build
           pnpm --filter @lingui-solid/babel-plugin-lingui-macro build
@@ -288,9 +289,9 @@ jobs:
           pnpm --filter client exec lingui compile --typescript
 
       - name: Build desktop app (other Linux binary)
-        shell: bash
+        shell: sh
         run: |
-          set -euxo pipefail
+          set -eux
           OTUBE_LINUX_FLAVOR=${{ matrix.distro }} pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Upload other Linux build output
@@ -331,6 +332,10 @@ jobs:
       - name: Add Flathub remote
         run: |
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Install Flatpak runtime and SDK
+        run: |
+          flatpak install --user -y flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
