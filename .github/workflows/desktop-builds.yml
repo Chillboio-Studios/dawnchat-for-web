@@ -42,6 +42,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            packages/client/pnpm-lock.yaml
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -113,6 +116,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            packages/client/pnpm-lock.yaml
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -182,10 +188,19 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Restore pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: /root/.pnpm-store
+          key: ${{ runner.os }}-arch-pnpm-${{ hashFiles('pnpm-lock.yaml', 'packages/client/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-arch-pnpm-
+
       - name: Install dependencies
         shell: bash
         run: |
           set -euxo pipefail
+          pnpm config set store-dir /root/.pnpm-store
           pnpm install --frozen-lockfile
 
       - name: Build dependencies
@@ -265,10 +280,19 @@ jobs:
           git submodule sync --recursive
           git submodule update --init --recursive
 
+      - name: Restore pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: /root/.pnpm-store
+          key: ${{ runner.os }}-other-${{ matrix.distro }}-pnpm-${{ hashFiles('pnpm-lock.yaml', 'packages/client/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-other-${{ matrix.distro }}-pnpm-
+
       - name: Install dependencies
         shell: sh
         run: |
           set -eux
+          pnpm config set store-dir /root/.pnpm-store
           pnpm install --frozen-lockfile
 
       - name: Build dependencies
@@ -338,6 +362,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            packages/client/pnpm-lock.yaml
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
