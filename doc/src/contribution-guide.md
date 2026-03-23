@@ -1,13 +1,23 @@
-# Contribution Guide
+# DawnChat Documentation
 
-If you have not yet read it, read the main [contribution guide](https://developers.stoat.chat/developing/contrib/).
+This documentation highlights DawnChat features and user-focused behavior.
 
-You can get started with Stoat for Web by following [the development guide on the repository](https://github.com/stoatchat/for-web?tab=readme-ov-file#development-guide).
+## Features
 
-## Contribution Policy
+- Modern real-time messaging with rich text, media, and embeds.
+- Voice and video calling, including screen sharing and participant controls.
+- Cross-platform support for web and desktop experiences.
+- Accessibility-minded interface patterns for navigation, readability, and usability.
+- Moderation and account safety workflows for healthier communities.
 
-Since this project is still heavily in development, things may change rapidly at little notice, so it's recommended that you join [the Stoat server](https://stt.gg/Testers) and [the Stoat development server](https://stt.gg/API) where you can talk in `#Stoat for Web` about this project.
+## Report Bugs
 
-If something is explicitly marked as 'help wanted', then you can likely just pick up the issue and contribute a PR, however, you should make sure to communicate this on the issue so others don't start on the same issue as you, causing issues later.
+If you find a bug, please open an issue in this repository's Issues section.
 
-Otherwise, feel free to come ask about what you'd like to contribute and run it past a maintainer so that we can check if there are any potential conflicts.
+Include the following details:
+- What you were doing
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Device/OS/browser or desktop platform
+- Screenshots, recordings, or logs when available

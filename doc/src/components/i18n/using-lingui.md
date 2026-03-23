@@ -1,53 +1,23 @@
-# Using Lingui
+# DawnChat Documentation
 
-Import the macro package wherever you wish to use Lingui, prefer to use the JSX syntax:
+This documentation highlights DawnChat features and user-focused behavior.
 
-```typescript
-import { Trans } from "@lingui-solid/solid/macro";
+## Features
 
-<Trans>Hi, I am a string!</Trans>
+- Modern real-time messaging with rich text, media, and embeds.
+- Voice and video calling, including screen sharing and participant controls.
+- Cross-platform support for web and desktop experiences.
+- Accessibility-minded interface patterns for navigation, readability, and usability.
+- Moderation and account safety workflows for healthier communities.
 
-<Trans>There are {5} users in queue.</Trans>
-```
+## Report Bugs
 
-But if necessary, you can use the hook where strings are needed:
+If you find a bug, please open an issue in this repository's Issues section.
 
-```typescript
-import { useLingui } from "@lingui-solid/solid/macro";
-
-const { t } = useLingui();
-
-t`Hello, chat!`;
-
-t`There are {3} people in your walls.`;
-```
-
-If your use case doesn't fit here, ask a maintainer for guidance.
-
-## Plurals
-
-Use the Plural component:
-
-```typescript
-import { Plural } from "@lingui-solid/solid/macro";
-
-<Plural
-  value={5}
-  one="# Member"
-  other="# Members"
-/>
-```
-
-Learn more in the [Lingui documentation](https://lingui.dev/guides/plurals).
-
-## Updating catalogs
-
-To update the catalogs, one must run:
-
-```bash
-pnpm --filter client lingui:extract && \
-pnpm --filter client lingui:compile
-```
-
-**NB. don't run this yourself!** \
-A maintainer will do this regularly & after merge down to `main`!
+Include the following details:
+- What you were doing
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Device/OS/browser or desktop platform
+- Screenshots, recordings, or logs when available

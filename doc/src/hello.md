@@ -1,11 +1,23 @@
-# Stoat for Web & Friends
+# DawnChat Documentation
 
-Welcome to the developer documentation for the Stoat for Web project and general guidelines for other platforms we build for.
+This documentation highlights DawnChat features and user-focused behavior.
 
-This is very much incomplete and needs more work!
+## Features
 
-## Documentation Contribution Guidelines
+- Modern real-time messaging with rich text, media, and embeds.
+- Voice and video calling, including screen sharing and participant controls.
+- Cross-platform support for web and desktop experiences.
+- Accessibility-minded interface patterns for navigation, readability, and usability.
+- Moderation and account safety workflows for healthier communities.
 
-This list is also very much incomplete, but it'll grow as time goes on:
+## Report Bugs
 
-- Convert all assets to WebP when contributing new images.
+If you find a bug, please open an issue in this repository's Issues section.
+
+Include the following details:
+- What you were doing
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Device/OS/browser or desktop platform
+- Screenshots, recordings, or logs when available

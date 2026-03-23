@@ -1,27 +1,23 @@
-# Summary
+# DawnChat Documentation
 
-- [Introduction](./hello.md)
-- [Contribution Guide](./contribution-guide.md)
-- [Feature Matrix](./feature-matrix.md)
-- [Project Structure]()
-- [User Interface]()
-  - [Navigation]()
-    - [Server List Sidebar]()
-    - [Conversations Sidebar](./user-interface/navigation/conversations.md)
-    - [Server Sidebar](./user-interface/navigation/server-sidebar.md)
-  - [Channels]()
-    - [Text Channels](./user-interface/channels/text-channels.md)
-- [Components]()
-  - [Client]()
-    - [Session Lifecycle](./components/client/session-lifecycle.md)
-  - [@revolt/i18n]()
-    - [Using Lingui](./components/i18n/using-lingui.md)
-    - [Using Dayjs](./components/i18n/using-dayjs.md)
-    - [Translating Errors](./components/i18n/translating-errors.md)
-  - [@revolt/modal]()
-    - [General Guidelines](./components/modal/guidelines.md)
-  - [@revolt/ui]()
-    - [Themes]()
-      - [Reference Guide](./components/ui/themes/reference.md)
-    - [Tools]()
-      - [Form2](./components/ui/tools/form2.md)
+This documentation highlights DawnChat features and user-focused behavior.
+
+## Features
+
+- Modern real-time messaging with rich text, media, and embeds.
+- Voice and video calling, including screen sharing and participant controls.
+- Cross-platform support for web and desktop experiences.
+- Accessibility-minded interface patterns for navigation, readability, and usability.
+- Moderation and account safety workflows for healthier communities.
+
+## Report Bugs
+
+If you find a bug, please open an issue in this repository's Issues section.
+
+Include the following details:
+- What you were doing
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Device/OS/browser or desktop platform
+- Screenshots, recordings, or logs when available
