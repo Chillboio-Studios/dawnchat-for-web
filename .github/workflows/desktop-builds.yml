@@ -19,6 +19,7 @@ env:
   TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  MISE_NODE_COMPILE: false
 
 jobs:
   windows:
@@ -31,21 +32,19 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: pnpm
+      - name: Setup Mise
+        uses: jdx/mise-action@v3
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install dependencies
         shell: pwsh
-        run: pnpm install --no-frozen-lockfile --link-workspace-packages=false
+        run: mise install:frozen
+
+      - name: Build dependencies
+        shell: pwsh
+        run: mise build:deps
 
       - name: Build desktop app (Windows)
         shell: pwsh
@@ -83,14 +82,8 @@ jobs:
             patchelf \
             pkg-config
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: pnpm
+      - name: Setup Mise
+        uses: jdx/mise-action@v3
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -99,7 +92,13 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --no-frozen-lockfile --link-workspace-packages=false
+          mise install:frozen
+
+      - name: Build dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mise build:deps
 
       - name: Build desktop app (Debian)
         shell: bash
@@ -140,9 +139,11 @@ jobs:
             openssl \
             pkgconf \
             rustup \
-            webkit2gtk-4.1
+            webkit2gtk-4.1 \
+            zip
           rustup default stable
-          npm install -g pnpm@10.10.0
+          curl https://mise.run | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Checkout
         uses: actions/checkout@v5
@@ -153,7 +154,13 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --no-frozen-lockfile --link-workspace-packages=false
+          mise install:frozen
+
+      - name: Build dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mise build:deps
 
       - name: Build desktop app (Arch binary)
         shell: bash
@@ -187,6 +194,7 @@ jobs:
                 libappindicator-gtk3-devel \
                 libstdc++-static \
                 make \
+                curl \
                 nodejs \
                 npm \
                 openssl-devel \
@@ -204,6 +212,7 @@ jobs:
                 gtk3-devel \
                 libappindicator3-devel \
                 make \
+                curl \
                 nodejs \
                 npm \
                 openssl-devel \
@@ -220,7 +229,8 @@ jobs:
         run: |
           set -euxo pipefail
           ${{ matrix.install }}
-          npm install -g pnpm@10.10.0
+          curl https://mise.run | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Checkout
         uses: actions/checkout@v5
@@ -231,7 +241,13 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --no-frozen-lockfile --link-workspace-packages=false
+          mise install:frozen
+
+      - name: Build dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mise build:deps
 
       - name: Build desktop app (other Linux binary)
         shell: bash
@@ -260,11 +276,13 @@ jobs:
           usesh: true
           prepare: |
             pkg install -y bash curl git node npm pkgconf rust
-            npm install -g pnpm@10.10.0
+            curl https://mise.run | sh
           run: |
             set -eux
             cd $GITHUB_WORKSPACE
-            pnpm install --no-frozen-lockfile --link-workspace-packages=false
+            export PATH="$HOME/.local/bin:$PATH"
+            mise install:frozen
+            mise build:deps
             pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
   flatpak:
@@ -298,14 +316,8 @@ jobs:
         run: |
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: pnpm
+      - name: Setup Mise
+        uses: jdx/mise-action@v3
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -314,7 +326,13 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          pnpm install --no-frozen-lockfile --link-workspace-packages=false
+          mise install:frozen
+
+      - name: Build dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mise build:deps
 
       - name: Build desktop binary for Flatpak
         shell: bash
