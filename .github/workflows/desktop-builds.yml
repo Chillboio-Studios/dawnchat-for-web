@@ -48,7 +48,7 @@ jobs:
 
       - name: Build desktop app (Windows)
         shell: pwsh
-        run: pnpm build-windows
+        run: mise exec -- pnpm build-windows
 
       - name: Upload Windows bundles
         uses: actions/upload-artifact@v4
@@ -104,7 +104,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=debian pnpm build-linux
+          OTUBE_LINUX_FLAVOR=debian mise exec -- pnpm build-linux
 
       - name: Upload Debian bundles
         uses: actions/upload-artifact@v4
@@ -166,7 +166,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=arch pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
+          OTUBE_LINUX_FLAVOR=arch mise exec -- pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Upload Arch build output
         uses: actions/upload-artifact@v4
@@ -232,10 +232,21 @@ jobs:
           curl https://mise.run | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
+      - name: Checkout (manual git clone)
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euxo pipefail
+          rm -rf "$GITHUB_WORKSPACE"
+          mkdir -p "$GITHUB_WORKSPACE"
+          cd "$GITHUB_WORKSPACE"
+          git init
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "$GITHUB_SHA"
+          git checkout --force FETCH_HEAD
+          git submodule sync --recursive
+          git submodule update --init --recursive
 
       - name: Install dependencies
         shell: bash
@@ -253,7 +264,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=${{ matrix.distro }} pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
+          OTUBE_LINUX_FLAVOR=${{ matrix.distro }} mise exec -- pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Upload other Linux build output
         uses: actions/upload-artifact@v4
@@ -276,13 +287,16 @@ jobs:
           usesh: true
           prepare: |
             pkg install -y bash curl git node npm pkgconf rust
-            curl https://mise.run | sh
+            npm install -g pnpm@10.10.0
           run: |
             set -eux
             cd $GITHUB_WORKSPACE
-            export PATH="$HOME/.local/bin:$PATH"
-            mise install:frozen
-            mise build:deps
+            pnpm install --frozen-lockfile
+            pnpm --filter stoat.js build
+            pnpm --filter solid-livekit-components build
+            pnpm --filter @lingui-solid/babel-plugin-lingui-macro build
+            pnpm --filter @lingui-solid/babel-plugin-extract-messages build
+            pnpm --filter client exec lingui compile --typescript
             pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
   flatpak:
@@ -338,7 +352,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          OTUBE_LINUX_FLAVOR=flatpak pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
+          OTUBE_LINUX_FLAVOR=flatpak mise exec -- pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
       - name: Build Flatpak bundle
         shell: bash

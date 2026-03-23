@@ -25,7 +25,6 @@ import MdHome from "@material-design-icons/svg/filled/home.svg?component-solid";
 import MdRateReview from "@material-design-icons/svg/filled/rate_review.svg?component-solid";
 import MdSettings from "@material-design-icons/svg/filled/settings.svg?component-solid";
 
-import Wordmark from "../../public/assets/web/wordmark.svg?component-solid";
 import splashButtons from "./homeSplashButtons.json";
 
 import { HeaderIcon } from "./common/CommonHeader";
@@ -299,10 +298,11 @@ export function HomePage() {
           </NotFoundNotice>
         </Show>
         <Column>
-          <Wordmark
+          <img
+            src="/assets/web/wordmark.svg"
+            alt="DawnChat"
             class={css({
               width: "160px",
-              fill: "var(--md-sys-color-on-surface)",
             })}
           />
         </Column>
