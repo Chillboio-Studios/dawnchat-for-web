@@ -45,12 +45,12 @@ import { ModerationView } from "./interface/ModerationView";
 import { ServerHome } from "./interface/ServerHome";
 import { ChannelPage } from "./interface/channels/ChannelPage";
 import { ModerationEntityView } from "./interface/moderation/ModerationEntityView";
-import { captureClientError } from "./sentry";
+import { captureClientError, isSentryEnabled } from "./sentry";
 import "./serviceWorkerInterface";
 
 attachDevtoolsOverlay();
 
-function renderFatalErrorBanner(message: string) {
+function renderFatalErrorBanner(message: string, details?: string) {
   const existing = document.getElementById("fatal-error-banner");
   if (existing) return;
 
@@ -67,21 +67,35 @@ function renderFatalErrorBanner(message: string) {
   banner.style.color = "#ffffff";
   banner.style.fontFamily = "monospace";
   banner.style.fontSize = "13px";
-  banner.textContent = message;
+  banner.textContent = details ? `${message} | ${details}` : message;
 
   document.body.appendChild(banner);
 }
 
 function installGlobalErrorHandling() {
   window.addEventListener("error", (event) => {
-    captureClientError(event.error ?? event.message, "window.error");
-    renderFatalErrorBanner("A runtime error occurred. The app entered safe mode.");
+    const result = captureClientError(event.error ?? event.message, "window.error", {
+      source: event.filename,
+      line: event.lineno,
+      column: event.colno,
+    });
+
+    renderFatalErrorBanner(
+      "A runtime error occurred. The app entered safe mode.",
+      result.eventId
+        ? `${result.summary} (event ${result.eventId})`
+        : result.summary,
+    );
   });
 
   window.addEventListener("unhandledrejection", (event) => {
-    captureClientError(event.reason, "window.unhandledrejection");
+    const result = captureClientError(event.reason, "window.unhandledrejection");
+
     renderFatalErrorBanner(
       "An async runtime error occurred. The app entered safe mode.",
+      result.eventId
+        ? `${result.summary} (event ${result.eventId})`
+        : result.summary,
     );
     event.preventDefault();
   });
@@ -178,7 +192,7 @@ function MountContext(props: { children?: JSX.Element }) {
 }
 
 function FatalAppFallback(props: { error: unknown; reset: () => void }) {
-  captureClientError(props.error, "solid.error-boundary");
+  const result = captureClientError(props.error, "solid.error-boundary");
 
   return (
     <div
@@ -206,6 +220,30 @@ function FatalAppFallback(props: { error: unknown; reset: () => void }) {
         <p style={{ margin: "0 0 16px", opacity: 0.92 }}>
           Error details were captured. You can try recovering without restarting.
         </p>
+        <p
+          style={{
+            margin: "0 0 8px",
+            opacity: 0.95,
+            "font-family": "monospace",
+            "font-size": "12px",
+            "word-break": "break-word",
+          }}
+        >
+          {result.summary}
+        </p>
+        <Show when={isSentryEnabled() && result.eventId}>
+          <p
+            style={{
+              margin: "0 0 16px",
+              opacity: 0.85,
+              "font-family": "monospace",
+              "font-size": "12px",
+              "word-break": "break-word",
+            }}
+          >
+            Sentry event: {result.eventId}
+          </p>
+        </Show>
         <div style={{ display: "flex", gap: "10px", "flex-wrap": "wrap" }}>
           <button
             type="button"

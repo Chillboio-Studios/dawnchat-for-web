@@ -50,15 +50,40 @@ export function Embed(props: { embed: MessageEmbed }) {
       ? (props.embed as ImageEmbed)
       : isGIF() && (props.embed as WebsiteEmbed).image) || undefined;
 
+  const imageSrc = () => {
+    const media = image();
+    if (!media) return undefined;
+
+    if (isGIF()) return media.url;
+    return media.proxiedURL || media.url;
+  };
+
+  const videoSrc = () => {
+    const media = video();
+    if (!media) return undefined;
+
+    if (isGIF()) return media.url;
+    return media.proxiedURL || media.url;
+  };
+
   return (
     <Switch fallback={`Could not render ${props.embed.type}!`}>
       <Match when={image()}>
         <SizedContent width={image()!.width} height={image()!.height}>
           <img
             // bypass proxy for known GIF providers
-            src={isGIF() ? image()!.url : image()!.proxiedURL}
+            src={imageSrc()}
             loading="lazy"
             class={css({ cursor: "pointer" })}
+            onError={(event) => {
+              const fallback = image()?.url;
+              if (!fallback) return;
+
+              const target = event.currentTarget;
+              if (target.src !== fallback) {
+                target.src = fallback;
+              }
+            }}
             onClick={() =>
               openModal({
                 type: "image_viewer",
@@ -81,8 +106,17 @@ export function Embed(props: { embed: MessageEmbed }) {
             controlsList={isGIF() ? "nofullscreen noremoteplayback" : undefined}
             preload="metadata"
             // bypass proxy for known GIF providers
-            src={isGIF() ? video()!.url : video()!.proxiedURL}
+            src={videoSrc()}
             class={css({ cursor: isGIF() ? "pointer" : "unset" })}
+            onError={(event) => {
+              const fallback = video()?.url;
+              if (!fallback) return;
+
+              const target = event.currentTarget;
+              if (target.src !== fallback) {
+                target.src = fallback;
+              }
+            }}
             onClick={() =>
               isGIF() &&
               openModal({
