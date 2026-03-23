@@ -50,26 +50,89 @@ import "./serviceWorkerInterface";
 
 attachDevtoolsOverlay();
 
-function renderFatalErrorBanner(message: string, details?: string) {
-  const existing = document.getElementById("fatal-error-banner");
-  if (existing) return;
+function renderFatalErrorModal(message: string, details: string) {
+  let overlay = document.getElementById("fatal-error-modal-overlay");
+  let body = document.getElementById("fatal-error-modal-body");
 
-  const banner = document.createElement("div");
-  banner.id = "fatal-error-banner";
-  banner.setAttribute("role", "alert");
-  banner.style.position = "fixed";
-  banner.style.top = "0";
-  banner.style.left = "0";
-  banner.style.right = "0";
-  banner.style.zIndex = "2147483647";
-  banner.style.padding = "12px 16px";
-  banner.style.background = "#7f1d1d";
-  banner.style.color = "#ffffff";
-  banner.style.fontFamily = "monospace";
-  banner.style.fontSize = "13px";
-  banner.textContent = details ? `${message} | ${details}` : message;
+  if (!overlay || !body) {
+    overlay = document.createElement("div");
+    overlay.id = "fatal-error-modal-overlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.style.position = "fixed";
+    overlay.style.inset = "0";
+    overlay.style.zIndex = "2147483647";
+    overlay.style.display = "grid";
+    overlay.style.placeItems = "center";
+    overlay.style.padding = "20px";
+    overlay.style.background = "rgba(17, 24, 39, 0.78)";
 
-  document.body.appendChild(banner);
+    const modal = document.createElement("div");
+    modal.style.width = "min(560px, 100%)";
+    modal.style.background = "#111827";
+    modal.style.border = "1px solid #374151";
+    modal.style.borderRadius = "12px";
+    modal.style.padding = "18px";
+    modal.style.color = "#f9fafb";
+    modal.style.fontFamily =
+      'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif';
+
+    const title = document.createElement("h2");
+    title.textContent = "The app hit an unexpected error";
+    title.style.margin = "0 0 10px";
+    title.style.fontSize = "18px";
+
+    const description = document.createElement("p");
+    description.textContent =
+      "Error details were captured and sent to Sentry when enabled.";
+    description.style.margin = "0 0 14px";
+    description.style.opacity = "0.92";
+
+    body = document.createElement("p");
+    body.id = "fatal-error-modal-body";
+    body.style.margin = "0 0 16px";
+    body.style.fontFamily = "monospace";
+    body.style.fontSize = "12px";
+    body.style.wordBreak = "break-word";
+
+    const actions = document.createElement("div");
+    actions.style.display = "flex";
+    actions.style.gap = "10px";
+    actions.style.flexWrap = "wrap";
+
+    const continueButton = document.createElement("button");
+    continueButton.type = "button";
+    continueButton.textContent = "Continue";
+    continueButton.style.padding = "10px 14px";
+    continueButton.style.border = "1px solid #4b5563";
+    continueButton.style.borderRadius = "8px";
+    continueButton.style.background = "#2563eb";
+    continueButton.style.color = "#ffffff";
+    continueButton.style.cursor = "pointer";
+    continueButton.addEventListener("click", () => {
+      overlay?.remove();
+    });
+
+    const refreshButton = document.createElement("button");
+    refreshButton.type = "button";
+    refreshButton.textContent = "Refresh";
+    refreshButton.style.padding = "10px 14px";
+    refreshButton.style.border = "1px solid #4b5563";
+    refreshButton.style.borderRadius = "8px";
+    refreshButton.style.background = "transparent";
+    refreshButton.style.color = "#f9fafb";
+    refreshButton.style.cursor = "pointer";
+    refreshButton.addEventListener("click", () => {
+      window.location.reload();
+    });
+
+    actions.append(continueButton, refreshButton);
+    modal.append(title, description, body, actions);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+  }
+
+  body.textContent = details ? `${message} | ${details}` : message;
 }
 
 function isBenignResizeObserverIssue(value: unknown): boolean {
@@ -101,7 +164,7 @@ function installGlobalErrorHandling() {
       column: event.colno,
     });
 
-    renderFatalErrorBanner(
+    renderFatalErrorModal(
       "A runtime error occurred. The app entered safe mode.",
       result.eventId
         ? `${result.summary} (event ${result.eventId})`
@@ -117,7 +180,7 @@ function installGlobalErrorHandling() {
 
     const result = captureClientError(event.reason, "window.unhandledrejection");
 
-    renderFatalErrorBanner(
+    renderFatalErrorModal(
       "An async runtime error occurred. The app entered safe mode.",
       result.eventId
         ? `${result.summary} (event ${result.eventId})`
