@@ -226,23 +226,6 @@ jobs:
                 openssl-devel \
                 pkg-config \
                 webkit2gtk4.1-devel
-          - distro: opensuse
-            image: opensuse/tumbleweed:latest
-            install: |
-              zypper --non-interactive refresh
-              zypper --non-interactive install \
-                bash \
-                gcc-c++ \
-                git \
-                gtk3-devel \
-                libappindicator3-devel \
-                make \
-                curl \
-                nodejs \
-                npm \
-                openssl-devel \
-                pkg-config \
-                webkit2gtk3-devel
     container:
       image: ${{ matrix.image }}
 
