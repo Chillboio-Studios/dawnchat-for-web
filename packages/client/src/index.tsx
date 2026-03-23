@@ -72,8 +72,29 @@ function renderFatalErrorBanner(message: string, details?: string) {
   document.body.appendChild(banner);
 }
 
+function isBenignResizeObserverIssue(value: unknown): boolean {
+  const text =
+    typeof value === "string"
+      ? value
+      : value instanceof Error
+        ? value.message
+        : "";
+
+  return (
+    text.includes("ResizeObserver loop completed with undelivered notifications") ||
+    text.includes("ResizeObserver loop limit exceeded")
+  );
+}
+
 function installGlobalErrorHandling() {
   window.addEventListener("error", (event) => {
+    if (
+      isBenignResizeObserverIssue(event.message) ||
+      isBenignResizeObserverIssue(event.error)
+    ) {
+      return;
+    }
+
     const result = captureClientError(event.error ?? event.message, "window.error", {
       source: event.filename,
       line: event.lineno,
@@ -89,6 +110,11 @@ function installGlobalErrorHandling() {
   });
 
   window.addEventListener("unhandledrejection", (event) => {
+    if (isBenignResizeObserverIssue(event.reason)) {
+      event.preventDefault();
+      return;
+    }
+
     const result = captureClientError(event.reason, "window.unhandledrejection");
 
     renderFatalErrorBanner(
