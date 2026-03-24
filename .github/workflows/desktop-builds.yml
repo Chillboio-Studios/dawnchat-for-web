@@ -379,7 +379,6 @@ jobs:
           # Generate summary, static deltas, and AppStream (for Discover)
           flatpak build-update-repo \
             --generate-static-deltas \
-            --generate-appstream \
             --prune \
             "public/${APP_CHANNEL_PATH}/repo"
 
