@@ -277,25 +277,48 @@ jobs:
             CHANNEL="nightly"
             VERSION="nightly-${GITHUB_RUN_NUMBER}-${GITHUB_SHA}"
           fi
+
+          APPSTREAM_VERSION="${VERSION}"
+          if [[ "${CHANNEL}" == "stable" ]]; then
+            base="${VERSION}"
+            if [[ "${base}" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              base="${base#v}"
+              APPSTREAM_VERSION="v${base}-${GITHUB_RUN_ID}"
+            else
+              APPSTREAM_VERSION="${VERSION}-${GITHUB_RUN_ID}"
+            fi
+          fi
+
           echo "channel=${CHANNEL}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "appstream_version=${APPSTREAM_VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Build Flatpak repository with Flatter
-        id: flatter
-        uses: andyholmes/flatter@v1.0.0
-        with:
-          files: |
-            packaging/flatpak/com.chillboiostudios.dawnchat.yml
-          arch: ${{ matrix.arch }}
-          flatpak-builder-args: |
-            --default-branch=${{ steps.flatpak_meta.outputs.channel }}
-            --metadata=version=${{ steps.flatpak_meta.outputs.version }}
-
-      - name: Build Flatpak bundle
+      - name: Stamp AppStream release version
         shell: bash
         run: |
           set -euxo pipefail
-          flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo "${{ steps.flatter.outputs.repository }}" DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat ${{ steps.flatpak_meta.outputs.channel }}
+          APPSTREAM_FILE="packaging/flatpak/com.chillboiostudios.dawnchat.metainfo.xml"
+          APPSTREAM_DATE="$(date -u +%F)"
+          APPSTREAM_VERSION="${{ steps.flatpak_meta.outputs.appstream_version }}"
+
+          perl -0777 -i -pe 's#<releases>.*?</releases>#<releases>\n    <release version="'"${APPSTREAM_VERSION}"'" date="'"${APPSTREAM_DATE}"'"/>\n  </releases>#s' "$APPSTREAM_FILE"
+
+          grep -q "<release version=\"${APPSTREAM_VERSION}\" date=\"${APPSTREAM_DATE}\"/>" "$APPSTREAM_FILE"
+
+      - name: Build Flatpak repository and bundle
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          manifest-path: packaging/flatpak/com.chillboiostudios.dawnchat.yml
+          bundle: DawnChat-${{ matrix.arch }}.flatpak
+          branch: ${{ steps.flatpak_meta.outputs.channel }}
+          arch: ${{ matrix.arch }}
+          repository-name: flathub
+          repository-url: https://flathub.org/repo/flathub.flatpakrepo
+          repo-dir: repo
+          state-dir: .flatpak-builder
+          build-dir: flatpak-build-dir
+          cache-key: flatpak-builder-${{ matrix.arch }}-${{ hashFiles('packaging/flatpak/com.chillboiostudios.dawnchat.yml', 'pnpm-lock.yaml', 'packages/client/pnpm-lock.yaml') }}
+          upload-artifact: false
 
       - name: Upload Flatpak
         uses: actions/upload-artifact@v4
@@ -308,7 +331,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: desktop-flatpak-repo-${{ matrix.arch }}
-          path: ${{ steps.flatter.outputs.repository }}/
+          path: repo/
           if-no-files-found: error
 
   publish-flatpak-remote:
