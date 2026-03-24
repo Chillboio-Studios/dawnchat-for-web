@@ -189,9 +189,21 @@ jobs:
           files: |
             packaging/flatpak/com.chillboiostudios.dawnchat.yml
           arch: ${{ matrix.arch }}
-          upload-bundles: true
           flatpak-builder-args: |
             --default-branch=stable
+
+      - name: Build Flatpak bundle
+        shell: bash
+        run: |
+          set -euxo pipefail
+          flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo "${{ steps.flatter.outputs.repository }}" DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat stable
+
+      - name: Upload Flatpak
+        uses: actions/upload-artifact@v4
+        with:
+          name: com.chillboiostudios.dawnchat-${{ matrix.arch }}
+          path: DawnChat-${{ matrix.arch }}.flatpak
+          if-no-files-found: error
 
       - name: Upload Flatpak OSTree repo
         uses: actions/upload-artifact@v4
