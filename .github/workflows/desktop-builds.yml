@@ -189,21 +189,9 @@ jobs:
           files: |
             packaging/flatpak/com.chillboiostudios.dawnchat.yml
           arch: ${{ matrix.arch }}
+          upload-bundles: true
           flatpak-builder-args: |
             --default-branch=stable
-
-      - name: Build Flatpak bundle
-        shell: bash
-        run: |
-          set -euxo pipefail
-          flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo "${{ steps.flatter.outputs.repository }}" DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat stable
-
-      - name: Upload Flatpak
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-flatpak-${{ matrix.arch }}
-          path: DawnChat-${{ matrix.arch }}.flatpak
-          if-no-files-found: error
 
       - name: Upload Flatpak OSTree repo
         uses: actions/upload-artifact@v4
@@ -235,7 +223,7 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           path: flatpak-bundles
-          pattern: desktop-flatpak-*
+          pattern: com.chillboiostudios.dawnchat-*
           merge-multiple: false
 
       - name: Compute OTA version tag
@@ -321,7 +309,7 @@ jobs:
           mkdir -p "public/${FLATPAK_OTA_APP_PATH}/bundles"
           while IFS= read -r bundle_file; do
             cp "${bundle_file}" "public/${FLATPAK_OTA_APP_PATH}/bundles/"
-          done < <(find flatpak-bundles -type f -name 'DawnChat-*.flatpak' | sort)
+          done < <(find flatpak-bundles -type f -name '*.flatpak' | sort)
 
       - name: Upload Flatpak remote artifact
         uses: actions/upload-artifact@v4
@@ -455,5 +443,6 @@ jobs:
             release-assets/**/DawnChat*.exe
             release-assets/**/DawnChat*.msi
             release-assets/**/DawnChat*.flatpak
+            release-assets/**/com.chillboiostudios*.flatpak
             release-assets/**/com.chillboiostudios.dawnchat.flatpakref
             release-assets/**/com.chillboiostudios.dawnchat.aarch64.flatpakref
