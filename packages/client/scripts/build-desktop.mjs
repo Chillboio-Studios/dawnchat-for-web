@@ -12,9 +12,9 @@ const clientRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(clientRoot, "..", "..");
 
 const target = process.argv[2];
-if (!["linux", "linux-nobundle", "windows"].includes(target)) {
+if (!["linux", "linux-updater", "linux-nobundle", "windows"].includes(target)) {
   console.error(
-    "Usage: node scripts/build-desktop.mjs <linux|linux-nobundle|windows>",
+    "Usage: node scripts/build-desktop.mjs <linux|linux-updater|linux-nobundle|windows>",
   );
   process.exit(1);
 }
@@ -99,6 +99,8 @@ run("pnpm", ["exec", "vite", "build"]);
 
 if (target === "linux") {
   run("pnpm", ["exec", "tauri", "build", "--bundles", "deb,appimage,rpm"]);
+} else if (target === "linux-updater") {
+  run("pnpm", ["exec", "tauri", "build", "--bundles", "deb,appimage"]);
 } else if (target === "linux-nobundle") {
   run("pnpm", ["exec", "tauri", "build", "--no-bundle"]);
 } else {

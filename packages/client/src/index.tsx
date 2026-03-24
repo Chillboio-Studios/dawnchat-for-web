@@ -34,6 +34,7 @@ import { FloatingManager, LoadTheme } from "@revolt/ui";
 import "@revolt/ui/styles";
 
 import AuthPage from "./Auth";
+import { initDesktopUpdater } from "./desktopUpdater";
 import Interface from "./Interface";
 import "./desktopUrlShim";
 import "./index.css";
@@ -369,6 +370,7 @@ function FatalAppFallback(props: { error: unknown; reset: () => void }) {
 }
 
 installGlobalErrorHandling();
+initDesktopUpdater();
 
 render(
   () => (
