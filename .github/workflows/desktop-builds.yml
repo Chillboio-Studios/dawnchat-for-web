@@ -207,8 +207,9 @@ jobs:
             patchelf \
             pkg-config
 
-      - name: Add Flathub remote
+      - name: Add Flathub remotes
         run: |
+          flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
       - name: Install Flatpak runtime and SDK
@@ -314,9 +315,6 @@ jobs:
           arch: ${{ matrix.arch }}
           repository-name: flathub
           repository-url: https://flathub.org/repo/flathub.flatpakrepo
-          repo-dir: repo
-          state-dir: .flatpak-builder
-          build-dir: flatpak-build-dir
           cache-key: flatpak-builder-${{ matrix.arch }}-${{ hashFiles('packaging/flatpak/com.chillboiostudios.dawnchat.yml', 'pnpm-lock.yaml', 'packages/client/pnpm-lock.yaml') }}
           upload-artifact: false
 
