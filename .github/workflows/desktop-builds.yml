@@ -160,16 +160,6 @@ jobs:
           workspaces: |
             packages/client/src-tauri -> target
 
-      - name: Restore Flatpak builder cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .flatpak-builder/cache
-            .flatpak-builder/downloads
-          key: ${{ runner.os }}-flatpak-builder-${{ matrix.arch }}-${{ hashFiles('packaging/flatpak/com.chillboiostudios.dawnchat.yml', 'packages/client/src-tauri/tauri.conf.json', 'pnpm-lock.yaml', 'packages/client/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-flatpak-builder-${{ matrix.arch }}-
-
       - name: Install dependencies
         shell: bash
         run: |
@@ -192,13 +182,21 @@ jobs:
           set -euxo pipefail
           OTUBE_LINUX_FLAVOR=flatpak-${{ matrix.arch }} pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
+      - name: Build Flatpak repository with Flatter
+        id: flatter
+        uses: andyholmes/flatter@v1.0.0
+        with:
+          files: |
+            packaging/flatpak/com.chillboiostudios.dawnchat.yml
+          arch: ${{ matrix.arch }}
+          flatpak-builder-args: |
+            --default-branch=stable
+
       - name: Build Flatpak bundle
         shell: bash
         run: |
           set -euxo pipefail
-          flatpak-builder --arch=${{ matrix.arch }} --default-branch=stable --force-clean --repo=repo flatpak-build-dir packaging/flatpak/com.chillboiostudios.dawnchat.yml
-          flatpak build-update-repo --prune repo
-          flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo repo DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat stable
+          flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo "${{ steps.flatter.outputs.repository }}" DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat stable
 
       - name: Upload Flatpak
         uses: actions/upload-artifact@v4
@@ -211,7 +209,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: desktop-flatpak-repo-${{ matrix.arch }}
-          path: repo/
+          path: ${{ steps.flatter.outputs.repository }}/
           if-no-files-found: error
 
   publish-flatpak-remote:
@@ -231,6 +229,13 @@ jobs:
         with:
           path: flatpak-repos
           pattern: desktop-flatpak-repo-*
+          merge-multiple: false
+
+      - name: Download Flatpak bundle artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: flatpak-bundles
+          pattern: desktop-flatpak-*
           merge-multiple: false
 
       - name: Compute OTA version tag
@@ -312,6 +317,11 @@ jobs:
           else
             echo "NoGPGVerify=true" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.aarch64.flatpakref"
           fi
+
+          mkdir -p "public/${FLATPAK_OTA_APP_PATH}/bundles"
+          while IFS= read -r bundle_file; do
+            cp "${bundle_file}" "public/${FLATPAK_OTA_APP_PATH}/bundles/"
+          done < <(find flatpak-bundles -type f -name 'DawnChat-*.flatpak' | sort)
 
       - name: Upload Flatpak remote artifact
         uses: actions/upload-artifact@v4
