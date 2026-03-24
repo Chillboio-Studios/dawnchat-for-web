@@ -65,13 +65,17 @@ export function captureClientError(
   extras?: Record<string, unknown>,
 ): ErrorCaptureResult {
   const summary = toErrorSummary(error);
+  const normalizedError =
+    error instanceof Error ? error : new Error(summary || "Unknown error");
+  const extra =
+    error instanceof Error ? extras : { ...extras, originalError: error };
 
   if (sentryEnabled) {
-    const eventId = Sentry.captureException(error, {
+    const eventId = Sentry.captureException(normalizedError, {
       tags: {
         context,
       },
-      extra: extras,
+      extra,
     });
 
     return {

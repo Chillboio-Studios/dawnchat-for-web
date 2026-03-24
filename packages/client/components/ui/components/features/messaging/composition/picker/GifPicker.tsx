@@ -30,6 +30,27 @@ type GifResult = {
   media_formats: Record<"webm" | "tinywebm", { url: string }>;
 };
 
+function getResultsArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (
+    value &&
+    typeof value === "object" &&
+    "results" in value &&
+    Array.isArray((value as { results?: unknown }).results)
+  ) {
+    return (value as { results: T[] }).results;
+  }
+  if (
+    value &&
+    typeof value === "object" &&
+    "data" in value &&
+    Array.isArray((value as { data?: unknown }).data)
+  ) {
+    return (value as { data: T[] }).data;
+  }
+  return [];
+}
+
 const FilterContext = createContext<(value: string) => void>();
 
 export function GifPicker() {
@@ -106,7 +127,9 @@ function Categories() {
         headers: {
           [authHeader]: authHeaderValue,
         },
-      }).then((r) => r.json());
+      })
+        .then((r) => r.json())
+        .then((resp) => getResultsArray<GifCategory>(resp));
     },
     refetchOnReconnect: false,
     refetchOnWindowFocus: false,
@@ -123,7 +146,7 @@ function Categories() {
         },
       })
         .then((r) => r.json())
-        .then((resp) => resp.results[0]);
+        .then((resp) => getResultsArray<GifResult>(resp)[0] ?? null);
     },
     refetchOnReconnect: false,
     refetchOnWindowFocus: false,
@@ -232,7 +255,7 @@ function GifSearch(props: { query: string }) {
         },
       )
         .then((r) => r.json())
-        .then((resp) => resp.results);
+        .then((resp) => getResultsArray<GifResult>(resp));
     },
     refetchOnReconnect: false,
     refetchOnWindowFocus: false,
@@ -270,7 +293,11 @@ const GifItem = (props: {
       role="listitem"
       style={props.style as string}
       tabIndex={props.tabIndex}
-      src={props.item.media_formats.tinywebm.url}
+      src={
+        props.item.media_formats.tinywebm?.url ??
+        props.item.media_formats.webm?.url ??
+        props.item.url
+      }
       onClick={() => onMessage(props.item.url)}
     />
   );

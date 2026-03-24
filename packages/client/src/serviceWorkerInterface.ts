@@ -6,7 +6,11 @@ const [pendingUpdate, setPendingUpdate] = createSignal<() => void>();
 
 export { pendingUpdate };
 
-if (import.meta.env.PROD) {
+const isDesktopRuntime =
+  typeof window !== "undefined" &&
+  ("__TAURI__" in window || "__TAURI_INTERNALS__" in window);
+
+if (import.meta.env.PROD && !isDesktopRuntime && "serviceWorker" in navigator) {
   const updateSW = registerSW({
     onNeedRefresh() {
       setPendingUpdate(() => void updateSW(true));

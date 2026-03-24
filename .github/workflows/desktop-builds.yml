@@ -373,19 +373,32 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add "${FLATPAK_OTA_APP_PATH}" CNAME
+          for attempt in 1 2 3 4 5; do
+            rsync -a --delete "../public/${FLATPAK_OTA_APP_PATH}/" "${FLATPAK_OTA_APP_PATH}/"
+            git add "${FLATPAK_OTA_APP_PATH}" CNAME
 
-          if git diff --cached --quiet; then
-            echo "No OTA content changes to publish."
-            exit 0
-          fi
+            if git diff --cached --quiet; then
+              echo "No OTA content changes to publish."
+              exit 0
+            fi
 
-          git commit -m "dawnchat ota ${OTA_VERSION_TAG}"
+            git commit -m "dawnchat ota ${OTA_VERSION_TAG}"
+            if git push origin "${target_branch}"; then
+              break
+            fi
+
+            if [ "${attempt}" -eq 5 ]; then
+              echo "Failed to push ${target_branch} after 5 attempts." >&2
+              exit 1
+            fi
+
+            echo "Push rejected (non-fast-forward). Retrying with latest ${target_branch}."
+            git fetch origin "${target_branch}"
+            git reset --hard "origin/${target_branch}"
+          done
 
           tag_name="dawnchat-${OTA_VERSION_TAG}"
           git tag -f "${tag_name}"
-
-          git push origin "${target_branch}"
           git push origin "${tag_name}" --force
 
       - name: Trigger OTA repository metadata rebuild

@@ -28,6 +28,9 @@ export function NotificationsWorker() {
   const navigate = useNavigate();
   const params = useSmartParams();
 
+  const hasNotificationApi =
+    typeof window !== "undefined" && "Notification" in window;
+
   /**
    * Handle incoming messages
    * @param message Message
@@ -167,7 +170,7 @@ export function NotificationsWorker() {
     // todo: play sound
 
     // Don't continue if we don't have notification permissions
-    if (Notification.permission !== "granted") return;
+    if (!hasNotificationApi || Notification.permission !== "granted") return;
 
     console.info(`[notification] ${title} ${icon} ${body}`);
 
@@ -199,6 +202,8 @@ export function NotificationsWorker() {
   function tryRequest() {
     document.removeEventListener("click", tryRequest);
 
+    if (!hasNotificationApi) return;
+
     if (!localStorage.getItem("denied-notifications")) {
       Notification.requestPermission().then(
         (permission) =>
@@ -209,6 +214,8 @@ export function NotificationsWorker() {
   }
 
   onMount(() => {
+    if (!hasNotificationApi) return;
+
     // don't bother mounting if denied before
     if (!localStorage.getItem("denied-notifications")) {
       document.addEventListener("click", tryRequest);
