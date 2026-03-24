@@ -209,12 +209,12 @@ jobs:
 
       - name: Add Flathub remotes
         run: |
-          flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
       - name: Install Flatpak runtime and SDK
         run: |
-          flatpak install --user -y flathub org.gnome.Platform//47 org.gnome.Sdk//47
+          sudo flatpak install --system -y flathub org.gnome.Platform//47 org.gnome.Sdk//47
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
