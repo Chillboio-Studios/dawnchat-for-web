@@ -258,6 +258,28 @@ jobs:
           set -euxo pipefail
           OTUBE_LINUX_FLAVOR=flatpak-${{ matrix.arch }} pnpm --filter client exec node ./scripts/build-desktop.mjs linux-nobundle
 
+      - name: Compute Flatpak channel metadata
+        id: flatpak_meta
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            CHANNEL="stable"
+            if [[ -n "${{ github.event.inputs.release_tag }}" ]]; then
+              VERSION="${{ github.event.inputs.release_tag }}"
+            else
+              VERSION="v${GITHUB_RUN_NUMBER}"
+            fi
+          elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            CHANNEL="beta"
+            VERSION="beta-${GITHUB_RUN_NUMBER}"
+          else
+            CHANNEL="nightly"
+            VERSION="nightly-${GITHUB_RUN_NUMBER}-${GITHUB_SHA}"
+          fi
+          echo "channel=${CHANNEL}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
       - name: Build Flatpak repository with Flatter
         id: flatter
         uses: andyholmes/flatter@v1.0.0
@@ -266,13 +288,14 @@ jobs:
             packaging/flatpak/com.chillboiostudios.dawnchat.yml
           arch: ${{ matrix.arch }}
           flatpak-builder-args: |
-            --default-branch=stable
+            --default-branch=${{ steps.flatpak_meta.outputs.channel }}
+            --metadata=version=${{ steps.flatpak_meta.outputs.version }}
 
       - name: Build Flatpak bundle
         shell: bash
         run: |
           set -euxo pipefail
-          flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo "${{ steps.flatter.outputs.repository }}" DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat stable
+          flatpak build-bundle --arch=${{ matrix.arch }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo "${{ steps.flatter.outputs.repository }}" DawnChat-${{ matrix.arch }}.flatpak com.chillboiostudios.dawnchat ${{ steps.flatpak_meta.outputs.channel }}
 
       - name: Upload Flatpak
         uses: actions/upload-artifact@v4
@@ -319,46 +342,74 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            input_tag="${{ github.event.inputs.release_tag }}"
-            if [ -n "${input_tag}" ]; then
-              version_tag="${input_tag}"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            CHANNEL="stable"
+            if [[ -n "${{ github.event.inputs.release_tag }}" ]]; then
+              VERSION="${{ github.event.inputs.release_tag }}"
             else
-              version_tag="v${{ github.run_number }}"
+              VERSION="v${GITHUB_RUN_NUMBER}"
             fi
-          elif [ "${{ github.ref_type }}" = "tag" ]; then
-            version_tag="${{ github.ref_name }}"
+          elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            CHANNEL="beta"
+            VERSION="beta-${GITHUB_RUN_NUMBER}"
           else
-            version_tag="beta-${{ github.run_number }}-${{ github.sha }}"
+            CHANNEL="nightly"
+            VERSION="nightly-${GITHUB_RUN_NUMBER}-${GITHUB_SHA}"
           fi
-          echo "version_tag=${version_tag}" >> "$GITHUB_OUTPUT"
+          echo "channel=${CHANNEL}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version_tag=${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Merge architecture repos and create remote metadata
+      - name: Merge architecture repos and create app repo + metadata
         shell: bash
         run: |
           set -euxo pipefail
 
-          mkdir -p "public/${FLATPAK_OTA_APP_PATH}/repo"
-          ostree --repo="public/${FLATPAK_OTA_APP_PATH}/repo" init --mode=archive-z2
+          CHANNEL="${{ steps.ota_meta.outputs.channel }}"
+          APP_CHANNEL_PATH="${FLATPAK_OTA_APP_PATH}/${CHANNEL}"
 
+          mkdir -p "public/${APP_CHANNEL_PATH}/repo"
+          ostree --repo="public/${APP_CHANNEL_PATH}/repo" init --mode=archive-z2
+
+          # Merge per-arch repos into a single multi-arch app repo
           while IFS= read -r repo_dir; do
-            ostree --repo="public/${FLATPAK_OTA_APP_PATH}/repo" pull-local "${repo_dir}"
+            ostree --repo="public/${APP_CHANNEL_PATH}/repo" pull-local "${repo_dir}"
           done < <(find flatpak-repos -mindepth 2 -maxdepth 2 -type d -name repo | sort)
 
-          flatpak build-update-repo --generate-static-deltas --prune "public/${FLATPAK_OTA_APP_PATH}/repo"
+          # Generate summary, static deltas, and AppStream (for Discover)
+          flatpak build-update-repo \
+            --generate-static-deltas \
+            --generate-appstream \
+            --prune \
+            "public/${APP_CHANNEL_PATH}/repo"
 
-          REPO_URL="${FLATPAK_OTA_BASE_URL}/${FLATPAK_OTA_APP_PATH}/repo/"
-          HOMEPAGE_URL="https://github.com/Chillboio-Studios/otube-for-web"
-          ICON_URL="${FLATPAK_OTA_BASE_URL}/apps/dawnchat/icon.png"
+          REPO_URL="${FLATPAK_OTA_BASE_URL}/${APP_CHANNEL_PATH}/repo/"
+          HOMEPAGE_URL="https://github.com/Chillboio-Studios/dawnchat-for-web"
+          ICON_URL="${FLATPAK_OTA_BASE_URL}/${APP_CHANNEL_PATH}/icon.png"
           GPG_KEY_BASE64="${{ secrets.FLATPAK_REPO_GPG_KEY_BASE64 }}"
 
-          mkdir -p "public/${FLATPAK_OTA_APP_PATH}"
-          cp packages/client/src-tauri/icons/icon.png "public/${FLATPAK_OTA_APP_PATH}/icon.png"
+          mkdir -p "public/${APP_CHANNEL_PATH}"
+          cp packages/client/src-tauri/icons/icon.png "public/${APP_CHANNEL_PATH}/icon.png"
 
-          cat > "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.flatpakref" <<EOF
+          # x86_64 channel
+          cat > "public/${APP_CHANNEL_PATH}/com.chillboiostudios.dawnchat.${CHANNEL}.flatpakref" <<EOF
           [Flatpak Ref]
-          Name=app/com.chillboiostudios.dawnchat/x86_64/stable
-          Branch=stable
+          Name=app/com.chillboiostudios.dawnchat/x86_64/${CHANNEL}
+          Branch=${CHANNEL}
+          Title=DawnChat
+          IsRuntime=false
+          Url=${REPO_URL}
+          RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
+          SuggestRemoteName=dawnchat
+          Homepage=${HOMEPAGE_URL}
+          Icon=${ICON_URL}
+          EOF
+
+          # aarch64 channel
+          cat > "public/${APP_CHANNEL_PATH}/com.chillboiostudios.dawnchat.aarch64.${CHANNEL}.flatpakref" <<EOF
+          [Flatpak Ref]
+          Name=app/com.chillboiostudios.dawnchat/aarch64/${CHANNEL}
+          Branch=${CHANNEL}
           Title=DawnChat
           IsRuntime=false
           Url=${REPO_URL}
@@ -369,35 +420,18 @@ jobs:
           EOF
 
           if [ -n "${GPG_KEY_BASE64}" ]; then
-            echo "GPGKey=${GPG_KEY_BASE64}" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.flatpakref"
-            echo "NoGPGVerify=false" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.flatpakref"
+            echo "GPGKey=${GPG_KEY_BASE64}" >> "public/${APP_CHANNEL_PATH}/com.chillboiostudios.dawnchat.${CHANNEL}.flatpakref"
+            echo "NoGPGVerify=false" >> "public/${APP_CHANNEL_PATH}/com.chillboiostudios.dawnchat.aarch64.${CHANNEL}.flatpakref"
+            echo "GPGKey=${GPG_KEY_BASE64}" >> "public/${APP_CHANNEL_PATH}/com.chillboiostudios.dawnchat.aarch64.${CHANNEL}.flatpakref"
+            echo "NoGPGVerify=false" >> "public/${APP_CHANNEL_PATH}/com.chillboiostudios.dawnchat.${CHANNEL}.flatpakref"
           else
-            echo "NoGPGVerify=true" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.flatpakref"
+            echo "NoGPGVerify=true" >> "public/${APP_CHANNEL_PATH}/com.chillboiostudios.dawnchat.${CHANNEL}.flatpakref"
+            echo "NoGPGVerify=true" >> "public/${APP_CHANNEL_PATH}/com.chillboiostudios.dawnchat.aarch64.${CHANNEL}.flatpakref"
           fi
 
-          cat > "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.aarch64.flatpakref" <<EOF
-          [Flatpak Ref]
-          Name=app/com.chillboiostudios.dawnchat/aarch64/stable
-          Branch=stable
-          Title=DawnChat
-          IsRuntime=false
-          Url=${REPO_URL}
-          RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
-          SuggestRemoteName=dawnchat
-          Homepage=${HOMEPAGE_URL}
-          Icon=${ICON_URL}
-          EOF
-
-          if [ -n "${GPG_KEY_BASE64}" ]; then
-            echo "GPGKey=${GPG_KEY_BASE64}" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.aarch64.flatpakref"
-            echo "NoGPGVerify=false" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.aarch64.flatpakref"
-          else
-            echo "NoGPGVerify=true" >> "public/${FLATPAK_OTA_APP_PATH}/com.chillboiostudios.dawnchat.aarch64.flatpakref"
-          fi
-
-          mkdir -p "public/${FLATPAK_OTA_APP_PATH}/bundles"
+          mkdir -p "public/${APP_CHANNEL_PATH}/bundles"
           while IFS= read -r bundle_file; do
-            cp "${bundle_file}" "public/${FLATPAK_OTA_APP_PATH}/bundles/"
+            cp "${bundle_file}" "public/${APP_CHANNEL_PATH}/bundles/"
           done < <(find flatpak-bundles -type f -name '*.flatpak' | sort)
 
       - name: Upload Flatpak remote artifact
@@ -412,7 +446,7 @@ jobs:
         shell: bash
         env:
           OTA_REPO_TOKEN: ${{ secrets.FLATPAK_OTA_REPO_TOKEN }}
-          OTA_VERSION_TAG: ${{ steps.ota_meta.outputs.version_tag }}
+          OTA_VERSION_TAG: ${{ steps.ota_meta.outputs.version }}
         run: |
           set -euxo pipefail
 
@@ -478,31 +512,6 @@ jobs:
           git tag -f "${tag_name}"
           git push origin "${tag_name}" --force
 
-      - name: Trigger OTA repository metadata rebuild
-        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') || github.ref_name == github.event.repository.default_branch || github.ref_name == 'master'
-        shell: bash
-        env:
-          OTA_REPO_TOKEN: ${{ secrets.FLATPAK_OTA_REPO_TOKEN }}
-        run: |
-          set -euxo pipefail
-
-          if [ -z "${OTA_REPO_TOKEN}" ]; then
-            echo "FLATPAK_OTA_REPO_TOKEN is required to trigger OTA metadata rebuild."
-            exit 1
-          fi
-
-          dispatch_ref="main"
-          if ! curl -fsSL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${OTA_REPO_TOKEN}" \
-            "https://api.github.com/repos/${FLATPAK_OTA_REPOSITORY}/branches/main" >/dev/null 2>&1; then
-            dispatch_ref="master"
-          fi
-
-          curl -fsSL -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${OTA_REPO_TOKEN}" \
-            "https://api.github.com/repos/${FLATPAK_OTA_REPOSITORY}/actions/workflows/build-main-remote.yml/dispatches" \
-            -d "{\"ref\":\"${dispatch_ref}\"}"
-
   publish-release:
     name: Publish GitHub Release
     runs-on: ubuntu-latest
@@ -521,18 +530,34 @@ jobs:
       - name: Compute release metadata
         id: meta
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            echo "tag=beta-${{ github.run_number }}-${{ github.sha }}" >> "$GITHUB_OUTPUT"
-            echo "name=DawnChat Beta ${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            CHANNEL="stable"
+            if [[ -n "${{ github.event.inputs.release_tag }}" ]]; then
+              VERSION="${{ github.event.inputs.release_tag }}"
+            else
+              VERSION="v${GITHUB_RUN_NUMBER}"
+            fi
+          elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            CHANNEL="beta"
+            VERSION="beta-${GITHUB_RUN_NUMBER}"
+          else
+            CHANNEL="nightly"
+            VERSION="nightly-${GITHUB_RUN_NUMBER}-${GITHUB_SHA}"
+          fi
+
+          echo "channel=${CHANNEL}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "tag=${VERSION}" >> "$GITHUB_OUTPUT"
+          if [[ "${CHANNEL}" == "stable" ]]; then
+            echo "name=DawnChat ${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          elif [[ "${CHANNEL}" == "beta" ]]; then
+            echo "name=DawnChat Beta ${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
           else
-            input_tag="${{ github.event.inputs.release_tag }}"
-            if [ -z "$input_tag" ]; then
-              input_tag="v${{ github.run_number }}"
-            fi
-            echo "tag=$input_tag" >> "$GITHUB_OUTPUT"
-            echo "name=DawnChat $input_tag" >> "$GITHUB_OUTPUT"
-            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "name=DawnChat Nightly ${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build multi-platform updater package
@@ -573,6 +598,5 @@ jobs:
             release-assets/**/*.sig
             release-assets/**/DawnChat*.flatpak
             release-assets/**/com.chillboiostudios*.flatpak
-            release-assets/**/com.chillboiostudios.dawnchat.flatpakref
-            release-assets/**/com.chillboiostudios.dawnchat.aarch64.flatpakref
+            release-assets/**/com.chillboiostudios.dawnchat*.flatpakref
             DawnChat-updater-multi-platform.zip
