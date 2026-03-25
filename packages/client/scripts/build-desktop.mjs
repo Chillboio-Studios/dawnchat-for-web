@@ -69,12 +69,22 @@ function normalizeWindowsBundleVersion(version) {
   const prerelease = match[2];
   const metadata = match[3];
 
-  if (!prerelease) return version;
+  // MSI requires numeric-only prerelease/build metadata <= 65535.
+  const parseSafeNumeric = (value) => {
+    const parsed = Number.parseInt(value, 10);
+    return /^[0-9]+$/.test(value) && Number.isFinite(parsed) && parsed >= 0 && parsed <= 65535
+      ? parsed
+      : undefined;
+  };
 
-  // MSI requires numeric-only prerelease <= 65535.
-  const numeric = Number.parseInt(prerelease, 10);
-  const isNumericOnly = /^[0-9]+$/.test(prerelease);
-  if (isNumericOnly && Number.isFinite(numeric) && numeric >= 0 && numeric <= 65535) {
+  const safePrerelease = prerelease ? parseSafeNumeric(prerelease) : undefined;
+  const safeMetadata = metadata ? parseSafeNumeric(metadata) : undefined;
+
+  // Already safe for MSI, keep as-is.
+  if (
+    (!prerelease || safePrerelease !== undefined) &&
+    (!metadata || safeMetadata !== undefined)
+  ) {
     return version;
   }
 
@@ -85,17 +95,12 @@ function normalizeWindowsBundleVersion(version) {
       ? parsedFallback
       : 1;
 
-  const normalizedTag = prerelease
-    .replace(/[^0-9A-Za-z.-]+/g, ".")
-    .replace(/\.+/g, ".")
-    .replace(/^\.|\.$/g, "")
-    .toLowerCase();
+  const normalizedPrerelease = safePrerelease ?? safeId;
+  const normalizedMetadata = safeMetadata;
 
-  const metadataParts = [];
-  if (metadata) metadataParts.push(metadata);
-  if (normalizedTag) metadataParts.push(`channel.${normalizedTag}`);
-
-  return `${core}-${safeId}${metadataParts.length ? `+${metadataParts.join(".")}` : ""}`;
+  return `${core}-${normalizedPrerelease}${
+    normalizedMetadata !== undefined ? `+${normalizedMetadata}` : ""
+  }`;
 }
 
 function rewriteVersionInJson(filePath, nextVersion) {
