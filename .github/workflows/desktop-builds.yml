@@ -471,6 +471,7 @@ jobs:
           fi
 
           REPO_URL="${FLATPAK_OTA_BASE_URL}/${APP_CHANNEL_PATH}/repo/"
+          ROOT_REPO_METADATA_URL="${FLATPAK_OTA_BASE_URL}/chillboio.flatpakrepo"
           HOMEPAGE_URL="https://github.com/Chillboio-Studios/dawnchat-for-web"
           ICON_URL="${FLATPAK_OTA_BASE_URL}/${APP_CHANNEL_PATH}/icon.png"
 
@@ -492,7 +493,7 @@ jobs:
           Title=DawnChat
           IsRuntime=false
           Url=${REPO_URL}
-          RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
+          RuntimeRepo=${ROOT_REPO_METADATA_URL}
           SuggestRemoteName=dawnchat
           Homepage=${HOMEPAGE_URL}
           Icon=${ICON_URL}
@@ -506,7 +507,7 @@ jobs:
           Title=DawnChat
           IsRuntime=false
           Url=${REPO_URL}
-          RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
+          RuntimeRepo=${ROOT_REPO_METADATA_URL}
           SuggestRemoteName=dawnchat
           Homepage=${HOMEPAGE_URL}
           Icon=${ICON_URL}
