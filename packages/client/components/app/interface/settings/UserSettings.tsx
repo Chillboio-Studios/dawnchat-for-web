@@ -22,7 +22,7 @@ import MdSmartToy from "@material-design-icons/svg/outlined/smart_toy.svg?compon
 import MdVerifiedUser from "@material-design-icons/svg/outlined/verified_user.svg?component-solid";
 import MdWorkspacePremium from "@material-design-icons/svg/outlined/workspace_premium.svg?component-solid";
 
-import { version as appVersion } from "../../../../../../package.json";
+import { version as appVersion } from "../../../../package.json";
 
 import { SettingsConfiguration } from ".";
 import { MyAccount } from "./user/Account";
@@ -40,15 +40,36 @@ import { VideoOptions } from "./user/voice/VideoOptions";
 import { VoiceSettings } from "./user/voice/VoiceSettings";
 
 function getSettingsFooterVersionLabel() {
-  if (!window.native) {
-    return `dawnchat-web-${appVersion}`;
+  const buildScriptIdRaw =
+    (import.meta.env.VITE_DESKTOP_BUILD_SCRIPT_ID as string | undefined) ??
+    (import.meta.env.VITE_DESKTOP_BUILD_TARGET as string | undefined);
+  const buildScriptId = buildScriptIdRaw
+    ?.trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._:-]/g, "");
+
+  const isDesktopRuntime =
+    typeof window !== "undefined" &&
+    (Boolean(window.native) ||
+      "__TAURI__" in window ||
+      "__TAURI_INTERNALS__" in window ||
+      window.location.hostname === "tauri.localhost" ||
+      window.location.hostname.endsWith(".tauri.localhost") ||
+      window.location.protocol === "tauri:");
+
+  if (!isDesktopRuntime) {
+    return buildScriptId
+      ? `dawnchat-web-${appVersion}-${buildScriptId}`
+      : `dawnchat-web-${appVersion}`;
   }
 
-  const desktopVersion = window.native.versions.desktop();
+  const desktopVersion = window.native?.versions.desktop?.() ?? appVersion;
   const userAgent = navigator.userAgent.toLowerCase();
 
   if (userAgent.includes("windows")) {
-    return `dawnchat-windows-${desktopVersion}`;
+    return buildScriptId
+      ? `dawnchat-windows-${desktopVersion}-${buildScriptId}`
+      : `dawnchat-windows-${desktopVersion}`;
   }
 
   if (userAgent.includes("linux")) {
@@ -62,10 +83,18 @@ function getSettingsFooterVersionLabel() {
         ? "flatpak"
         : (linuxFlavorRaw?.replace(/[^a-z0-9._-]/g, "") ?? "distro");
 
-    return `dawnchat-linux-${linuxFlavor}-${desktopVersion}`;
+    if (linuxFlavor === "flatpak") {
+      return `dawnchat-desktop-flatpak-${desktopVersion}`;
+    }
+
+    return buildScriptId
+      ? `dawnchat-linux-${linuxFlavor}-${desktopVersion}-${buildScriptId}`
+      : `dawnchat-linux-${linuxFlavor}-${desktopVersion}`;
   }
 
-  return `dawnchat-desktop-${desktopVersion}`;
+  return buildScriptId
+    ? `dawnchat-desktop-${desktopVersion}-${buildScriptId}`
+    : `dawnchat-desktop-${desktopVersion}`;
 }
 
 const Config: SettingsConfiguration<{ server: Server }> = {

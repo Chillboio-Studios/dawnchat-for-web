@@ -57,6 +57,8 @@ const env = {
   VITE_MEDIA_URL: mediaUrl,
   VITE_PROXY_URL: proxyUrl,
   VITE_DESKTOP_LINUX_FLAVOR: "",
+  VITE_DESKTOP_BUILD_TARGET: target,
+  VITE_DESKTOP_BUILD_SCRIPT_ID: `build-desktop.mjs:${target}`,
 };
 
 function normalizeWindowsBundleVersion(version) {
