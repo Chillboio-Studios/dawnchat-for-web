@@ -314,7 +314,7 @@ export function HomePage() {
               src={Wordmark}
               alt="DawnChat"
               class={css({
-                width: "240px",
+                width: "480px",
                 maxWidth: "min(100%, 92vw)",
                 height: "auto",
                 display: "block",
