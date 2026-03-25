@@ -403,6 +403,11 @@ jobs:
             repo_dir="$(dirname "${config_file}")"
             if grep -q '^mode=archive-z2$' "${config_file}"; then
               found_repo=1
+
+              # Some artifact layouts omit empty refs directories; older ostree
+              # can fail pull-local if refs/remotes is missing.
+              mkdir -p "${repo_dir}/refs/heads" "${repo_dir}/refs/remotes"
+
               ostree --repo="public/${APP_CHANNEL_PATH}/repo" pull-local "${repo_dir}"
             fi
           done < <(find flatpak-repos -type f -name config | sort)
