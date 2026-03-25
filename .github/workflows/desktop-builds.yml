@@ -24,6 +24,7 @@ env:
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
   FLATPAK_OTA_BASE_URL: https://flatpak-ota.chillboiostudios.com
   FLATPAK_OTA_REPOSITORY: Chillboio-Studios/flatpak-ota
+  FLATPAK_OTA_PUBLISH_BRANCH: com.chillboiostudios.dawnchat
   FLATPAK_OTA_APP_PATH: apps/dawnchat
   APP_API_URL: https://app.dawn-chat.com/api
   APP_CLIENT_API_URL: https://app.dawn-chat.com/client-api
@@ -395,10 +396,26 @@ jobs:
           mkdir -p "public/${APP_CHANNEL_PATH}/repo"
           ostree --repo="public/${APP_CHANNEL_PATH}/repo" init --mode=archive-z2
 
-          # Merge per-arch repos into a single multi-arch app repo
-          while IFS= read -r repo_dir; do
-            ostree --repo="public/${APP_CHANNEL_PATH}/repo" pull-local "${repo_dir}"
-          done < <(find flatpak-repos -mindepth 2 -maxdepth 2 -type d -name repo | sort)
+          # Merge per-arch repos into a single multi-arch app repo.
+          # Artifact extraction can either preserve the repo/ directory or flatten it.
+          found_repo=0
+          while IFS= read -r config_file; do
+            repo_dir="$(dirname "${config_file}")"
+            if grep -q '^mode=archive-z2$' "${config_file}"; then
+              found_repo=1
+              ostree --repo="public/${APP_CHANNEL_PATH}/repo" pull-local "${repo_dir}"
+            fi
+          done < <(find flatpak-repos -type f -name config | sort)
+
+          if [ "${found_repo}" -eq 0 ]; then
+            echo "No OSTree repos found in downloaded flatpak artifacts." >&2
+            exit 1
+          fi
+
+          if ! ostree --repo="public/${APP_CHANNEL_PATH}/repo" refs | grep -q '^app/com\.chillboiostudios\.dawnchat/'; then
+            echo "Merged OSTree repo has no DawnChat app refs." >&2
+            exit 1
+          fi
 
           GPG_KEY_BASE64="${{ secrets.FLATPAK_REPO_GPG_KEY_BASE64 }}"
           GPG_PRIVATE_KEY="${{ secrets.FLATPAK_REPO_GPG_PRIVATE_KEY }}"
@@ -529,18 +546,12 @@ jobs:
           git clone --depth=1 "https://x-access-token:${OTA_REPO_TOKEN}@github.com/${FLATPAK_OTA_REPOSITORY}.git" ota-repo
           cd ota-repo
 
-          target_branch=""
-          if git ls-remote --exit-code --heads origin main >/dev/null 2>&1; then
-            target_branch="main"
-          elif git ls-remote --exit-code --heads origin master >/dev/null 2>&1; then
-            target_branch="master"
-          fi
+          target_branch="${FLATPAK_OTA_PUBLISH_BRANCH}"
 
-          if [ -n "${target_branch}" ]; then
+          if git ls-remote --exit-code --heads origin "${target_branch}" >/dev/null 2>&1; then
             git fetch origin "${target_branch}"
             git checkout -B "${target_branch}" FETCH_HEAD
           else
-            target_branch="main"
             git checkout --orphan "${target_branch}"
             git rm -rf . || true
           fi
