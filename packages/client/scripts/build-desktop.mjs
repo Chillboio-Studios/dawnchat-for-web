@@ -1,7 +1,7 @@
 /* eslint-env node */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -59,6 +59,92 @@ const env = {
   VITE_DESKTOP_LINUX_FLAVOR: "",
 };
 
+function normalizeWindowsBundleVersion(version) {
+  const match = /^(\d+\.\d+\.\d+)(?:-([^+]+))?(?:\+(.+))?$/.exec(version);
+  if (!match) return version;
+
+  const core = match[1];
+  const prerelease = match[2];
+  const metadata = match[3];
+
+  if (!prerelease) return version;
+
+  // MSI requires numeric-only prerelease <= 65535.
+  const numeric = Number.parseInt(prerelease, 10);
+  const isNumericOnly = /^[0-9]+$/.test(prerelease);
+  if (isNumericOnly && Number.isFinite(numeric) && numeric >= 0 && numeric <= 65535) {
+    return version;
+  }
+
+  const fallback = process.env.OTUBE_WINDOWS_PRERELEASE_ID ?? "1";
+  const parsedFallback = Number.parseInt(fallback, 10);
+  const safeId =
+    Number.isFinite(parsedFallback) && parsedFallback >= 0 && parsedFallback <= 65535
+      ? parsedFallback
+      : 1;
+
+  const normalizedTag = prerelease
+    .replace(/[^0-9A-Za-z.-]+/g, ".")
+    .replace(/\.+/g, ".")
+    .replace(/^\.|\.$/g, "")
+    .toLowerCase();
+
+  const metadataParts = [];
+  if (metadata) metadataParts.push(metadata);
+  if (normalizedTag) metadataParts.push(`channel.${normalizedTag}`);
+
+  return `${core}-${safeId}${metadataParts.length ? `+${metadataParts.join(".")}` : ""}`;
+}
+
+function rewriteVersionInJson(filePath, nextVersion) {
+  const raw = readFileSync(filePath, "utf8");
+  const parsed = JSON.parse(raw);
+  if (typeof parsed.version !== "string") {
+    throw new Error(`Missing string version field in ${filePath}`);
+  }
+
+  parsed.version = nextVersion;
+  writeFileSync(filePath, `${JSON.stringify(parsed, null, 2)}\n`, "utf8");
+}
+
+function rewriteVersionInCargoToml(filePath, nextVersion) {
+  const raw = readFileSync(filePath, "utf8");
+  const updated = raw.replace(
+    /^(version\s*=\s*")[^"]+("\s*)$/m,
+    `$1${nextVersion}$2`,
+  );
+
+  if (updated === raw) {
+    throw new Error(`Could not update version in ${filePath}`);
+  }
+
+  writeFileSync(filePath, updated, "utf8");
+}
+
+function ensureWindowsCompatibleVersion() {
+  const packageJsonPath = path.join(clientRoot, "package.json");
+  const tauriConfigPath = path.join(clientRoot, "src-tauri", "tauri.conf.json");
+  const cargoTomlPath = path.join(clientRoot, "src-tauri", "Cargo.toml");
+
+  const packageVersion = JSON.parse(readFileSync(packageJsonPath, "utf8")).version;
+  if (typeof packageVersion !== "string") {
+    throw new Error("Missing version in client package.json");
+  }
+
+  const normalizedVersion = normalizeWindowsBundleVersion(packageVersion);
+  if (normalizedVersion === packageVersion) {
+    return;
+  }
+
+  console.info(
+    `[windows-bundle] Normalizing version ${packageVersion} -> ${normalizedVersion} for MSI compatibility`,
+  );
+
+  rewriteVersionInJson(packageJsonPath, normalizedVersion);
+  rewriteVersionInJson(tauriConfigPath, normalizedVersion);
+  rewriteVersionInCargoToml(cargoTomlPath, normalizedVersion);
+}
+
 if (target.startsWith("linux")) {
   const explicitFlavor = process.env.OTUBE_LINUX_FLAVOR?.trim();
 
@@ -104,5 +190,6 @@ if (target === "linux") {
 } else if (target === "linux-nobundle") {
   run("pnpm", ["exec", "tauri", "build", "--no-bundle"]);
 } else {
+  ensureWindowsCompatibleVersion();
   run("pnpm", ["exec", "tauri", "build", "--bundles", "msi,nsis"]);
 }

@@ -32,7 +32,20 @@ if [ -n "$build" ]; then
       ;;
   esac
 
-  version="${version}-${build}"
+  # MSI requires numeric prerelease identifiers; keep channel in build metadata.
+  case "$build" in
+    nightly)
+      prerelease_id="1"
+      ;;
+    beta)
+      prerelease_id="2"
+      ;;
+    pre-release)
+      prerelease_id="3"
+      ;;
+  esac
+
+  version="${version}-${prerelease_id}+${build}"
 fi
 
 repo_root="$(cd "$(dirname "$0")" && pwd)"
