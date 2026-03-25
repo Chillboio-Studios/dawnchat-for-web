@@ -1,6 +1,6 @@
 [package]
 name = "dawnchat_desktop"
-version = "1.0.1-pre-release"
+version = "1.0.1"
 description = "DawnChat Desktop"
 authors = ["DawnChat"]
 license = "AGPL-3.0-only"

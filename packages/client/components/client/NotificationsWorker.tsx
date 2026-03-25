@@ -31,6 +31,17 @@ export function NotificationsWorker() {
   const hasNotificationApi =
     typeof window !== "undefined" && "Notification" in window;
 
+  function getNotificationApi(): typeof Notification | undefined {
+    if (!hasNotificationApi) return undefined;
+
+    try {
+      const api = window.Notification;
+      return typeof api === "function" ? api : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   /**
    * Handle incoming messages
    * @param message Message
@@ -170,11 +181,12 @@ export function NotificationsWorker() {
     // todo: play sound
 
     // Don't continue if we don't have notification permissions
-    if (!hasNotificationApi || Notification.permission !== "granted") return;
+    const notificationApi = getNotificationApi();
+    if (!notificationApi || notificationApi.permission !== "granted") return;
 
     console.info(`[notification] ${title} ${icon} ${body}`);
 
-    const notification = new Notification(title!, {
+    const notification = new notificationApi(title!, {
       icon,
       // @ts-expect-error this does exist on some platforms
       image,
@@ -202,10 +214,11 @@ export function NotificationsWorker() {
   function tryRequest() {
     document.removeEventListener("click", tryRequest);
 
-    if (!hasNotificationApi) return;
+    const notificationApi = getNotificationApi();
+    if (!notificationApi) return;
 
     if (!localStorage.getItem("denied-notifications")) {
-      Notification.requestPermission().then(
+      notificationApi.requestPermission().then(
         (permission) =>
           permission === "denied" &&
           localStorage.setItem("denied-notifications", "1"),

@@ -459,6 +459,13 @@ jobs:
               --gpg-sign="${GPG_KEY_ID}"
               --gpg-homedir="${GNUPGHOME}"
             )
+
+            # Sign all commits pointed to by refs so client-side commit
+            # verification succeeds during install/pull.
+            while IFS= read -r ref_name; do
+              commit_id="$(ostree --repo="public/${APP_CHANNEL_PATH}/repo" rev-parse "${ref_name}")"
+              ostree --repo="public/${APP_CHANNEL_PATH}/repo" gpg-sign "${commit_id}" "${GPG_KEY_ID}"
+            done < <(ostree --repo="public/${APP_CHANNEL_PATH}/repo" refs)
           fi
 
           # Generate summary, static deltas, and AppStream (for Discover)

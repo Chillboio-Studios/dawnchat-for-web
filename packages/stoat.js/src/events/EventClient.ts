@@ -110,6 +110,10 @@ export class EventClient<
   ) {
     super();
 
+    // Keep a default listener so upstream callers that forget to subscribe
+    // don't trigger runtime crashes on Node-style `error` semantics.
+    this.on("error", () => {});
+
     this.#protocolVersion = protocolVersion;
     this.#transportFormat = transportFormat;
 
@@ -130,6 +134,17 @@ export class EventClient<
     this.#setPing = setPing;
 
     this.disconnect = this.disconnect.bind(this);
+  }
+
+  /**
+   * Emit an error event without allowing missing listeners to crash runtime.
+   */
+  private emitError(error: unknown): void {
+    Promise.resolve(this.emit("error", error as never)).catch(() => {
+      if (this.options.debug) {
+        console.warn("[events] Unhandled error event", error);
+      }
+    });
   }
 
   /**
@@ -189,7 +204,7 @@ export class EventClient<
 
     this.#socket.onerror = (error) => {
       this.#lastError = { type: "socket", data: error };
-      this.emit("error", error as never);
+      this.emitError(error);
     };
 
     this.#socket.onmessage = (event) => {
@@ -231,8 +246,29 @@ export class EventClient<
    */
   send(event: EventProtocol<T>["client"]): void {
     if (this.options.debug) console.debug("[C->S]", event);
-    if (!this.#socket) throw "Socket closed, trying to send.";
-    this.#socket.send(JSONStringify(event));
+    if (!this.#socket) {
+      if (this.options.debug) {
+        console.debug("[C->S] dropped, socket is undefined", event);
+      }
+      return;
+    }
+
+    if (this.#socket.readyState !== WebSocket.OPEN) {
+      if (this.options.debug) {
+        console.debug(
+          `[C->S] dropped, socket not open (state=${this.#socket.readyState})`,
+          event,
+        );
+      }
+      return;
+    }
+
+    try {
+      this.#socket.send(JSONStringify(event));
+    } catch (error) {
+      this.#lastError = { type: "socket", data: error };
+      this.emitError(error);
+    }
   }
 
   /**
@@ -258,7 +294,7 @@ export class EventClient<
           type: "revolt",
           data: event.data,
         };
-        this.emit("error", event as never);
+        this.emitError(event);
         this.disconnect();
         return;
     }

@@ -206,6 +206,9 @@ export class Client extends AsyncEventEmitter<Events> {
   constructor(options?: Partial<ClientOptions>, configuration?: RevoltConfig) {
     super();
 
+    // Prevent Node-style unhandled `error` event crashes in host apps.
+    this.on("error", () => {});
+
     this.options = {
       baseURL: "https://stoat.chat/api",
       partials: false,
@@ -276,7 +279,13 @@ export class Client extends AsyncEventEmitter<Events> {
     this.users = new UserCollection(this);
 
     this.events = new EventClient(1, "json", this.options);
-    this.events.on("error", (error) => this.emit("error", error));
+    this.events.on("error", (error) => {
+      Promise.resolve(this.emit("error", error)).catch(() => {
+        if (this.options.debug) {
+          console.warn("[client] Unhandled error event", error);
+        }
+      });
+    });
     this.events.on("state", (state) => {
       switch (state) {
         case ConnectionState.Connected:

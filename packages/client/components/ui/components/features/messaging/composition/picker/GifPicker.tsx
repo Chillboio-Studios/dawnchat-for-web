@@ -51,6 +51,19 @@ function getResultsArray<T>(value: unknown): T[] {
   return [];
 }
 
+async function readJsonOrNull(response: Response): Promise<unknown | null> {
+  if (!response.ok) return null;
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().includes("application/json")) return null;
+
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
 const FilterContext = createContext<(value: string) => void>();
 
 export function GifPicker() {
@@ -128,7 +141,7 @@ function Categories() {
           [authHeader]: authHeaderValue,
         },
       })
-        .then((r) => r.json())
+        .then((r) => readJsonOrNull(r))
         .then((resp) => getResultsArray<GifCategory>(resp));
     },
     refetchOnReconnect: false,
@@ -145,7 +158,7 @@ function Categories() {
           [authHeader]: authHeaderValue,
         },
       })
-        .then((r) => r.json())
+        .then((r) => readJsonOrNull(r))
         .then((resp) => getResultsArray<GifResult>(resp)[0] ?? null);
     },
     refetchOnReconnect: false,
@@ -154,13 +167,16 @@ function Categories() {
   }));
 
   const items = createMemo(() => {
+    const categories = Array.isArray(trendingCategories.data)
+      ? trendingCategories.data
+      : [];
+
     return [
       {
         t: 1,
         gif: trendingGif.data,
       },
-      ...(trendingCategories.data?.map((category) => ({ t: 0, category })) ??
-        []),
+      ...categories.map((category) => ({ t: 0 as const, category })),
     ] as CategoryItem[];
   });
 
@@ -254,7 +270,7 @@ function GifSearch(props: { query: string }) {
           },
         },
       )
-        .then((r) => r.json())
+        .then((r) => readJsonOrNull(r))
         .then((resp) => getResultsArray<GifResult>(resp));
     },
     refetchOnReconnect: false,

@@ -18,7 +18,34 @@ import { createPresenceStream } from "./presenceStream.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
-const distDir = path.resolve(rootDir, "packages/client/dist");
+
+function resolveDistDir() {
+  const configuredDist = process.env.CLIENT_DIST_DIR;
+  const candidates = [
+    configuredDist
+      ? path.isAbsolute(configuredDist)
+        ? configuredDist
+        : path.resolve(rootDir, configuredDist)
+      : null,
+    path.resolve(rootDir, "packages/client/dist"),
+    path.resolve(process.cwd(), "packages/client/dist"),
+    path.resolve(process.cwd(), "client/packages/client/dist"),
+    path.resolve(rootDir, "../packages/client/dist"),
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (
+      fs.existsSync(candidate) &&
+      fs.existsSync(path.resolve(candidate, "index.html"))
+    ) {
+      return candidate;
+    }
+  }
+
+  return path.resolve(rootDir, "packages/client/dist");
+}
+
+const distDir = resolveDistDir();
 
 dotenv.config({ path: path.resolve(rootDir, ".env") });
 

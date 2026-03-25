@@ -150,6 +150,39 @@ function isBenignResizeObserverIssue(value: unknown): boolean {
   );
 }
 
+function isTransientNonFatalRejection(value: unknown): boolean {
+  if (value && typeof value === "object") {
+    const retryAfter = (value as { retry_after?: unknown }).retry_after;
+    if (typeof retryAfter === "number") {
+      return true;
+    }
+  }
+
+  if (typeof value === "string") {
+    const text = value.toLowerCase();
+    if (
+      text.includes("<!doctype html") ||
+      text.includes("<html") ||
+      text.includes("retry_after")
+    ) {
+      return true;
+    }
+  }
+
+  if (value instanceof Error) {
+    const text = `${value.name} ${value.message}`.toLowerCase();
+    if (
+      text.includes("networkerror") ||
+      text.includes("failed to fetch") ||
+      text.includes("loading dynamically imported module")
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function installGlobalErrorHandling() {
   window.addEventListener("error", (event) => {
     if (
@@ -174,7 +207,10 @@ function installGlobalErrorHandling() {
   });
 
   window.addEventListener("unhandledrejection", (event) => {
-    if (isBenignResizeObserverIssue(event.reason)) {
+    if (
+      isBenignResizeObserverIssue(event.reason) ||
+      isTransientNonFatalRejection(event.reason)
+    ) {
       event.preventDefault();
       return;
     }
