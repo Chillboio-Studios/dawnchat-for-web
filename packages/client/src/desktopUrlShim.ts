@@ -2,17 +2,23 @@ const isDesktop =
   typeof window !== "undefined" &&
   ("__TAURI__" in window || "__TAURI_INTERNALS__" in window);
 
-const clientApiBase = (
+const configuredClientApiBase = (
   import.meta.env.VITE_CLIENT_API_URL as string | undefined
 )
   ?.trim()
   .replace(/\/+$/, "");
 
-if (isDesktop && clientApiBase) {
-  const fallbackApiBase = (import.meta.env.VITE_API_URL as string | undefined)
-    ?.trim()
-    .replace(/\/+$/, "");
+const fallbackApiBase = (import.meta.env.VITE_API_URL as string | undefined)
+  ?.trim()
+  .replace(/\/+$/, "");
 
+const derivedClientApiBase = fallbackApiBase
+  ? fallbackApiBase.replace(/\/api$/i, "")
+  : undefined;
+
+const clientApiBase = configuredClientApiBase || derivedClientApiBase;
+
+if (isDesktop && clientApiBase) {
   const ensureAbsolute = (urlLike: string) => {
     if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(urlLike)) {
       return urlLike;
