@@ -339,6 +339,9 @@ jobs:
       - flatpak
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
       - name: Install publishing dependencies
         run: |
           sudo apt-get update
@@ -409,7 +412,14 @@ jobs:
           GPG_KEY_BASE64="${{ secrets.FLATPAK_REPO_GPG_KEY_BASE64 }}"
 
           mkdir -p "public/${APP_CHANNEL_PATH}"
-          cp packages/client/src-tauri/icons/icon.png "public/${APP_CHANNEL_PATH}/icon.png"
+          if [ -f packages/client/src-tauri/icons/icon.png ]; then
+            cp packages/client/src-tauri/icons/icon.png "public/${APP_CHANNEL_PATH}/icon.png"
+          elif [ -f packages/client/assets/desktop/icon.png ]; then
+            cp packages/client/assets/desktop/icon.png "public/${APP_CHANNEL_PATH}/icon.png"
+          else
+            echo "Could not find icon source file for Flatpak OTA publish." >&2
+            exit 1
+          fi
 
           # x86_64 channel
           cat > "public/${APP_CHANNEL_PATH}/com.chillboiostudios.dawnchat.${CHANNEL}.flatpakref" <<EOF

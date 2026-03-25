@@ -30,6 +30,9 @@ export default function FlowHome() {
             <Wordmark
               class={css({
                 width: "60%",
+                maxWidth: "100%",
+                height: "auto",
+                display: "block",
                 margin: "auto",
                 fill: "var(--md-sys-color-on-surface)",
               })}

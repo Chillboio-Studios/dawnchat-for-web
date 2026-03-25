@@ -83,6 +83,13 @@ const iconButton2 = cva({
 
     color: "var(--colour)",
     fill: "var(--colour)",
+
+    "& > img, & > svg": {
+      maxWidth: "100%",
+      maxHeight: "100%",
+      objectFit: "contain",
+      flexShrink: 0,
+    },
   },
   variants: {
     variant: {

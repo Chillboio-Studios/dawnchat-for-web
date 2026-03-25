@@ -170,9 +170,10 @@ const BadgeRow = styled("div", {
     flexWrap: "wrap",
 
     "& img, & svg": {
-      width: "24px",
       height: "24px",
-      aspectRatio: "1/1",
+      width: "auto",
+      maxWidth: "32px",
+      objectFit: "contain",
     },
   },
 });

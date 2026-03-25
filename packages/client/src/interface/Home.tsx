@@ -304,6 +304,10 @@ export function HomePage() {
             alt="DawnChat"
             class={css({
               width: "160px",
+              maxWidth: "100%",
+              height: "auto",
+              display: "block",
+              objectFit: "contain",
             })}
           />
         </Column>

@@ -60,6 +60,9 @@ export function Titlebar() {
               <Wordmark
                 class={css({
                   height: "18px",
+                  width: "auto",
+                  display: "block",
+                  flexShrink: 0,
                   marginBlockStart: "1px",
                 })}
               />{" "}
