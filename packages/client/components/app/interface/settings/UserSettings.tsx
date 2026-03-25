@@ -40,13 +40,47 @@ import { VideoOptions } from "./user/voice/VideoOptions";
 import { VoiceSettings } from "./user/voice/VoiceSettings";
 
 function getSettingsFooterVersionLabel() {
-  const buildScriptIdRaw =
-    (import.meta.env.VITE_DESKTOP_BUILD_SCRIPT_ID as string | undefined) ??
-    (import.meta.env.VITE_DESKTOP_BUILD_TARGET as string | undefined);
-  const buildScriptId = buildScriptIdRaw
+  const buildTarget = (import.meta.env.VITE_DESKTOP_BUILD_TARGET as string | undefined)
+    ?.trim()
+    .toLowerCase();
+  const linuxFlavor = (import.meta.env.VITE_DESKTOP_LINUX_FLAVOR as string | undefined)
     ?.trim()
     .toLowerCase()
-    .replace(/[^a-z0-9._:-]/g, "");
+    .replace(/[^a-z0-9._-]/g, "");
+
+  const archFamilies = new Set([
+    "arch",
+    "archlinux",
+    "manjaro",
+    "endeavouros",
+    "garuda",
+    "artix",
+  ]);
+  const debianFamilies = new Set([
+    "debian",
+    "ubuntu",
+    "linuxmint",
+    "mint",
+    "pop",
+    "pop_os",
+    "elementary",
+    "zorin",
+    "neon",
+    "kali",
+    "raspbian",
+  ]);
+
+  const builtFor = (() => {
+    if (linuxFlavor === "flatpak") return "dawnchat-flatpak";
+
+    if (buildTarget?.startsWith("windows")) return "dawnchat-windows";
+
+    if (linuxFlavor && archFamilies.has(linuxFlavor)) return "dawnchat-linux-arch";
+    if (linuxFlavor && debianFamilies.has(linuxFlavor)) return "dawnchat-linux-debian";
+
+    if (buildTarget?.startsWith("linux")) return "dawnchat-linux-debian";
+    return undefined;
+  })();
 
   const isDesktopRuntime =
     typeof window !== "undefined" &&
@@ -58,42 +92,14 @@ function getSettingsFooterVersionLabel() {
       window.location.protocol === "tauri:");
 
   if (!isDesktopRuntime) {
-    return buildScriptId
-      ? `dawnchat-web-${appVersion}-${buildScriptId}`
+    return builtFor
+      ? `${builtFor}-${appVersion}`
       : `dawnchat-web-${appVersion}`;
   }
 
   const desktopVersion = window.native?.versions.desktop?.() ?? appVersion;
-  const userAgent = navigator.userAgent.toLowerCase();
-
-  if (userAgent.includes("windows")) {
-    return buildScriptId
-      ? `dawnchat-windows-${desktopVersion}-${buildScriptId}`
-      : `dawnchat-windows-${desktopVersion}`;
-  }
-
-  if (userAgent.includes("linux")) {
-    const linuxFlavorRaw = (
-      import.meta.env.VITE_DESKTOP_LINUX_FLAVOR as string | undefined
-    )
-      ?.trim()
-      .toLowerCase();
-    const linuxFlavor =
-      linuxFlavorRaw === "flatpak"
-        ? "flatpak"
-        : (linuxFlavorRaw?.replace(/[^a-z0-9._-]/g, "") ?? "distro");
-
-    if (linuxFlavor === "flatpak") {
-      return `dawnchat-desktop-flatpak-${desktopVersion}`;
-    }
-
-    return buildScriptId
-      ? `dawnchat-linux-${linuxFlavor}-${desktopVersion}-${buildScriptId}`
-      : `dawnchat-linux-${linuxFlavor}-${desktopVersion}`;
-  }
-
-  return buildScriptId
-    ? `dawnchat-desktop-${desktopVersion}-${buildScriptId}`
+  return builtFor
+    ? `${builtFor}-${desktopVersion}`
     : `dawnchat-desktop-${desktopVersion}`;
 }
 
