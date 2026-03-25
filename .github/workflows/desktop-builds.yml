@@ -24,7 +24,7 @@ env:
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
   FLATPAK_OTA_BASE_URL: https://flatpak-ota.chillboiostudios.com
   FLATPAK_OTA_REPOSITORY: Chillboio-Studios/flatpak-ota
-  FLATPAK_OTA_PUBLISH_BRANCH: com.chillboiostudios.dawnchat
+  FLATPAK_OTA_PUBLISH_BRANCH: main
   FLATPAK_OTA_APP_PATH: apps/dawnchat
   APP_API_URL: https://app.dawn-chat.com/api
   APP_CLIENT_API_URL: https://app.dawn-chat.com/client-api
