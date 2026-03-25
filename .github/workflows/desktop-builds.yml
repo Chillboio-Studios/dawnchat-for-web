@@ -559,6 +559,9 @@ jobs:
           git clone --depth=1 "https://x-access-token:${OTA_REPO_TOKEN}@github.com/${FLATPAK_OTA_REPOSITORY}.git" ota-repo
           cd ota-repo
 
+          ota_channel="${{ steps.ota_meta.outputs.channel }}"
+          ota_channel_path="${FLATPAK_OTA_APP_PATH}/${ota_channel}"
+
           target_branch="${FLATPAK_OTA_PUBLISH_BRANCH}"
 
           if git ls-remote --exit-code --heads origin "${target_branch}" >/dev/null 2>&1; then
@@ -569,8 +572,8 @@ jobs:
             git rm -rf . || true
           fi
 
-          mkdir -p "${FLATPAK_OTA_APP_PATH}"
-          rsync -a --delete "../public/${FLATPAK_OTA_APP_PATH}/" "${FLATPAK_OTA_APP_PATH}/"
+          mkdir -p "${ota_channel_path}"
+          rsync -a --delete "../public/${ota_channel_path}/" "${ota_channel_path}/"
 
           if [ ! -f CNAME ]; then
             echo "flatpak-ota.chillboiostudios.com" > CNAME
@@ -580,8 +583,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           for attempt in 1 2 3 4 5; do
-            rsync -a --delete "../public/${FLATPAK_OTA_APP_PATH}/" "${FLATPAK_OTA_APP_PATH}/"
-            git add "${FLATPAK_OTA_APP_PATH}" CNAME
+            rsync -a --delete "../public/${ota_channel_path}/" "${ota_channel_path}/"
+            git add "${ota_channel_path}" CNAME
 
             if git diff --cached --quiet; then
               echo "No OTA content changes to publish."
