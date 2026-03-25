@@ -140,6 +140,16 @@ const NotFoundNotice = styled("div", {
   },
 });
 
+const LogoBackdrop = styled("div", {
+  base: {
+    padding: "16px 24px",
+    borderRadius: "var(--borderRadius-xl)",
+    border: "1px solid var(--md-sys-color-outline-variant)",
+    background: "color-mix(in srgb, var(--md-sys-color-surface) 88%, white 12%)",
+    boxShadow: "var(--shadow-2)",
+  },
+});
+
 /**
  * Home page
  */
@@ -299,17 +309,19 @@ export function HomePage() {
           </NotFoundNotice>
         </Show>
         <Column>
-          <img
-            src={Wordmark}
-            alt="DawnChat"
-            class={css({
-              width: "160px",
-              maxWidth: "100%",
-              height: "auto",
-              display: "block",
-              objectFit: "contain",
-            })}
-          />
+          <LogoBackdrop>
+            <img
+              src={Wordmark}
+              alt="DawnChat"
+              class={css({
+                width: "240px",
+                maxWidth: "min(100%, 92vw)",
+                height: "auto",
+                display: "block",
+                objectFit: "contain",
+              })}
+            />
+          </LogoBackdrop>
         </Column>
         <Buttons>
           <SeparatedColumn>
