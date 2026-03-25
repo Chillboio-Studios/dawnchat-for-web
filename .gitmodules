@@ -1,12 +1,3 @@
-[submodule "packages/stoat.js"]
-	path = packages/stoat.js
-	url = https://github.com/stoatchat/javascript-client-sdk
-[submodule "packages/solid-livekit-components"]
-	path = packages/solid-livekit-components
-	url = https://github.com/revoltchat/solid-livekit-components
-[submodule "packages/js-lingui-solid"]
-	path = packages/js-lingui-solid
-	url = https://github.com/revoltchat/js-lingui-solid
 [submodule "packaging/flatpak/flatpak-ota"]
 	path = packaging/flatpak/flatpak-ota
 	url = https://github.com/Chillboio-Studios/flatpak-ota
