@@ -302,6 +302,8 @@ class Voice {
       typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
     const isMobile = /android|iphone|ipad|ipod/.test(userAgent);
 
+    const wantsScreenshareAudio = this.#settings.screenShareWithAudio;
+
     const captureOptions: {
       audio: boolean;
       video: boolean;
@@ -309,16 +311,14 @@ class Voice {
       selfBrowserSurface?: string;
       systemAudio?: string;
     } = {
-      audio: this.#settings.screenShareWithAudio,
+      audio: wantsScreenshareAudio,
       video: true,
+      systemAudio: wantsScreenshareAudio ? "include" : "exclude",
     };
 
     if (isMobile) {
       captureOptions.preferCurrentTab = true;
       captureOptions.selfBrowserSurface = "include";
-      captureOptions.systemAudio = this.#settings.screenShareWithAudio
-        ? "include"
-        : "exclude";
     }
 
     try {

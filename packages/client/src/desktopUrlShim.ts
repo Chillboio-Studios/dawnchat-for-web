@@ -1,16 +1,20 @@
 const isDesktop =
   typeof window !== "undefined" &&
-  ("__TAURI__" in window || "__TAURI_INTERNALS__" in window);
+  ("__TAURI__" in window ||
+    "__TAURI_INTERNALS__" in window ||
+    window.location.hostname === "tauri.localhost" ||
+    window.location.hostname.endsWith(".tauri.localhost") ||
+    window.location.protocol === "tauri:");
 
 const configuredClientApiBase = (
   import.meta.env.VITE_CLIENT_API_URL as string | undefined
 )
   ?.trim()
-  .replace(/\/+$/, "");
+  .replace(/\/+$/, "") ?? "https://app.dawn-chat.com/client-api";
 
 const fallbackApiBase = (import.meta.env.VITE_API_URL as string | undefined)
   ?.trim()
-  .replace(/\/+$/, "");
+  .replace(/\/+$/, "") ?? "https://app.dawn-chat.com/api";
 
 const derivedClientApiBase = fallbackApiBase
   ? fallbackApiBase.replace(/\/api$/i, "")
@@ -19,8 +23,32 @@ const derivedClientApiBase = fallbackApiBase
 const clientApiBase = configuredClientApiBase || derivedClientApiBase;
 
 if (isDesktop && clientApiBase) {
+  const rewriteClientApiPath = (pathname: string) => {
+    if (pathname.startsWith("/client-api")) {
+      const suffix = pathname.slice("/client-api".length);
+      return `${clientApiBase}${suffix}`;
+    }
+
+    if (pathname.startsWith("/api") && fallbackApiBase) {
+      const suffix = pathname.slice("/api".length);
+      return `${fallbackApiBase}${suffix}`;
+    }
+
+    return undefined;
+  };
+
   const ensureAbsolute = (urlLike: string) => {
     if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(urlLike)) {
+      try {
+        const parsed = new URL(urlLike);
+        const rewrittenBase = rewriteClientApiPath(parsed.pathname);
+        if (rewrittenBase) {
+          return `${rewrittenBase}${parsed.search}${parsed.hash}`;
+        }
+      } catch {
+        // Ignore parse failures and keep the original absolute URL.
+      }
+
       return urlLike;
     }
 
@@ -30,15 +58,8 @@ if (isDesktop && clientApiBase) {
       return `${protocol}${urlLike}`;
     }
 
-    if (urlLike.startsWith("/client-api")) {
-      const suffix = urlLike.slice("/client-api".length);
-      return `${clientApiBase}${suffix}`;
-    }
-
-    if (urlLike.startsWith("/api") && fallbackApiBase) {
-      const suffix = urlLike.slice("/api".length);
-      return `${fallbackApiBase}${suffix}`;
-    }
+    const rewrittenPath = rewriteClientApiPath(urlLike);
+    if (rewrittenPath) return rewrittenPath;
 
     return urlLike;
   };
@@ -64,15 +85,27 @@ if (isDesktop && clientApiBase) {
   const OriginalWebSocket = window.WebSocket;
   const rewriteWs = (value: string | URL) => {
     const asString = typeof value === "string" ? value : value.toString();
-    if (!asString.startsWith("/client-api")) {
-      return asString;
-    }
 
-    const suffix = asString.slice("/client-api".length);
     const wsBase = clientApiBase
       .replace(/^http:/, "ws:")
       .replace(/^https:/, "wss:");
-    return `${wsBase}${suffix}`;
+
+    if (asString.startsWith("/client-api")) {
+      const suffix = asString.slice("/client-api".length);
+      return `${wsBase}${suffix}`;
+    }
+
+    try {
+      const parsed = new URL(asString, window.location.href);
+      if (parsed.pathname.startsWith("/client-api")) {
+        const suffix = parsed.pathname.slice("/client-api".length);
+        return `${wsBase}${suffix}${parsed.search}${parsed.hash}`;
+      }
+    } catch {
+      // If URL parsing fails, fall back to the original URL.
+    }
+
+    return asString;
   };
 
   window.WebSocket = new Proxy(OriginalWebSocket, {

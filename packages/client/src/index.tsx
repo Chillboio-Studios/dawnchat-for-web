@@ -2,6 +2,7 @@
  * Configure contexts and render App
  */
 import "./sentry";
+import "./desktopUrlShim";
 
 import { ErrorBoundary, JSX, onMount } from "solid-js";
 import { render } from "solid-js/web";
@@ -36,7 +37,6 @@ import "@revolt/ui/styles";
 import AuthPage from "./Auth";
 import { initDesktopUpdater } from "./desktopUpdater";
 import Interface from "./Interface";
-import "./desktopUrlShim";
 import "./index.css";
 import { DevelopmentPage } from "./interface/Development";
 import { Discover } from "./interface/Discover";

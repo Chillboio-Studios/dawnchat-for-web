@@ -418,27 +418,36 @@ export function ModerationView() {
     const routeType = (params.targetType || "").trim();
     const routeId = (params.targetId || "").trim();
 
-    if (
-      routeType === "user" ||
-      routeType === "message" ||
-      routeType === "server" ||
-      routeType === "image"
-    ) {
-      setTargetType(routeType);
-      setTargetId(routeId);
+    if (!routeType) return;
 
-      if (routeType === "user") {
-        setStage("inspector");
-        void loadUserInspector(routeId);
-      } else if (routeType === "server") {
-        setStage("serverInspector");
-        void loadServerInspector(routeId);
-      } else if (routeType === "image") {
-        setStage("imageInspector");
-        void loadImageInspector(routeId);
-      } else {
-        setStage("cases");
-      }
+    if (
+      routeType !== "user" &&
+      routeType !== "message" &&
+      routeType !== "server" &&
+      routeType !== "image"
+    ) {
+      return;
+    }
+
+    if (!routeId) {
+      setStage("cases");
+      return;
+    }
+
+    setTargetType(routeType);
+    setTargetId(routeId);
+
+    if (routeType === "user") {
+      setStage("inspector");
+      void loadUserInspector(routeId);
+    } else if (routeType === "server") {
+      setStage("serverInspector");
+      void loadServerInspector(routeId);
+    } else if (routeType === "image") {
+      setStage("imageInspector");
+      void loadImageInspector(routeId);
+    } else {
+      setStage("cases");
     }
   });
 
