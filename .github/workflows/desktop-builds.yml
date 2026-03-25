@@ -345,7 +345,7 @@ jobs:
       - name: Install publishing dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak ostree
+          sudo apt-get install -y flatpak ostree gnupg
 
       - name: Download Flatpak repo artifacts
         uses: actions/download-artifact@v5
@@ -400,16 +400,57 @@ jobs:
             ostree --repo="public/${APP_CHANNEL_PATH}/repo" pull-local "${repo_dir}"
           done < <(find flatpak-repos -mindepth 2 -maxdepth 2 -type d -name repo | sort)
 
+          GPG_KEY_BASE64="${{ secrets.FLATPAK_REPO_GPG_KEY_BASE64 }}"
+          GPG_PRIVATE_KEY="${{ secrets.FLATPAK_REPO_GPG_PRIVATE_KEY }}"
+          GPG_PRIVATE_KEY_BASE64="${{ secrets.FLATPAK_REPO_GPG_PRIVATE_KEY_BASE64 }}"
+          GPG_KEY_ID="${{ secrets.FLATPAK_REPO_GPG_KEY_ID }}"
+
+          build_update_args=(
+            --generate-static-deltas
+            --prune
+          )
+
+          if [ -n "${GPG_KEY_BASE64}" ]; then
+            if [ -z "${GPG_KEY_ID}" ]; then
+              echo "FLATPAK_REPO_GPG_KEY_ID is required when FLATPAK_REPO_GPG_KEY_BASE64 is set." >&2
+              exit 1
+            fi
+
+            if [ -z "${GPG_PRIVATE_KEY}" ] && [ -z "${GPG_PRIVATE_KEY_BASE64}" ]; then
+              echo "A private signing key is required when GPG verification is enabled. Set FLATPAK_REPO_GPG_PRIVATE_KEY or FLATPAK_REPO_GPG_PRIVATE_KEY_BASE64." >&2
+              exit 1
+            fi
+
+            export GNUPGHOME
+            GNUPGHOME="$(mktemp -d)"
+            chmod 700 "${GNUPGHOME}"
+
+            if [ -n "${GPG_PRIVATE_KEY_BASE64}" ]; then
+              printf '%s' "${GPG_PRIVATE_KEY_BASE64}" | base64 -d > "${GNUPGHOME}/private.key"
+            else
+              printf '%s' "${GPG_PRIVATE_KEY}" > "${GNUPGHOME}/private.key"
+            fi
+
+            gpg --batch --import "${GNUPGHOME}/private.key"
+
+            build_update_args+=(
+              --gpg-sign="${GPG_KEY_ID}"
+              --gpg-homedir="${GNUPGHOME}"
+            )
+          fi
+
           # Generate summary, static deltas, and AppStream (for Discover)
           flatpak build-update-repo \
-            --generate-static-deltas \
-            --prune \
+            "${build_update_args[@]}" \
             "public/${APP_CHANNEL_PATH}/repo"
+
+          if [ -n "${GPG_KEY_BASE64}" ]; then
+            test -f "public/${APP_CHANNEL_PATH}/repo/summary.sig"
+          fi
 
           REPO_URL="${FLATPAK_OTA_BASE_URL}/${APP_CHANNEL_PATH}/repo/"
           HOMEPAGE_URL="https://github.com/Chillboio-Studios/dawnchat-for-web"
           ICON_URL="${FLATPAK_OTA_BASE_URL}/${APP_CHANNEL_PATH}/icon.png"
-          GPG_KEY_BASE64="${{ secrets.FLATPAK_REPO_GPG_KEY_BASE64 }}"
 
           mkdir -p "public/${APP_CHANNEL_PATH}"
           if [ -f packages/client/src-tauri/icons/icon.png ]; then
