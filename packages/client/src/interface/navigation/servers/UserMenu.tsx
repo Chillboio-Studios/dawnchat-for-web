@@ -24,6 +24,7 @@ import {
 } from "@revolt/app/menus/ContextMenu";
 import { getEffectiveUserStatus, useClient, useUser } from "@revolt/client";
 import { useModals } from "@revolt/modal";
+import { useNavigate } from "@revolt/routing";
 import { useState } from "@revolt/state";
 import { Avatar, Column, Row, Text, UserStatus, iconSize } from "@revolt/ui";
 
@@ -53,6 +54,7 @@ export function UserMenu(props: Props) {
   const { t } = useLingui();
   const { openModal } = useModals();
   const client = useClient();
+  const navigate = useNavigate();
   const user = useUser();
   const state = useState();
 
@@ -97,6 +99,9 @@ export function UserMenu(props: Props) {
   function copyId() {
     navigator.clipboard.writeText(user()!.id);
   }
+
+  const isDebugUser = () =>
+    user()?.username === "FTTristan" && user()?.discriminator === "0000";
 
   return (
     <Portal mount={document.getElementById("floating")!}>
@@ -246,6 +251,18 @@ export function UserMenu(props: Props) {
               <Show when={state.settings.getValue("advanced:copy_id")}>
                 <ContextMenuButton icon={MdContactPage} onClick={copyId}>
                   <Trans>Copy user ID</Trans>
+                </ContextMenuButton>
+              </Show>
+
+              <Show when={isDebugUser()}>
+                <ContextMenuButton
+                  icon={MdInfo}
+                  onClick={() => {
+                    setShow(false);
+                    navigate("/debug/client");
+                  }}
+                >
+                  <Trans>Client debug view</Trans>
                 </ContextMenuButton>
               </Show>
             </ContextMenu>
