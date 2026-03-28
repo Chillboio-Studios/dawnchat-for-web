@@ -1,5 +1,7 @@
 import { createStore } from "solid-js/store";
 
+import { toClientApiUrl, toClientApiWsUrl } from "./clientApiUrl";
+
 export type RemoteCallStatus = "Ringing" | "Active" | "Missed" | "Ended";
 
 export type RemoteCallState = {
@@ -63,15 +65,11 @@ const CALL_STATE_PUSH_RETRY_DELAY_MS = 500;
 
 let socketStarted = false;
 let reconnectTimer: number | undefined;
+let reconnectAttemptCount = 0;
 const socketListeners = new Set<(message: ClientApiSocketMessage) => void>();
 
 function createCallKey(channelId: string, callId: string) {
   return `${channelId}:${callId}`;
-}
-
-function toWebSocketUrl(pathname: string) {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${window.location.host}${pathname}`;
 }
 
 function isValidStatus(status: unknown): status is RemoteCallStatus {
@@ -152,7 +150,7 @@ async function postRemoteCallState(
 ): Promise<boolean> {
   for (let attempt = 1; attempt <= CALL_STATE_PUSH_MAX_ATTEMPTS; attempt += 1) {
     try {
-      const response = await fetch("/client-api/dm-ringing", {
+      const response = await fetch(toClientApiUrl("/client-api/dm-ringing"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -257,11 +255,26 @@ function scheduleReconnect() {
   if (typeof window === "undefined") return;
   if (typeof reconnectTimer !== "undefined") return;
 
+  reconnectAttemptCount += 1;
+  const delayMs = 2000;
+
+  console.error("[client-api-socket] reconnect scheduled", {
+    reconnectAttempt: reconnectAttemptCount,
+    delayMs,
+    online: navigator.onLine,
+    visibilityState: document.visibilityState,
+  });
+
   reconnectTimer = window.setTimeout(() => {
     reconnectTimer = undefined;
     socketStarted = false;
+    console.error("[client-api-socket] reconnect attempt", {
+      reconnectAttempt: reconnectAttemptCount,
+      online: navigator.onLine,
+      visibilityState: document.visibilityState,
+    });
     ensureClientApiSocketConnected();
-  }, 2000);
+  }, delayMs);
 }
 
 export function ensureClientApiSocketConnected() {
@@ -270,7 +283,15 @@ export function ensureClientApiSocketConnected() {
 
   socketStarted = true;
 
-  const ws = new WebSocket(toWebSocketUrl("/client-api/socket"));
+  const socketUrl = toClientApiWsUrl("/client-api/socket");
+  const ws = new WebSocket(socketUrl);
+
+  console.error("[client-api-socket] connect", {
+    socketUrl,
+    reconnectAttempt: reconnectAttemptCount,
+    online: navigator.onLine,
+    visibilityState: document.visibilityState,
+  });
 
   ws.addEventListener("message", (event) => {
     try {
@@ -295,6 +316,7 @@ export function ensureClientApiSocketConnected() {
   });
 
   ws.addEventListener("close", () => {
+    socketStarted = false;
     scheduleReconnect();
   });
 
@@ -308,7 +330,9 @@ export async function fetchRemoteCallState(channelId: string, callId: string) {
 
   try {
     const query = new URLSearchParams({ channelId, callId });
-    const response = await fetch(`/client-api/dm-ringing?${query.toString()}`);
+    const response = await fetch(
+      toClientApiUrl(`/client-api/dm-ringing?${query.toString()}`),
+    );
 
     if (!response.ok) return;
 

@@ -1,26 +1,76 @@
-const isDesktop =
-  typeof window !== "undefined" &&
-  ("__TAURI__" in window ||
-    "__TAURI_INTERNALS__" in window ||
-    window.location.hostname === "tauri.localhost" ||
-    window.location.hostname.endsWith(".tauri.localhost") ||
-    window.location.protocol === "tauri:");
+const browserWindow: Window | undefined =
+  typeof globalThis !== "undefined" && "window" in globalThis
+    ? ((globalThis as { window: Window }).window as Window)
+    : undefined;
 
-const configuredClientApiBase = (
-  import.meta.env.VITE_CLIENT_API_URL as string | undefined
+const desktopBuildTarget = (
+  import.meta.env.VITE_DESKTOP_BUILD_TARGET as string | undefined
 )
   ?.trim()
-  .replace(/\/+$/, "") ?? "https://app.dawn-chat.com/client-api";
+  .toLowerCase();
 
-const fallbackApiBase = (import.meta.env.VITE_API_URL as string | undefined)
-  ?.trim()
-  .replace(/\/+$/, "") ?? "https://app.dawn-chat.com/api";
+function normalizeApiBase(input: string | undefined) {
+  const trimmed = input?.trim().replace(/\/+$/, "");
+  if (!trimmed) return undefined;
 
-const derivedClientApiBase = fallbackApiBase
-  ? fallbackApiBase.replace(/\/api$/i, "")
-  : undefined;
+  if (/\/api$/i.test(trimmed)) {
+    return trimmed;
+  }
 
-const clientApiBase = configuredClientApiBase || derivedClientApiBase;
+  if (/\/client-api$/i.test(trimmed)) {
+    return trimmed.replace(/\/client-api$/i, "/api");
+  }
+
+  return `${trimmed}/api`;
+}
+
+function normalizeClientApiBase(input: string | undefined) {
+  const trimmed = input?.trim().replace(/\/+$/, "");
+  if (!trimmed) return undefined;
+
+  if (/\/client-api$/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/\/api$/i.test(trimmed)) {
+    return trimmed.replace(/\/api$/i, "/client-api");
+  }
+
+  return `${trimmed}/client-api`;
+}
+
+const isDesktop = (() => {
+  // Desktop bundles always define this env var via scripts/build-desktop.mjs.
+  if (desktopBuildTarget) return true;
+
+  if (!browserWindow) return false;
+
+  const tauriWindow = browserWindow as Window & Record<string, unknown>;
+  const { hostname, protocol } = browserWindow.location;
+
+  return (
+    "__TAURI__" in tauriWindow ||
+    "__TAURI_INTERNALS__" in tauriWindow ||
+    hostname === "tauri.localhost" ||
+    hostname.endsWith(".tauri.localhost") ||
+    protocol === "tauri:"
+  );
+})();
+
+const configuredClientApiBase = normalizeClientApiBase(
+  import.meta.env.VITE_CLIENT_API_URL as string | undefined,
+);
+
+const fallbackApiBase =
+  normalizeApiBase(import.meta.env.VITE_API_URL as string | undefined) ??
+  "https://app.dawn-chat.com/api";
+
+const derivedClientApiBase = normalizeClientApiBase(fallbackApiBase);
+
+const clientApiBase =
+  configuredClientApiBase ||
+  derivedClientApiBase ||
+  "https://app.dawn-chat.com/client-api";
 
 if (isDesktop && clientApiBase) {
   const rewriteClientApiPath = (pathname: string) => {

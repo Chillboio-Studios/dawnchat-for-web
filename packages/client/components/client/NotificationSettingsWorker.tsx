@@ -1,6 +1,7 @@
 import { createEffect, onCleanup } from "solid-js";
 
 import { useClient } from "@revolt/client";
+import { toClientApiUrl } from "@revolt/common/lib/clientApiUrl";
 import { useState } from "@revolt/state";
 
 const SAVE_DEBOUNCE_MS = 1200;
@@ -20,7 +21,7 @@ export function NotificationSettingsWorker() {
     try {
       const query = new URLSearchParams({ userId });
       const response = await fetch(
-        `/client-api/notification-settings?${query.toString()}`,
+        toClientApiUrl(`/client-api/notification-settings?${query.toString()}`),
       );
 
       if (!response.ok) return;
@@ -42,7 +43,7 @@ export function NotificationSettingsWorker() {
 
   async function save(userId: string) {
     try {
-      await fetch("/client-api/notification-settings", {
+      await fetch(toClientApiUrl("/client-api/notification-settings"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

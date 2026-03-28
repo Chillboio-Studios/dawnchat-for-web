@@ -30,6 +30,15 @@ type State =
 
 const CONNECT_TIMEOUT_MS = 15000;
 
+function isRuntimeWebRTCSupported() {
+  return (
+    typeof window.RTCPeerConnection !== "undefined" &&
+    typeof window.WebSocket !== "undefined" &&
+    typeof navigator.mediaDevices !== "undefined" &&
+    typeof navigator.mediaDevices.getUserMedia === "function"
+  );
+}
+
 class Voice {
   #settings: VoiceSettings;
 
@@ -88,6 +97,24 @@ class Voice {
 
   async connect(channel: Channel, auth?: { url: string; token: string }) {
     this.disconnect();
+
+    if (!isRuntimeWebRTCSupported()) {
+      const details = {
+        hasRTCPeerConnection: typeof window.RTCPeerConnection !== "undefined",
+        hasWebSocket: typeof window.WebSocket !== "undefined",
+        hasMediaDevices: typeof navigator.mediaDevices !== "undefined",
+        hasGetUserMedia:
+          typeof navigator.mediaDevices?.getUserMedia === "function",
+        isSecureContext: window.isSecureContext,
+        pageUrl: window.location.href,
+        userAgent: navigator.userAgent,
+      };
+
+      console.error("[rtc] webRTC unsupported runtime", details);
+      throw new Error(
+        `WebRTC is not supported in this desktop runtime (${navigator.userAgent}).`,
+      );
+    }
 
     const room = new Room({
       adaptiveStream: this.#settings.videoAdaptiveStream,

@@ -6,7 +6,9 @@
     "build": "pnpm --filter client exec vite build",
     "start": "node server/index.mjs",
     "build-linux": "pnpm --filter client run build-desktop-linux",
-    "build-windows": "pnpm --filter client run build-desktop-windows"
+    "build-windows": "pnpm --filter client run build-desktop-windows",
+    "build:vendored": "pnpm --filter stoat.js run build && pnpm --filter solid-livekit-components run build && pnpm --filter @lingui-solid/babel-plugin-lingui-macro run build && pnpm --filter @lingui-solid/babel-plugin-extract-messages run build",
+    "postinstall": "pnpm run build:vendored"
   },
   "dependencies": {
     "@sentry/node": "^8.55.0",

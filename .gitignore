@@ -12,3 +12,6 @@ dist
 .idea
 
 OLD-service-admin-panel-main
+packages/client/src-tauri/target
+repo/
+.flatpak-builder/

@@ -6,9 +6,9 @@ import readline from "node:readline";
 import { clearInterval, setInterval, setTimeout } from "node:timers";
 import { URL, fileURLToPath } from "node:url";
 
+import * as Sentry from "@sentry/node";
 import dotenv from "dotenv";
 import express from "express";
-import * as Sentry from "@sentry/node";
 import { WebSocketServer } from "ws";
 
 import { createCallStateStore } from "./callStateStore.mjs";
@@ -102,6 +102,62 @@ const ownerScopes = Object.freeze({
 const app = express();
 app.disable("x-powered-by");
 app.use(express.json({ limit: "64kb" }));
+
+const clientApiCorsAllowedOrigins = new Set(
+  String(
+    process.env.CLIENT_API_ALLOWED_ORIGINS ||
+      "tauri://localhost,https://app.dawn-chat.com,http://localhost,http://127.0.0.1",
+  )
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean),
+);
+
+function applyClientApiCorsHeaders(req, res) {
+  const origin =
+    typeof req.headers.origin === "string" ? req.headers.origin.trim() : "";
+
+  if (origin && clientApiCorsAllowedOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PATCH,PUT,DELETE,OPTIONS",
+  );
+
+  const requestHeaders =
+    typeof req.headers["access-control-request-headers"] === "string"
+      ? req.headers["access-control-request-headers"]
+      : "";
+
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    requestHeaders ||
+      [
+        "content-type",
+        "authorization",
+        "x-session-token",
+        "x-user-id",
+        "x-client-session-token",
+        "x-client-user-id",
+      ].join(", "),
+  );
+
+  res.setHeader("Access-Control-Max-Age", "86400");
+}
+
+app.use("/client-api", (req, res, next) => {
+  applyClientApiCorsHeaders(req, res);
+
+  if (req.method === "OPTIONS") {
+    res.status(204).end();
+    return;
+  }
+
+  next();
+});
 
 function isValidCallStatus(status) {
   return (

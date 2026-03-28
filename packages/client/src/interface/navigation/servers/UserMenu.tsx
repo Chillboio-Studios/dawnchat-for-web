@@ -94,7 +94,24 @@ export function UserMenu(props: Props) {
     presence: (API.DataEditUser["status"] & {})["presence"],
   ) => user()?.edit({ status: { presence } });
 
-  const effectiveStatusText = () => getEffectiveUserStatus(user())?.text;
+  const effectiveStatusText = () => {
+    const current = user();
+
+    if (!current) return undefined;
+
+    const status = current.status
+      ? {
+          ...current.status,
+          presence: current.status.presence ?? undefined,
+          text: current.status.text ?? undefined,
+        }
+      : undefined;
+
+    return getEffectiveUserStatus({
+      id: current.id,
+      status,
+    })?.text;
+  };
 
   function copyId() {
     navigator.clipboard.writeText(user()!.id);

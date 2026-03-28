@@ -17,10 +17,34 @@ type MutableWindow = Window & {
   __clientDebugInstalled?: boolean;
 };
 
+type NavigatorConnectionInfo = {
+  connection?: {
+    effectiveType?: string;
+    rtt?: number;
+    downlink?: number;
+    saveData?: boolean;
+  };
+};
+
 const MAX_EVENTS = 1500;
 let nextEventId = 1;
 const events: ClientDebugEvent[] = [];
 const listeners = new Set<ClientDebugListener>();
+
+function isBenignResizeObserverIssue(value: unknown): boolean {
+  const text =
+    typeof value === "string"
+      ? value
+      : value instanceof Error
+        ? value.message
+        : "";
+
+  return (
+    text.includes(
+      "ResizeObserver loop completed with undelivered notifications",
+    ) || text.includes("ResizeObserver loop limit exceeded")
+  );
+}
 
 function shallowCloneData(
   data: Record<string, unknown> | undefined,
@@ -41,6 +65,59 @@ function normalizeText(value: unknown): string {
   } catch {
     return String(value);
   }
+}
+
+function toErrorData(error: unknown): Record<string, unknown> {
+  if (error instanceof Error) {
+    return {
+      errorName: error.name,
+      errorMessage: error.message,
+      errorStack: error.stack,
+    };
+  }
+
+  if (typeof error === "object" && error) {
+    return {
+      errorValue: normalizeText(error),
+    };
+  }
+
+  return {
+    errorValue: String(error),
+  };
+}
+
+function resolveAbsoluteUrl(inputUrl: string): URL | undefined {
+  try {
+    return new URL(inputUrl, window.location.href);
+  } catch {
+    return undefined;
+  }
+}
+
+function networkContext(targetUrl: string): Record<string, unknown> {
+  const resolved = resolveAbsoluteUrl(targetUrl);
+  const online = navigator.onLine;
+  const connection = (navigator as Navigator & NavigatorConnectionInfo)
+    .connection;
+
+  return {
+    pageUrl: window.location.href,
+    pageOrigin: window.location.origin,
+    requestUrl: targetUrl,
+    resolvedUrl: resolved?.toString(),
+    resolvedOrigin: resolved?.origin,
+    sameOrigin: resolved
+      ? resolved.origin === window.location.origin
+      : undefined,
+    online,
+    visibilityState: document.visibilityState,
+    userAgent: navigator.userAgent,
+    connectionType: connection?.effectiveType,
+    connectionRtt: connection?.rtt,
+    connectionDownlinkMbps: connection?.downlink,
+    connectionSaveData: connection?.saveData,
+  };
 }
 
 function emit() {
@@ -90,12 +167,23 @@ function toHeaderRecord(
 ): Record<string, string> | undefined {
   if (!headers) return undefined;
 
+  const redactedHeaders = new Set([
+    "authorization",
+    "cookie",
+    "x-session-token",
+    "x-client-session-token",
+  ]);
+
   const result: Record<string, string> = {};
   const iterator = new Headers(headers);
 
   for (const [key, value] of iterator.entries()) {
     const lowerKey = key.toLowerCase();
-    if (lowerKey === "authorization" || lowerKey === "cookie") continue;
+    if (redactedHeaders.has(lowerKey)) {
+      result[key] = "[redacted]";
+      continue;
+    }
+
     result[key] = value;
   }
 
@@ -172,6 +260,9 @@ export function enableClientDebugInstrumentation() {
           ok: response.ok,
           durationMs,
           requestHeaders: request.headers,
+          redirected: response.redirected,
+          responseType: response.type,
+          ...networkContext(request.url),
         },
       });
 
@@ -189,6 +280,8 @@ export function enableClientDebugInstrumentation() {
           url: request.url,
           durationMs,
           requestHeaders: request.headers,
+          ...toErrorData(error),
+          ...networkContext(request.url),
         },
       });
       throw error;
@@ -196,6 +289,10 @@ export function enableClientDebugInstrumentation() {
   };
 
   window.addEventListener("error", (event) => {
+    if (isBenignResizeObserverIssue(event.error || event.message)) {
+      return;
+    }
+
     pushEvent({
       category: "error",
       level: "error",
@@ -210,6 +307,10 @@ export function enableClientDebugInstrumentation() {
   });
 
   window.addEventListener("unhandledrejection", (event) => {
+    if (isBenignResizeObserverIssue(event.reason)) {
+      return;
+    }
+
     pushEvent({
       category: "error",
       level: "error",
@@ -311,6 +412,8 @@ export function enableClientDebugInstrumentation() {
         ? new target(asUrl, protocols)
         : new target(asUrl);
 
+      const startedAt = performance.now();
+
       const category: DebugCategory = isVoiceUrl(asUrl) ? "voice" : "api";
 
       pushEvent({
@@ -318,6 +421,10 @@ export function enableClientDebugInstrumentation() {
         level: "info",
         title: "WebSocket open attempt",
         details: asUrl,
+        data: {
+          protocols,
+          ...networkContext(asUrl),
+        },
       });
 
       socket.addEventListener("open", () => {
@@ -326,15 +433,33 @@ export function enableClientDebugInstrumentation() {
           level: "info",
           title: "WebSocket open",
           details: asUrl,
+          data: {
+            protocol: socket.protocol,
+            extensions: socket.extensions,
+            readyState: socket.readyState,
+            openAfterMs:
+              Math.round((performance.now() - startedAt) * 100) / 100,
+            ...networkContext(asUrl),
+          },
         });
       });
 
-      socket.addEventListener("error", () => {
+      socket.addEventListener("error", (event) => {
         pushEvent({
           category,
           level: "error",
           title: "WebSocket error",
           details: asUrl,
+          data: {
+            type: event.type,
+            readyState: socket.readyState,
+            bufferedAmount: socket.bufferedAmount,
+            protocol: socket.protocol,
+            extensions: socket.extensions,
+            sinceOpenAttemptMs:
+              Math.round((performance.now() - startedAt) * 100) / 100,
+            ...networkContext(asUrl),
+          },
         });
       });
 
@@ -348,6 +473,13 @@ export function enableClientDebugInstrumentation() {
             code: event.code,
             reason: event.reason,
             wasClean: event.wasClean,
+            readyState: socket.readyState,
+            bufferedAmount: socket.bufferedAmount,
+            protocol: socket.protocol,
+            extensions: socket.extensions,
+            sinceOpenAttemptMs:
+              Math.round((performance.now() - startedAt) * 100) / 100,
+            ...networkContext(asUrl),
           },
         });
       });

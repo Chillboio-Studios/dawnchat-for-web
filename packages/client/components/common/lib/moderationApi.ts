@@ -1,5 +1,7 @@
 import type { Session } from "@revolt/state/stores/Auth";
 
+import { toClientApiUrl } from "./clientApiUrl";
+
 export type ModerationScopes = {
   viewPanel: boolean;
   manageModerators: boolean;
@@ -259,11 +261,53 @@ type AuthHeaders = {
   "x-client-session-token": string;
 };
 
+type AuthHeaderVariant = {
+  name: string;
+  headers: Record<string, string>;
+};
+
 function toAuthHeaders(session: Session): AuthHeaders {
   return {
     "x-client-user-id": session.userId,
     "x-client-session-token": session.token,
   };
+}
+
+function isTransportFailure(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return message.includes("load failed") || message.includes("failed to fetch");
+}
+
+function moderationAuthHeaderVariants(session: Session): AuthHeaderVariant[] {
+  return [
+    {
+      name: "x-client",
+      headers: {
+        "x-client-user-id": session.userId,
+        "x-client-session-token": session.token,
+      },
+    },
+    {
+      name: "x-session+x-user",
+      headers: {
+        "x-user-id": session.userId,
+        "x-session-token": session.token,
+      },
+    },
+    {
+      name: "x-session",
+      headers: {
+        "x-session-token": session.token,
+      },
+    },
+    {
+      name: "authorization-session",
+      headers: {
+        Authorization: `Session ${session.token}`,
+      },
+    },
+  ];
 }
 
 async function request<T>(
@@ -274,20 +318,85 @@ async function request<T>(
     headers?: Record<string, string>;
   },
 ): Promise<T> {
-  const execute = async (requestPath: string) =>
-    fetch(requestPath, {
+  const execute = async (requestPath: string, authHeaders: Record<string, string>) =>
+    fetch(toClientApiUrl(requestPath), {
       ...options,
       headers: {
-        ...toAuthHeaders(session),
+        ...authHeaders,
         ...options?.headers,
       },
     });
 
-  let response = await execute(path);
+  const executeWithCompatibleAuth = async (requestPath: string) => {
+    const variants = moderationAuthHeaderVariants(session);
+    let lastThrownError: unknown;
+    let lastAuthResponse: Response | undefined;
+
+    for (const variant of variants) {
+      try {
+        const response = await execute(requestPath, variant.headers);
+
+        // Some deployments only accept one auth header style.
+        if (response.status === 401 || response.status === 403) {
+          console.error("[moderation-api] auth variant rejected", {
+            path: requestPath,
+            authVariant: variant.name,
+            status: response.status,
+          });
+          lastAuthResponse = response;
+          continue;
+        }
+
+        if (variant.name !== "x-client") {
+          console.error("[moderation-api] auth variant accepted", {
+            path: requestPath,
+            authVariant: variant.name,
+            status: response.status,
+          });
+        }
+
+        return response;
+      } catch (error) {
+        console.error("[moderation-api] auth variant transport failure", {
+          path: requestPath,
+          authVariant: variant.name,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        lastThrownError = error;
+
+        // CORS/transport failures are independent from auth header style.
+        if (isTransportFailure(error)) {
+          break;
+        }
+      }
+    }
+
+    if (lastAuthResponse) {
+      return lastAuthResponse;
+    }
+
+    throw lastThrownError ?? new Error("Moderation request failed");
+  };
+
+  let response: Response;
+
+  try {
+    response = await executeWithCompatibleAuth(path);
+  } catch (primaryError) {
+    if (isTransportFailure(primaryError)) {
+      throw primaryError;
+    }
+
+    if (!legacyPath) {
+      throw primaryError;
+    }
+
+    response = await executeWithCompatibleAuth(legacyPath);
+  }
 
   // Legacy fallback allows older and newer client/server combinations to interoperate.
   if (response.status === 404 && legacyPath) {
-    response = await execute(legacyPath);
+    response = await executeWithCompatibleAuth(legacyPath);
   }
 
   if (!response.ok) {
@@ -307,12 +416,43 @@ async function request<T>(
   return (await response.json()) as T;
 }
 
+function disabledScopes(): ModerationScopes {
+  return {
+    viewPanel: false,
+    manageModerators: false,
+    moderateUsers: false,
+    moderateMessages: false,
+    moderateServers: false,
+    moderateImages: false,
+    manageCases: false,
+  };
+}
+
 export async function fetchModerationBootstrap(session: Session) {
-  return request<{ item: ModerationBootstrap }>(
-    session,
-    "/client-api/moderation/bootstrap",
-    "/client-api/moderation/legacy/bootstrap",
-  );
+  try {
+    return await request<{ item: ModerationBootstrap }>(
+      session,
+      "/client-api/moderation/bootstrap",
+      "/client-api/moderation/legacy/bootstrap",
+    );
+  } catch (error) {
+    if (!isTransportFailure(error)) {
+      throw error;
+    }
+
+    console.error("[moderation-api] bootstrap disabled after transport failure", {
+      userId: session.userId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return {
+      item: {
+        userId: session.userId,
+        role: "none",
+        scopes: disabledScopes(),
+      },
+    };
+  }
 }
 
 export async function fetchModerators(session: Session) {

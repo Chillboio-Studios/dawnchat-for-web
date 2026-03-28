@@ -10,6 +10,12 @@ import { Avatar, Ripple, Text } from "@revolt/ui/components/design";
 import { Row } from "@revolt/ui/components/layout";
 import { Symbol } from "@revolt/ui/components/utils/Symbol";
 
+let hasLoggedUnsupportedVoiceRuntime = false;
+
+function isVoiceRuntimeSupported() {
+  return typeof window.RTCPeerConnection !== "undefined";
+}
+
 /**
  * Call card (preview)
  */
@@ -32,6 +38,19 @@ export function VoiceCallCardPreview(props: { channel: Channel }) {
   }
 
   function joinVoice() {
+    if (!isVoiceRuntimeSupported()) {
+      if (!hasLoggedUnsupportedVoiceRuntime) {
+        hasLoggedUnsupportedVoiceRuntime = true;
+        console.error("[rtc] voice disabled for this runtime", {
+          reason: "RTCPeerConnection is unavailable",
+          userAgent: navigator.userAgent,
+          pageUrl: window.location.href,
+        });
+      }
+
+      return;
+    }
+
     void voice.connect(props.channel).catch((error) => {
       console.error("[rtc] join voice failed", error);
     });

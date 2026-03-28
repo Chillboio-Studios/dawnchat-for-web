@@ -30,11 +30,16 @@ const appApiUrl = (
   parsed.APP_API_URL ||
   "http://localhost:3000/api"
 ).trim();
-const clientApiUrl = (
-  process.env.APP_CLIENT_API_URL ||
-  parsed.APP_CLIENT_API_URL ||
-  "http://localhost:3000"
-).trim();
+
+const explicitClientApiUrl =
+  process.env.APP_CLIENT_API_URL || parsed.APP_CLIENT_API_URL;
+
+const clientApiUrl = (explicitClientApiUrl
+  ? explicitClientApiUrl
+  : appApiUrl.replace(/\/api\/?$/i, "/client-api"))
+  .trim()
+  // Keep the previous localhost behavior for local dev defaults.
+  || "http://localhost:3000/client-api";
 
 const normalizedApiUrl = appApiUrl.replace(/\/+$/, "");
 const normalizedClientApiUrl = clientApiUrl.replace(/\/+$/, "");
