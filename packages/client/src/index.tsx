@@ -4,7 +4,7 @@
 import "./sentry";
 import "./desktopUrlShim";
 
-import { ErrorBoundary, JSX, onMount } from "solid-js";
+import { ErrorBoundary, JSX, Show, onMount } from "solid-js";
 import { render } from "solid-js/web";
 
 import { attachDevtoolsOverlay } from "@solid-devtools/overlay";
@@ -38,6 +38,7 @@ import AuthPage from "./Auth";
 import { initDesktopUpdater } from "./desktopUpdater";
 import Interface from "./Interface";
 import "./index.css";
+import { ClientDebugView } from "./interface/ClientDebugView";
 import { DevelopmentPage } from "./interface/Development";
 import { Discover } from "./interface/Discover";
 import { Friends } from "./interface/Friends";
@@ -432,6 +433,7 @@ render(
           <Route path="/" component={Interface as never}>
             <Route path="/pwa" component={PWARedirect} />
             <Route path="/dev" component={DevelopmentPage} />
+            <Route path="/debug/client" component={ClientDebugView} />
             <Route path="/discover/*" component={Discover} />
             <Route path="/settings" component={SettingsRedirect} />
             <Route path="/invite/:code" component={InviteRedirect} />

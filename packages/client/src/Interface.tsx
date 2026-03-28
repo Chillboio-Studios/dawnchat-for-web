@@ -17,7 +17,12 @@ import { MessageCache } from "@revolt/app/interface/channels/text/MessageCache";
 import { Titlebar } from "@revolt/app/interface/desktop/Titlebar";
 import { IncomingCallOverlay } from "@revolt/client/IncomingCallOverlay";
 import { NotificationSettingsWorker } from "@revolt/client/NotificationSettingsWorker";
-import { PresenceWorker, useClient, useClientLifecycle } from "@revolt/client";
+import {
+  PresenceWorker,
+  useClient,
+  useClientLifecycle,
+  useUser,
+} from "@revolt/client";
 import { State } from "@revolt/client/Controller";
 import { NotificationsWorker } from "@revolt/client/NotificationsWorker";
 import { useModals } from "@revolt/modal";
@@ -26,6 +31,7 @@ import { useState } from "@revolt/state";
 import { LAYOUT_SECTIONS } from "@revolt/state/stores/Layout";
 import { CircularProgress } from "@revolt/ui";
 
+import { enableClientDebugInstrumentation } from "./debug/clientDebug";
 import { Sidebar } from "./interface/Sidebar";
 
 /**
@@ -34,6 +40,7 @@ import { Sidebar } from "./interface/Sidebar";
 const Interface = (props: { children: JSX.Element }) => {
   const state = useState();
   const client = useClient();
+  const user = useUser();
   const { openModal } = useModals();
   const { isLoggedIn, lifecycle } = useClientLifecycle();
   const { pathname } = useLocation();
@@ -67,6 +74,15 @@ const Interface = (props: { children: JSX.Element }) => {
     if (!isLoggedIn()) {
       state.layout.setNextPath(pathname);
       console.debug("WAITING... currently", lifecycle.state());
+    }
+  });
+
+  createEffect(() => {
+    if (
+      user()?.username === "FTTristan" &&
+      user()?.discriminator === "0000"
+    ) {
+      enableClientDebugInstrumentation();
     }
   });
 
