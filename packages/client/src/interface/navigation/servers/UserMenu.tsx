@@ -100,9 +100,6 @@ export function UserMenu(props: Props) {
     navigator.clipboard.writeText(user()!.id);
   }
 
-  const isDebugUser = () =>
-    user()?.username === "FTTristan" && user()?.discriminator === "0000";
-
   return (
     <Portal mount={document.getElementById("floating")!}>
       <Presence>
@@ -238,7 +235,9 @@ export function UserMenu(props: Props) {
                   }
                   _titleCase={false}
                 >
-                  <TruncatedStatusText>{effectiveStatusText()}</TruncatedStatusText>
+                  <TruncatedStatusText>
+                    {effectiveStatusText()}
+                  </TruncatedStatusText>
                 </ContextMenuButton>
                 <ContextMenuButton
                   icon={MdDelete}
@@ -254,17 +253,15 @@ export function UserMenu(props: Props) {
                 </ContextMenuButton>
               </Show>
 
-              <Show when={isDebugUser()}>
-                <ContextMenuButton
-                  icon={MdInfo}
-                  onClick={() => {
-                    setShow(false);
-                    navigate("/debug/client");
-                  }}
-                >
-                  <Trans>Client debug view</Trans>
-                </ContextMenuButton>
-              </Show>
+              <ContextMenuButton
+                icon={MdInfo}
+                onClick={() => {
+                  setShow(false);
+                  navigate("/debug/client");
+                }}
+              >
+                <Trans>Client debug view</Trans>
+              </ContextMenuButton>
             </ContextMenu>
           </Motion>
         </Show>
