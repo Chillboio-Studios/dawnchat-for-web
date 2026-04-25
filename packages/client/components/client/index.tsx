@@ -20,11 +20,11 @@ import ClientController from "./Controller";
 
 export type { default as ClientController } from "./Controller";
 export { PresenceWorker } from "./PresenceWorker";
+export { CallRingingWorker } from "./CallRingingWorker";
+export { getAllRingingStates, getRingingState } from "./callRingingState";
 export {
-  applyPresenceEvent,
   getEffectiveUserPresence,
   getEffectiveUserStatus,
-  replacePresenceSnapshot,
 } from "./presenceState";
 
 const clientContext = createContext(null! as ClientController);

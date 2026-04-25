@@ -9,10 +9,6 @@ import { getEffectiveUserPresence, useClient } from "@revolt/client";
 import { TextWithEmoji } from "@revolt/markdown";
 import { useModals } from "@revolt/modal";
 import { useVoice } from "@revolt/rtc";
-import {
-  getAllRemoteCallStates,
-  pushRemoteCallState,
-} from "@revolt/common/lib/clientApiSocket";
 import { useState } from "@revolt/state";
 import { LAYOUT_SECTIONS } from "@revolt/state/stores/Layout";
 import {
@@ -204,48 +200,9 @@ export function ChannelHeader(props: Props) {
               return;
             }
 
-            const currentUserId = client().user?.id;
-            const channelType =
-              props.channel.type === "DirectMessage" ||
-              props.channel.type === "Group"
-                ? props.channel.type
-                : undefined;
-
-            const activeRingForCaller =
-              currentUserId && channelType
-                ? getAllRemoteCallStates().find(
-                    (item) =>
-                      item.channelId === props.channel.id &&
-                      item.status === "Ringing" &&
-                      item.startedById === currentUserId,
-                  )
-                : undefined;
-
-            const callId =
-              activeRingForCaller?.callId ??
-              `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-
             try {
               await voice.connect(props.channel);
-
-              // For DM/Group calls, publish a Ringing state immediately so recipients
-              // and late joiners receive it from websocket snapshots/updates.
-              if (currentUserId && channelType) {
-                await pushRemoteCallState(props.channel.id, callId, "Ringing", {
-                  startedById: currentUserId,
-                  updatedById: currentUserId,
-                  channelType,
-                });
-              }
             } catch {
-              if (currentUserId && channelType) {
-                await pushRemoteCallState(props.channel.id, callId, "Ended", {
-                  startedById: currentUserId,
-                  updatedById: currentUserId,
-                  channelType,
-                });
-              }
-
               // Ignore transient call connect errors; voice subsystem handles user feedback.
             }
           }}

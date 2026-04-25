@@ -156,7 +156,10 @@ app.use("/client-api", (req, res, next) => {
     return;
   }
 
-  next();
+  res.status(410).json({
+    error:
+      "Client API on this server is retired. Use dawnchat-api endpoints and events websocket.",
+  });
 });
 
 function isValidCallStatus(status) {
@@ -1650,12 +1653,7 @@ app.use((err, _req, res, _next) => {
 
 const server = app.listen(port, () => {
   console.info(`[server] listening on http://localhost:${port}`);
-  console.info(
-    `[client-api] websocket endpoint: ws://localhost:${port}${clientApiSocketPath}`,
-  );
-  console.info(
-    `[client-api] legacy presence endpoint alias: ws://localhost:${port}${legacyPresenceSocketPath}`,
-  );
+  console.info("[server] client-api websocket endpoints are retired");
 });
 
 const clientApiWss = new WebSocketServer({ noServer: true });
@@ -1766,19 +1764,11 @@ server.on("upgrade", (req, socket, head) => {
     requestUrl.pathname === clientApiSocketPath ||
     requestUrl.pathname === legacyPresenceSocketPath
   ) {
-    clientApiWss.handleUpgrade(req, socket, head, (ws) => {
-      clientApiWss.emit("connection", ws, req);
-    });
-    return;
-  }
-
-  if (
-    requestUrl.pathname !== clientApiSocketPath &&
-    requestUrl.pathname !== legacyPresenceSocketPath
-  ) {
     socket.destroy();
     return;
   }
+
+  socket.destroy();
 });
 
 let cliInterface;

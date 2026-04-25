@@ -10,16 +10,12 @@ import {
 import { styled } from "styled-system/jsx";
 
 import { useClient } from "@revolt/client";
-import {
-  ensureClientApiSocketConnected,
-  getAllRemoteCallStates,
-  pushRemoteCallState,
-} from "@revolt/common/lib/clientApiSocket";
 import { useNavigate } from "@revolt/routing";
 import { useVoice } from "@revolt/rtc";
 import { useState } from "@revolt/state";
 import { Button } from "@revolt/ui/components/design";
 import callRingtoneMp3 from "../../assets/ringer/Call Sound.mp3";
+import { getAllRingingStates } from "./callRingingState";
 
 const RING_TIMEOUT_MS = 60_000;
 
@@ -97,18 +93,14 @@ export function IncomingCallOverlay() {
   >({});
   const ringtone = createRingtoneController();
 
-  createEffect(() => {
-    ensureClientApiSocketConnected();
-  });
-
   const activeIncomingCall = createMemo(() => {
     const currentUserId = client().user?.id;
     if (!currentUserId) return undefined;
 
     const activeChannelId = voice.channel()?.id;
 
-    return getAllRemoteCallStates()
-      .filter((item) => item.status === "Ringing")
+    return getAllRingingStates()
+      .filter((item) => !item.ended)
       .filter((item) => item.startedById !== currentUserId)
       .filter((item) => item.channelId !== activeChannelId)
       .filter((item) => {
@@ -116,17 +108,17 @@ export function IncomingCallOverlay() {
         return channel?.type === "DirectMessage" || channel?.type === "Group";
       })
       .filter((item) => {
-        const dismissedAt = dismissedCallIds()[item.callId] ?? 0;
+        const dismissedAt = dismissedCallIds()[item.channelId] ?? 0;
         // Allow re-ringing if this call state has been updated after dismissal.
-        return item.updatedAt > dismissedAt;
+        return item.startedAt > dismissedAt;
       })
-      .filter((item) => Date.now() - item.updatedAt < RING_TIMEOUT_MS)
-      .sort((a, b) => b.updatedAt - a.updatedAt)[0];
+      .filter((item) => Date.now() - item.startedAt < RING_TIMEOUT_MS)
+      .sort((a, b) => b.startedAt - a.startedAt)[0];
   });
 
   createEffect(
     on(
-      () => activeIncomingCall()?.callId,
+      () => activeIncomingCall()?.channelId,
       (nextCallId, previousCallId) => {
         if (!nextCallId || !previousCallId || nextCallId === previousCallId) {
           return;
@@ -169,11 +161,6 @@ export function IncomingCallOverlay() {
 
     try {
       await voice.connect(channel);
-      await pushRemoteCallState(call.channelId, call.callId, "Active", {
-        startedById: call.startedById,
-        updatedById: client().user?.id,
-        channelType: channel.type,
-      });
 
       const fallbackPath = `/channel/${channel.id}`;
       const nextPath =
@@ -192,13 +179,8 @@ export function IncomingCallOverlay() {
 
     setDismissedCallIds((current) => ({
       ...current,
-      [call.callId]: Date.now(),
+      [call.channelId]: Date.now(),
     }));
-
-    await pushRemoteCallState(call.channelId, call.callId, "Missed", {
-      startedById: call.startedById,
-      updatedById: client().user?.id,
-    });
   }
 
   async function stopRinging() {
@@ -213,14 +195,10 @@ export function IncomingCallOverlay() {
 
     setDismissedCallIds((current) => ({
       ...current,
-      [call.callId]: Date.now(),
+      [call.channelId]: Date.now(),
     }));
 
-    await pushRemoteCallState(call.channelId, call.callId, "Ended", {
-      startedById: call.startedById,
-      updatedById: client().user?.id,
-      channelType,
-    });
+    void channelType;
   }
 
   function disableRinging() {
@@ -234,7 +212,7 @@ export function IncomingCallOverlay() {
       return;
     }
 
-    const elapsed = Date.now() - call.updatedAt;
+    const elapsed = Date.now() - call.startedAt;
     const remaining = RING_TIMEOUT_MS - elapsed;
 
     if (remaining <= 0) {

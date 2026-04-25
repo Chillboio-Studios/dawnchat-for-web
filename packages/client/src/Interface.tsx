@@ -15,10 +15,14 @@ import { styled } from "styled-system/jsx";
 import { ChannelContextMenu, ServerContextMenu } from "@revolt/app";
 import { MessageCache } from "@revolt/app/interface/channels/text/MessageCache";
 import { Titlebar } from "@revolt/app/interface/desktop/Titlebar";
-import { PresenceWorker, useClient, useClientLifecycle } from "@revolt/client";
+import {
+  CallRingingWorker,
+  PresenceWorker,
+  useClient,
+  useClientLifecycle,
+} from "@revolt/client";
 import { State } from "@revolt/client/Controller";
 import { IncomingCallOverlay } from "@revolt/client/IncomingCallOverlay";
-import { NotificationSettingsWorker } from "@revolt/client/NotificationSettingsWorker";
 import { NotificationsWorker } from "@revolt/client/NotificationsWorker";
 import { useModals } from "@revolt/modal";
 import { Navigate, useBeforeLeave, useLocation } from "@revolt/routing";
@@ -156,7 +160,7 @@ const Interface = (props: { children: JSX.Element }) => {
 
         <NotificationsWorker />
         <PresenceWorker />
-        <NotificationSettingsWorker />
+        <CallRingingWorker />
         <IncomingCallOverlay />
       </div>
     </MessageCache>

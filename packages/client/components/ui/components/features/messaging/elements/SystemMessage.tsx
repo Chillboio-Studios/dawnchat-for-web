@@ -3,9 +3,6 @@ import {
   Match,
   Show,
   Switch,
-  createEffect,
-  createSignal,
-  onMount,
 } from "solid-js";
 
 import { Trans } from "@lingui-solid/solid/macro";
@@ -29,13 +26,7 @@ import { RenderAnchor } from "@revolt/markdown/plugins/anchors";
 import { UserMention } from "@revolt/markdown/plugins/mentions";
 import { useSmartParams } from "@revolt/routing";
 import { useVoice } from "@revolt/rtc";
-import { useClient } from "@revolt/client";
-import {
-  ensureClientApiSocketConnected,
-  fetchRemoteCallState,
-  getRemoteCallState,
-  pushRemoteCallState,
-} from "@revolt/common/lib/clientApiSocket";
+import { getRingingState, useClient } from "@revolt/client";
 import { Button } from "@revolt/ui/components/design";
 import { formatTime, Time } from "@revolt/ui/components/utils";
 
@@ -74,13 +65,6 @@ export function SystemMessage(props: Props) {
   const dayjs = useTime();
   const voice = useVoice();
   const client = useClient();
-  const [lastAutoPushed, setLastAutoPushed] = createSignal<
-    | {
-        key: string;
-        status: string;
-      }
-    | undefined
-  >();
 
   const callSystemMessage = () =>
     props.systemMessage as CallStartedSystemMessage | undefined;
@@ -95,12 +79,19 @@ export function SystemMessage(props: Props) {
   const callStatus = () => {
     const call = callSystemMessage();
     const channelId = props.channelId;
-    const callId = props.messageId;
     const currentUserId = client().user?.id;
-    const remoteState = getRemoteCallState(channelId, callId);
+    const ringingState = getRingingState(channelId);
 
     if (!call || !channelId || !currentUserId) return "Ended";
-    if (remoteState?.status) return remoteState.status;
+
+    if (
+      ringingState &&
+      !ringingState.ended &&
+      ringingState.startedById === call.byId &&
+      !call.finishedAt
+    ) {
+      return voice.channel()?.id === channelId ? "Active" : "Ringing";
+    }
 
     return localCallStatus();
   };
@@ -134,75 +125,27 @@ export function SystemMessage(props: Props) {
     return "Ended";
   };
 
-  onMount(() => {
-    ensureClientApiSocketConnected();
-  });
-
-  createEffect(() => {
-    const channelId = props.channelId;
-    const callId = props.messageId;
-
-    if (!channelId || !callId) return;
-
-    void fetchRemoteCallState(channelId, callId);
-  });
-
   async function stopRinging() {
     const channelId = props.channelId;
-    const callId = props.messageId;
-    const call = callSystemMessage();
     const currentUserId = client().user?.id;
     const channel = channelId ? client().channels.get(channelId) : undefined;
 
-    if (!channelId || !callId || !call || !currentUserId || !channel) return;
-
-    await pushRemoteCallState(channelId, callId, "Ended", {
-      startedById: call.byId,
-      updatedById: currentUserId,
-      channelType:
-        channel.type === "DirectMessage" || channel.type === "Group"
-          ? channel.type
-          : undefined,
-    });
-  }
-
-  createEffect(() => {
-    const channelId = props.channelId;
-    const callId = props.messageId;
-    const call = callSystemMessage();
-    const currentUserId = client().user?.id;
-    const channel = channelId ? client().channels.get(channelId) : undefined;
-    const remoteState = getRemoteCallState(channelId, callId);
-
-    if (!channelId || !callId || !call || !currentUserId || !channel) return;
+    if (!channelId || !currentUserId || !channel) return;
     if (channel.type !== "DirectMessage" && channel.type !== "Group") return;
-    if (call.byId !== currentUserId) return;
 
-    // Once a call has been marked terminal remotely, do not reopen it from local heuristics.
-    if (
-      remoteState?.status === "Missed" ||
-      remoteState?.status === "Ended"
-    ) {
-      return;
-    }
+    const targets =
+      channel.type === "DirectMessage"
+        ? [channel.recipientId]
+        : channel.recipients
+            .map((entry) => entry.id)
+            .filter((id) => id !== currentUserId);
 
-    // Caller should publish Ringing when a call starts; Active is driven by recipient accept.
-    const nextStatus = call.finishedAt != null ? "Ended" : "Ringing";
-    const key = `${channelId}:${callId}`;
-    const previous = lastAutoPushed();
-
-    if (previous?.key === key && previous.status === nextStatus) {
-      return;
-    }
-
-    setLastAutoPushed({ key, status: nextStatus });
-
-    void pushRemoteCallState(channelId, callId, nextStatus, {
-      startedById: call.byId,
-      updatedById: currentUserId,
-      channelType: channel.type,
-    });
-  });
+    await Promise.allSettled(
+      targets.map((targetUserId) =>
+        client().api.put(`/channels/${channelId}/end_ring/${targetUserId}`),
+      ),
+    );
+  }
 
   return (
     <Base>

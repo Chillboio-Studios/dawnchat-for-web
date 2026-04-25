@@ -209,7 +209,14 @@ class Voice {
 
     try {
       if (!auth) {
-        auth = await channel.joinCall("worldwide");
+        const recipients =
+          channel.type === "DirectMessage"
+            ? [channel.recipient]
+            : channel.type === "Group"
+              ? channel.recipients
+              : undefined;
+
+        auth = await channel.joinCall("worldwide", true, recipients);
       }
 
       await Promise.race([

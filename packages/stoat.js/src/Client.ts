@@ -97,6 +97,16 @@ export type Events = {
   // ^ userPresenceChanged: [user: User, previousPresence: boolean];
   userSettingsUpdate: [id: string, update: Record<string, [number, string]>];
 
+  dmCallRingingUpdate: [
+    payload: {
+      channel_id: string;
+      initiator_id: string;
+      started_at?: string;
+      ended: boolean;
+      recipients?: string[];
+    },
+  ];
+
   emojiCreate: [emoji: Emoji];
   emojiDelete: [emoji: HydratedEmoji];
 };

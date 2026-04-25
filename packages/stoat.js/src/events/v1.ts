@@ -203,6 +203,14 @@ type ServerMessage =
       type: "UserMoveVoiceChannel";
       node: string;
       token: string;
+    }
+  | {
+      type: "DmCallRingingUpdate";
+      channel_id: string;
+      initiator_id: string;
+      started_at?: string;
+      ended: boolean;
+      recipients?: string[];
     };
 
 /**
@@ -982,6 +990,10 @@ export async function handleEvent(
     }
     case "UserMoveVoiceChannel": {
       // todo
+      break;
+    }
+    case "DmCallRingingUpdate": {
+      client.emit("dmCallRingingUpdate", event);
       break;
     }
   }
