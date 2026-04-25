@@ -6,9 +6,9 @@ import { File, Message } from "stoat.js";
 import { useClient, useUser } from "@revolt/client";
 import { CustomEmoji, UnicodeEmoji } from "@revolt/markdown/emoji";
 import { useModals } from "@revolt/modal";
-import { useNavigate } from "@revolt/routing";
 import { useState } from "@revolt/state";
 
+import MdAdminPanelSettings from "@material-design-icons/svg/outlined/admin_panel_settings.svg?component-solid";
 import MdBadge from "@material-design-icons/svg/outlined/badge.svg?component-solid";
 import MdContentCopy from "@material-design-icons/svg/outlined/content_copy.svg?component-solid";
 import MdDelete from "@material-design-icons/svg/outlined/delete.svg?component-solid";
@@ -22,8 +22,6 @@ import MdPin from "@material-design-icons/svg/outlined/pin_invoke.svg?component-
 import MdReply from "@material-design-icons/svg/outlined/reply.svg?component-solid";
 import MdReport from "@material-design-icons/svg/outlined/report.svg?component-solid";
 import MdShare from "@material-design-icons/svg/outlined/share.svg?component-solid";
-import MdShield from "@material-design-icons/svg/outlined/shield.svg?component-solid";
-
 import MdSentimentContent from "@material-symbols/svg-400/outlined/sentiment_content.svg?component-solid";
 
 import {
@@ -32,6 +30,10 @@ import {
   ContextMenuDivider,
   ContextMenuSubMenu,
 } from "./ContextMenu";
+import {
+  openAdminPanelAttachment,
+  openAdminPanelMessage,
+} from "./adminPanel";
 
 /**
  * Context menu for messages
@@ -40,7 +42,6 @@ export function MessageContextMenu(props: { message?: Message; file?: File }) {
   const user = useUser();
   const state = useState();
   const client = useClient();
-  const navigate = useNavigate();
   const { openModal, showError } = useModals();
 
   /**
@@ -89,11 +90,15 @@ export function MessageContextMenu(props: { message?: Message; file?: File }) {
     }
   }
 
-  /**
-   * Open message in Stoat Admin Panel
-   */
-  function openAdminPanel() {
-    navigate(`/moderation/message/${props.message!.id}`);
+  function openMessageInAdminPanel() {
+    openAdminPanelMessage(props.message?.id);
+  }
+
+  function openFileInAdminPanel() {
+    openAdminPanelAttachment(
+      (props.file as File & { _id?: string } | undefined)?.id ??
+        (props.file as File & { _id?: string } | undefined)?._id,
+    );
   }
 
   /**
@@ -133,6 +138,9 @@ export function MessageContextMenu(props: { message?: Message; file?: File }) {
       <Show when={props.file}>
         <ContextMenuButton icon={MdOpenInNew} onClick={OpenFile}>
           <Trans>Open file</Trans>
+        </ContextMenuButton>
+        <ContextMenuButton icon={MdAdminPanelSettings} onClick={openFileInAdminPanel}>
+          <Trans>Open in Admin Panel</Trans>
         </ContextMenuButton>
         <ContextMenuButton icon={MdLink} onClick={CopyLink}>
           <Trans>Copy link</Trans>
@@ -254,11 +262,9 @@ export function MessageContextMenu(props: { message?: Message; file?: File }) {
           </ContextMenuButton>
         </Show>
         <ContextMenuDivider />
-        <Show when={state.settings.getValue("advanced:admin_panel")}>
-          <ContextMenuButton icon={MdShield} onClick={openAdminPanel}>
-            <Trans>Admin Panel</Trans>
-          </ContextMenuButton>
-        </Show>
+        <ContextMenuButton icon={MdAdminPanelSettings} onClick={openMessageInAdminPanel}>
+          <Trans>Open in Admin Panel</Trans>
+        </ContextMenuButton>
         <ContextMenuButton icon={MdShare} onClick={copyLink}>
           <Trans>Copy link</Trans>
         </ContextMenuButton>

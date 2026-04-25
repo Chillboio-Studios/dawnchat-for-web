@@ -3,9 +3,7 @@ import {
   For,
   JSX,
   Show,
-  createEffect,
   createMemo,
-  createSignal,
 } from "solid-js";
 
 import { Trans } from "@lingui-solid/solid/macro";
@@ -21,10 +19,7 @@ import { useNavigate } from "@revolt/routing";
 import { useState } from "@revolt/state";
 import { Avatar, Column, Text, Time, Unreads, UserStatus } from "@revolt/ui";
 
-import { fetchModerationBootstrap } from "../../../../components/common/lib/moderationApi";
-
 import MdAdd from "@material-design-icons/svg/filled/add.svg?component-solid";
-import MdAdminPanelSettings from "@material-design-icons/svg/filled/admin_panel_settings.svg?component-solid";
 import MdExplore from "@material-design-icons/svg/filled/explore.svg?component-solid";
 import MdHome from "@material-design-icons/svg/filled/home.svg?component-solid";
 import MdSettings from "@material-design-icons/svg/filled/settings.svg?component-solid";
@@ -124,44 +119,9 @@ export const ServerList = (props: Props) => {
 
   // Ref for floating menu
   const [menuButton, setMenuButton] = createSignal<HTMLDivElement>();
-  const [canOpenModeration, setCanOpenModeration] = createSignal(false);
-
-  createEffect(() => {
-    const session = state.auth.getSession();
-    if (!session) {
-      setCanOpenModeration(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    void fetchModerationBootstrap(session)
-      .then((payload) => {
-        if (!cancelled) {
-          setCanOpenModeration(Boolean(payload.item?.scopes?.viewPanel));
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setCanOpenModeration(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  });
-
   return (
     <ServerListBase>
       <div use:invisibleScrollable={{ direction: "y", class: listBase() }}>
-        <Show when={canOpenModeration()}>
-          <Tooltip placement="right" content="Moderation Panel">
-            <a class={entryContainer()} href="/moderation">
-              <Avatar size={42} fallback={<MdAdminPanelSettings />} interactive />
-            </a>
-          </Tooltip>
-        </Show>
         <a
           class={entryContainer({
             indicator: !props.selectedServer() ? "selected" : undefined,

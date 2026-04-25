@@ -222,11 +222,6 @@ export type Modals =
       contextMessage?: Message;
     }
   | {
-      type: "moderation_panel";
-      targetType?: "user" | "message" | "server" | "image";
-      targetId?: string;
-    }
-  | {
       type: "server_identity";
       member: ServerMember;
     }

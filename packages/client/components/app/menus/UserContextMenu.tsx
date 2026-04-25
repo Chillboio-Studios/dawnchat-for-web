@@ -34,6 +34,7 @@ import {
   ContextMenuButton,
   ContextMenuDivider,
 } from "./ContextMenu";
+import { openAdminPanelUser } from "./adminPanel";
 import { NotificationContextMenu } from "./shared/NotificationContextMenu";
 
 /**
@@ -113,6 +114,10 @@ export function UserContextMenu(props: {
     });
   }
 
+  function openAdminPanel() {
+    openAdminPanelUser(props.user.id);
+  }
+
   /**
    * Kick the member
    */
@@ -170,13 +175,6 @@ export function UserContextMenu(props: {
    */
   function unblockUser() {
     props.user.unblockUser();
-  }
-
-  /**
-   * Open user in Stoat Admin Panel
-   */
-  function openAdminPanel() {
-    navigate(`/moderation/user/${props.user.id}`);
   }
 
   /**
@@ -384,20 +382,11 @@ export function UserContextMenu(props: {
         </Show>
       </Show>
 
-      <Show
-        when={
-          state.settings.getValue("advanced:admin_panel") ||
-          state.settings.getValue("advanced:copy_id")
-        }
-      >
-        <ContextMenuDivider />
-      </Show>
+      <ContextMenuDivider />
 
-      <Show when={state.settings.getValue("advanced:admin_panel")}>
-        <ContextMenuButton icon={MdAdminPanelSettings} onClick={openAdminPanel}>
-          <Trans>Admin Panel</Trans>
-        </ContextMenuButton>
-      </Show>
+      <ContextMenuButton icon={MdAdminPanelSettings} onClick={openAdminPanel}>
+        <Trans>Open in Admin Panel</Trans>
+      </ContextMenuButton>
       <Show when={state.settings.getValue("advanced:copy_id")}>
         <ContextMenuButton icon={MdBadge} onClick={copyId}>
           <Trans>Copy user ID</Trans>

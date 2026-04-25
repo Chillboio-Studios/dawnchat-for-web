@@ -4,9 +4,9 @@ import { Trans } from "@lingui-solid/solid/macro";
 import { Channel } from "stoat.js";
 
 import { useModals } from "@revolt/modal";
-import { useNavigate } from "@revolt/routing";
 import { useState } from "@revolt/state";
 
+import MdAdminPanelSettings from "@material-design-icons/svg/outlined/admin_panel_settings.svg?component-solid";
 import MdBadge from "@material-design-icons/svg/outlined/badge.svg?component-solid";
 import MdDelete from "@material-design-icons/svg/outlined/delete.svg?component-solid";
 import MdGroupAdd from "@material-design-icons/svg/outlined/group_add.svg?component-solid";
@@ -15,13 +15,12 @@ import MdLogout from "@material-design-icons/svg/outlined/logout.svg?component-s
 import MdMarkChatRead from "@material-design-icons/svg/outlined/mark_chat_read.svg?component-solid";
 import MdSettings from "@material-design-icons/svg/outlined/settings.svg?component-solid";
 import MdShare from "@material-design-icons/svg/outlined/share.svg?component-solid";
-import MdShield from "@material-design-icons/svg/outlined/shield.svg?component-solid";
-
 import {
   ContextMenu,
   ContextMenuButton,
   ContextMenuDivider,
 } from "./ContextMenu";
+import { openAdminPanelServer } from "./adminPanel";
 import { NotificationContextMenu } from "./shared/NotificationContextMenu";
 
 /**
@@ -29,7 +28,6 @@ import { NotificationContextMenu } from "./shared/NotificationContextMenu";
  */
 export function ChannelContextMenu(props: { channel: Channel }) {
   const state = useState();
-  const navigate = useNavigate();
   const { openModal } = useModals();
 
   /**
@@ -80,11 +78,8 @@ export function ChannelContextMenu(props: { channel: Channel }) {
     });
   }
 
-  /**
-   * Open channel in Stoat Admin Panel
-   */
   function openAdminPanel() {
-    navigate("/moderation");
+    openAdminPanelServer(props.channel.server?.id);
   }
 
   /**
@@ -160,9 +155,9 @@ export function ChannelContextMenu(props: { channel: Channel }) {
         <ContextMenuDivider />
       </Show>
 
-      <Show when={state.settings.getValue("advanced:admin_panel")}>
-        <ContextMenuButton icon={MdShield} onClick={openAdminPanel}>
-          <Trans>Admin Panel</Trans>
+      <Show when={props.channel.server}>
+        <ContextMenuButton icon={MdAdminPanelSettings} onClick={openAdminPanel}>
+          <Trans>Open in Admin Panel</Trans>
         </ContextMenuButton>
       </Show>
       <ContextMenuButton icon={MdShare} onClick={copyLink}>

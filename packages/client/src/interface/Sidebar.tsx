@@ -58,8 +58,6 @@ export const Sidebar = (props: {
 
   const mobileSidebarOpen = () =>
     state.layout.getSectionState(LAYOUT_SECTIONS.PRIMARY_SIDEBAR, !isMobile());
-  const isModerationRoute = () => location.pathname.startsWith("/moderation");
-
   return (
     <div class={drawer({ mobileOpen: mobileSidebarOpen() })}>
       <Show when={isMobile() && mobileSidebarOpen()}>
@@ -98,8 +96,7 @@ export const Sidebar = (props: {
       <Show
         when={
           mobileSidebarOpen() &&
-          !location.pathname.startsWith("/discover") &&
-          !isModerationRoute()
+          !location.pathname.startsWith("/discover")
         }
       >
         <Switch fallback={<Home />}>

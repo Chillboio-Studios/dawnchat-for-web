@@ -65,11 +65,6 @@ interface SettingsDefinition {
   "advanced:copy_id": boolean;
 
   /**
-   * Whether to include admin panel links in context menus
-   */
-  "advanced:admin_panel": boolean;
-
-  /**
    * Last read changelog index
    */
   "changelog:last_index": number;
@@ -99,7 +94,6 @@ const EXPECTED_TYPES: { [K in keyof SettingsDefinition]: ValueType<K> } = {
   "appearance:show_send_button": "boolean",
   "appearance:compact_mode": "boolean",
   "advanced:copy_id": "boolean",
-  "advanced:admin_panel": "boolean",
   "changelog:last_index": "number",
 };
 
@@ -142,7 +136,6 @@ export class Settings extends AbstractStore<"settings", TypeSettings> {
       "appearance:show_send_button": true,
       "appearance:compact_mode": false,
       "advanced:copy_id": false,
-      "advanced:admin_panel": false,
     };
   }
 

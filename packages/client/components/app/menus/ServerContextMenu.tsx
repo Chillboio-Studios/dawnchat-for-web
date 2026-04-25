@@ -6,10 +6,10 @@ import { Server } from "stoat.js";
 
 import { useClient } from "@revolt/client";
 import { useModals } from "@revolt/modal";
-import { useNavigate } from "@revolt/routing";
 import { useState } from "@revolt/state";
 import { Column, Text, Time } from "@revolt/ui";
 
+import MdAdminPanelSettings from "@material-design-icons/svg/outlined/admin_panel_settings.svg?component-solid";
 import MdAlternateEmail from "@material-design-icons/svg/outlined/alternate_email.svg?component-solid";
 import MdBadge from "@material-design-icons/svg/outlined/badge.svg?component-solid";
 import MdFace from "@material-design-icons/svg/outlined/face.svg?component-solid";
@@ -20,8 +20,6 @@ import MdNotificationsOff from "@material-design-icons/svg/outlined/notification
 import MdPersonAdd from "@material-design-icons/svg/outlined/person_add.svg?component-solid";
 import MdReport from "@material-design-icons/svg/outlined/report.svg?component-solid";
 import MdSettings from "@material-design-icons/svg/outlined/settings.svg?component-solid";
-import MdShield from "@material-design-icons/svg/outlined/shield.svg?component-solid";
-
 import MdDoNotDisturbOff from "@material-symbols/svg-400/outlined/do_not_disturb_off.svg?component-solid";
 import MdDoNotDisturbOn from "@material-symbols/svg-400/outlined/do_not_disturb_on.svg?component-solid";
 import MdNotificationSettings from "@material-symbols/svg-400/outlined/notification_settings.svg?component-solid";
@@ -34,6 +32,7 @@ import {
   ContextMenuDivider,
   ContextMenuSubMenu,
 } from "./ContextMenu";
+import { openAdminPanelServer } from "./adminPanel";
 
 /**
  * Context menu for servers
@@ -41,7 +40,6 @@ import {
 export function ServerContextMenu(props: { server: Server }) {
   const state = useState();
   const client = useClient();
-  const navigate = useNavigate();
   const { openModal } = useModals();
 
   /**
@@ -112,11 +110,8 @@ export function ServerContextMenu(props: { server: Server }) {
     });
   }
 
-  /**
-   * Open server in Stoat Admin Panel
-   */
   function openAdminPanel() {
-    navigate(`/moderation/server/${props.server.id}`);
+    openAdminPanelServer(props.server.id);
   }
 
   /**
@@ -306,20 +301,11 @@ export function ServerContextMenu(props: { server: Server }) {
         </ContextMenuButton>
       </Show>
 
-      <Show
-        when={
-          state.settings.getValue("advanced:admin_panel") &&
-          state.settings.getValue("advanced:copy_id")
-        }
-      >
-        <ContextMenuDivider />
-      </Show>
+      <ContextMenuDivider />
 
-      <Show when={state.settings.getValue("advanced:admin_panel")}>
-        <ContextMenuButton icon={MdShield} onClick={openAdminPanel}>
-          <Trans>Admin Panel</Trans>
-        </ContextMenuButton>
-      </Show>
+      <ContextMenuButton icon={MdAdminPanelSettings} onClick={openAdminPanel}>
+        <Trans>Open in Admin Panel</Trans>
+      </ContextMenuButton>
       <Show when={state.settings.getValue("advanced:copy_id")}>
         <ContextMenuButton icon={MdBadge} onClick={copyId}>
           <Trans>Copy server ID</Trans>
