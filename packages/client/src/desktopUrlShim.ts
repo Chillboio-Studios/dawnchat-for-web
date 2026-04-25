@@ -24,21 +24,6 @@ function normalizeApiBase(input: string | undefined) {
   return `${trimmed}/api`;
 }
 
-function normalizeClientApiBase(input: string | undefined) {
-  const trimmed = input?.trim().replace(/\/+$/, "");
-  if (!trimmed) return undefined;
-
-  if (/\/client-api$/i.test(trimmed)) {
-    return trimmed;
-  }
-
-  if (/\/api$/i.test(trimmed)) {
-    return trimmed.replace(/\/api$/i, "/client-api");
-  }
-
-  return `${trimmed}/client-api`;
-}
-
 const isDesktop = (() => {
   // Desktop bundles always define this env var via scripts/build-desktop.mjs.
   if (desktopBuildTarget) return true;
@@ -57,28 +42,19 @@ const isDesktop = (() => {
   );
 })();
 
-const configuredClientApiBase = normalizeClientApiBase(
-  import.meta.env.VITE_CLIENT_API_URL as string | undefined,
+const configuredApiBase = normalizeApiBase(
+  (import.meta.env.VITE_API_URL as string | undefined) ??
+    (import.meta.env.VITE_CLIENT_API_URL as string | undefined),
 );
 
 const fallbackApiBase =
   normalizeApiBase(import.meta.env.VITE_API_URL as string | undefined) ??
   "https://app.dawn-chat.com/api";
 
-const derivedClientApiBase = normalizeClientApiBase(fallbackApiBase);
+const apiBase = configuredApiBase || fallbackApiBase || "https://app.dawn-chat.com/api";
 
-const clientApiBase =
-  configuredClientApiBase ||
-  derivedClientApiBase ||
-  "https://app.dawn-chat.com/client-api";
-
-if (isDesktop && clientApiBase) {
-  const rewriteClientApiPath = (pathname: string) => {
-    if (pathname.startsWith("/client-api")) {
-      const suffix = pathname.slice("/client-api".length);
-      return `${clientApiBase}${suffix}`;
-    }
-
+if (isDesktop && apiBase) {
+  const rewriteApiPath = (pathname: string) => {
     if (pathname.startsWith("/api") && fallbackApiBase) {
       const suffix = pathname.slice("/api".length);
       return `${fallbackApiBase}${suffix}`;
@@ -91,7 +67,7 @@ if (isDesktop && clientApiBase) {
     if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(urlLike)) {
       try {
         const parsed = new URL(urlLike);
-        const rewrittenBase = rewriteClientApiPath(parsed.pathname);
+        const rewrittenBase = rewriteApiPath(parsed.pathname);
         if (rewrittenBase) {
           return `${rewrittenBase}${parsed.search}${parsed.hash}`;
         }
@@ -108,7 +84,7 @@ if (isDesktop && clientApiBase) {
       return `${protocol}${urlLike}`;
     }
 
-    const rewrittenPath = rewriteClientApiPath(urlLike);
+    const rewrittenPath = rewriteApiPath(urlLike);
     if (rewrittenPath) return rewrittenPath;
 
     return urlLike;
@@ -133,22 +109,27 @@ if (isDesktop && clientApiBase) {
   };
 
   const OriginalWebSocket = window.WebSocket;
+  const configuredWsBase = (import.meta.env.VITE_WS_URL as string | undefined)
+    ?.trim()
+    .replace(/\/+$/, "");
+
   const rewriteWs = (value: string | URL) => {
     const asString = typeof value === "string" ? value : value.toString();
 
-    const wsBase = clientApiBase
+    const wsBase = (configuredWsBase || apiBase)
       .replace(/^http:/, "ws:")
-      .replace(/^https:/, "wss:");
+      .replace(/^https:/, "wss:")
+      .replace(/\/api$/i, "/ws");
 
-    if (asString.startsWith("/client-api")) {
-      const suffix = asString.slice("/client-api".length);
+    if (asString.startsWith("/api")) {
+      const suffix = asString.slice("/api".length);
       return `${wsBase}${suffix}`;
     }
 
     try {
       const parsed = new URL(asString, window.location.href);
-      if (parsed.pathname.startsWith("/client-api")) {
-        const suffix = parsed.pathname.slice("/client-api".length);
+      if (parsed.pathname.startsWith("/api")) {
+        const suffix = parsed.pathname.slice("/api".length);
         return `${wsBase}${suffix}${parsed.search}${parsed.hash}`;
       }
     } catch {

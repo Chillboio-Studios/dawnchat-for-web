@@ -432,8 +432,8 @@ export async function fetchModerationBootstrap(session: Session) {
   try {
     return await request<{ item: ModerationBootstrap }>(
       session,
-      "/client-api/moderation/bootstrap",
-      "/client-api/moderation/legacy/bootstrap",
+      "/api/moderation/bootstrap",
+      "/api/moderation/legacy/bootstrap",
     );
   } catch (error) {
     if (!isTransportFailure(error)) {
@@ -458,8 +458,8 @@ export async function fetchModerationBootstrap(session: Session) {
 export async function fetchModerators(session: Session) {
   return request<{ items: ModeratorRecord[] }>(
     session,
-    "/client-api/moderation/moderators",
-    "/client-api/moderation/legacy/moderators",
+    "/api/moderation/moderators",
+    "/api/moderation/legacy/moderators",
   );
 }
 
@@ -473,8 +473,8 @@ export async function upsertModerator(
 ) {
   return request<{ item: ModeratorRecord }>(
     session,
-    "/client-api/moderation/moderators",
-    "/client-api/moderation/legacy/moderators",
+    "/api/moderation/moderators",
+    "/api/moderation/legacy/moderators",
     {
       method: "POST",
       headers: {
@@ -488,8 +488,8 @@ export async function upsertModerator(
 export async function removeModerator(session: Session, userId: string) {
   return request<{ ok: true }>(
     session,
-    `/client-api/moderation/moderators/${encodeURIComponent(userId)}`,
-    `/client-api/moderation/legacy/moderators/${encodeURIComponent(userId)}`,
+    `/api/moderation/moderators/${encodeURIComponent(userId)}`,
+    `/api/moderation/legacy/moderators/${encodeURIComponent(userId)}`,
     {
       method: "DELETE",
     },
@@ -526,8 +526,8 @@ export async function fetchModerationCases(
 
   return request<ModerationPagedResponse<ModerationCase>>(
     session,
-    `/client-api/moderation/cases${query.size ? `?${query.toString()}` : ""}`,
-    `/client-api/moderation/legacy/cases${query.size ? `?${query.toString()}` : ""}`,
+    `/api/moderation/cases${query.size ? `?${query.toString()}` : ""}`,
+    `/api/moderation/legacy/cases${query.size ? `?${query.toString()}` : ""}`,
   );
 }
 
@@ -539,8 +539,8 @@ export async function updateModerationCaseStatus(
 ) {
   return request<{ item: ModerationCase }>(
     session,
-    `/client-api/moderation/cases/${encodeURIComponent(caseId)}/status`,
-    `/client-api/moderation/legacy/cases/${encodeURIComponent(caseId)}/status`,
+    `/api/moderation/cases/${encodeURIComponent(caseId)}/status`,
+    `/api/moderation/legacy/cases/${encodeURIComponent(caseId)}/status`,
     {
       method: "PATCH",
       headers: {
@@ -583,8 +583,8 @@ export async function fetchModerationReports(
 
   return request<ModerationPagedResponse<ModerationReport>>(
     session,
-    `/client-api/moderation/reports${suffix}`,
-    `/client-api/moderation/legacy/reports${suffix}`,
+    `/api/moderation/reports${suffix}`,
+    `/api/moderation/legacy/reports${suffix}`,
   );
 }
 
@@ -594,8 +594,8 @@ export async function fetchModerationReportDetail(
 ) {
   return request<{ item: ModerationReportDetail }>(
     session,
-    `/client-api/moderation/reports/${encodeURIComponent(reportId)}`,
-    `/client-api/moderation/legacy/reports/${encodeURIComponent(reportId)}`,
+    `/api/moderation/reports/${encodeURIComponent(reportId)}`,
+    `/api/moderation/legacy/reports/${encodeURIComponent(reportId)}`,
   );
 }
 
@@ -611,8 +611,8 @@ export async function createModerationReport(
 ) {
   return request<{ item: ModerationReport }>(
     session,
-    "/client-api/moderation/reports",
-    "/client-api/moderation/legacy/reports",
+    "/api/moderation/reports",
+    "/api/moderation/legacy/reports",
     {
       method: "POST",
       headers: {
@@ -631,8 +631,8 @@ export async function updateModerationReportStatus(
 ) {
   return request<{ item: ModerationReportDetail }>(
     session,
-    `/client-api/moderation/reports/${encodeURIComponent(reportId)}/status`,
-    `/client-api/moderation/legacy/reports/${encodeURIComponent(reportId)}/status`,
+    `/api/moderation/reports/${encodeURIComponent(reportId)}/status`,
+    `/api/moderation/legacy/reports/${encodeURIComponent(reportId)}/status`,
     {
       method: "PATCH",
       headers: {
@@ -661,8 +661,8 @@ export async function applyModerationAction(
     caseItem?: ModerationCase;
   }>(
     session,
-    "/client-api/moderation/actions",
-    "/client-api/moderation/legacy/actions",
+    "/api/moderation/actions",
+    "/api/moderation/legacy/actions",
     {
       method: "POST",
       headers: {
@@ -696,8 +696,8 @@ export async function applyBulkModerationAction(
     }>;
   }>(
     session,
-    "/client-api/moderation/actions/bulk",
-    "/client-api/moderation/legacy/actions/bulk",
+    "/api/moderation/actions/bulk",
+    "/api/moderation/legacy/actions/bulk",
     {
       method: "POST",
       headers: {
@@ -737,8 +737,8 @@ export async function fetchModerationActions(
 
   return request<ModerationPagedResponse<ModerationAction>>(
     session,
-    `/client-api/moderation/actions${suffix}`,
-    `/client-api/moderation/legacy/actions${suffix}`,
+    `/api/moderation/actions${suffix}`,
+    `/api/moderation/legacy/actions${suffix}`,
   );
 }
 
@@ -761,8 +761,8 @@ export async function searchModerationUsers(
 
   return request<ModerationPagedResponse<ModerationUserSearchResult>>(
     session,
-    `/client-api/moderation/search/users?${query.toString()}`,
-    `/client-api/moderation/legacy/search/users?${query.toString()}`,
+    `/api/moderation/search/users?${query.toString()}`,
+    `/api/moderation/legacy/search/users?${query.toString()}`,
   );
 }
 
@@ -785,8 +785,8 @@ export async function searchModerationServers(
 
   return request<ModerationPagedResponse<ModerationServerSearchResult>>(
     session,
-    `/client-api/moderation/search/servers?${query.toString()}`,
-    `/client-api/moderation/legacy/search/servers?${query.toString()}`,
+    `/api/moderation/search/servers?${query.toString()}`,
+    `/api/moderation/legacy/search/servers?${query.toString()}`,
   );
 }
 
@@ -809,8 +809,8 @@ export async function searchModerationImages(
 
   return request<ModerationPagedResponse<ModerationImageSearchResult>>(
     session,
-    `/client-api/moderation/search/images?${query.toString()}`,
-    `/client-api/moderation/legacy/search/images?${query.toString()}`,
+    `/api/moderation/search/images?${query.toString()}`,
+    `/api/moderation/legacy/search/images?${query.toString()}`,
   );
 }
 
@@ -820,8 +820,8 @@ export async function fetchModerationUserDetail(
 ) {
   return request<{ item: ModerationUserDetail }>(
     session,
-    `/client-api/moderation/view/users/${encodeURIComponent(userId)}`,
-    `/client-api/moderation/legacy/view/users/${encodeURIComponent(userId)}`,
+    `/api/moderation/view/users/${encodeURIComponent(userId)}`,
+    `/api/moderation/legacy/view/users/${encodeURIComponent(userId)}`,
   );
 }
 
@@ -832,8 +832,8 @@ export async function updateModerationUserProfile(
 ) {
   return request<{ item: ModerationUserDetail }>(
     session,
-    `/client-api/moderation/view/users/${encodeURIComponent(userId)}`,
-    `/client-api/moderation/legacy/view/users/${encodeURIComponent(userId)}`,
+    `/api/moderation/view/users/${encodeURIComponent(userId)}`,
+    `/api/moderation/legacy/view/users/${encodeURIComponent(userId)}`,
     {
       method: "PATCH",
       headers: {
@@ -854,8 +854,8 @@ export async function fetchModerationUserComments(
 
   return request<{ items: ModerationUserComment[] }>(
     session,
-    `/client-api/moderation/view/users/${encodeURIComponent(userId)}/comments?${query.toString()}`,
-    `/client-api/moderation/legacy/view/users/${encodeURIComponent(userId)}/comments?${query.toString()}`,
+    `/api/moderation/view/users/${encodeURIComponent(userId)}/comments?${query.toString()}`,
+    `/api/moderation/legacy/view/users/${encodeURIComponent(userId)}/comments?${query.toString()}`,
   );
 }
 
@@ -870,8 +870,8 @@ export async function createModerationUserComment(
 ) {
   return request<{ item: ModerationUserComment }>(
     session,
-    `/client-api/moderation/view/users/${encodeURIComponent(userId)}/comments`,
-    `/client-api/moderation/legacy/view/users/${encodeURIComponent(userId)}/comments`,
+    `/api/moderation/view/users/${encodeURIComponent(userId)}/comments`,
+    `/api/moderation/legacy/view/users/${encodeURIComponent(userId)}/comments`,
     {
       method: "POST",
       headers: {
@@ -892,8 +892,8 @@ export async function fetchModerationServerDetail(
 ) {
   return request<{ item: ModerationServerDetail }>(
     session,
-    `/client-api/moderation/view/servers/${encodeURIComponent(serverId)}`,
-    `/client-api/moderation/legacy/view/servers/${encodeURIComponent(serverId)}`,
+    `/api/moderation/view/servers/${encodeURIComponent(serverId)}`,
+    `/api/moderation/legacy/view/servers/${encodeURIComponent(serverId)}`,
   );
 }
 
@@ -904,8 +904,8 @@ export async function updateModerationServerProfile(
 ) {
   return request<{ item: ModerationServerDetail }>(
     session,
-    `/client-api/moderation/view/servers/${encodeURIComponent(serverId)}`,
-    `/client-api/moderation/legacy/view/servers/${encodeURIComponent(serverId)}`,
+    `/api/moderation/view/servers/${encodeURIComponent(serverId)}`,
+    `/api/moderation/legacy/view/servers/${encodeURIComponent(serverId)}`,
     {
       method: "PATCH",
       headers: {
@@ -926,8 +926,8 @@ export async function fetchModerationServerComments(
 
   return request<{ items: ModerationServerComment[] }>(
     session,
-    `/client-api/moderation/view/servers/${encodeURIComponent(serverId)}/comments?${query.toString()}`,
-    `/client-api/moderation/legacy/view/servers/${encodeURIComponent(serverId)}/comments?${query.toString()}`,
+    `/api/moderation/view/servers/${encodeURIComponent(serverId)}/comments?${query.toString()}`,
+    `/api/moderation/legacy/view/servers/${encodeURIComponent(serverId)}/comments?${query.toString()}`,
   );
 }
 
@@ -942,8 +942,8 @@ export async function createModerationServerComment(
 ) {
   return request<{ item: ModerationServerComment }>(
     session,
-    `/client-api/moderation/view/servers/${encodeURIComponent(serverId)}/comments`,
-    `/client-api/moderation/legacy/view/servers/${encodeURIComponent(serverId)}/comments`,
+    `/api/moderation/view/servers/${encodeURIComponent(serverId)}/comments`,
+    `/api/moderation/legacy/view/servers/${encodeURIComponent(serverId)}/comments`,
     {
       method: "POST",
       headers: {
@@ -964,8 +964,8 @@ export async function fetchModerationImageDetail(
 ) {
   return request<{ item: ModerationImageDetail }>(
     session,
-    `/client-api/moderation/view/images/${encodeURIComponent(imageId)}`,
-    `/client-api/moderation/legacy/view/images/${encodeURIComponent(imageId)}`,
+    `/api/moderation/view/images/${encodeURIComponent(imageId)}`,
+    `/api/moderation/legacy/view/images/${encodeURIComponent(imageId)}`,
   );
 }
 
@@ -979,8 +979,8 @@ export async function fetchModerationImageComments(
 
   return request<{ items: ModerationImageComment[] }>(
     session,
-    `/client-api/moderation/view/images/${encodeURIComponent(imageId)}/comments?${query.toString()}`,
-    `/client-api/moderation/legacy/view/images/${encodeURIComponent(imageId)}/comments?${query.toString()}`,
+    `/api/moderation/view/images/${encodeURIComponent(imageId)}/comments?${query.toString()}`,
+    `/api/moderation/legacy/view/images/${encodeURIComponent(imageId)}/comments?${query.toString()}`,
   );
 }
 
@@ -995,8 +995,8 @@ export async function createModerationImageComment(
 ) {
   return request<{ item: ModerationImageComment }>(
     session,
-    `/client-api/moderation/view/images/${encodeURIComponent(imageId)}/comments`,
-    `/client-api/moderation/legacy/view/images/${encodeURIComponent(imageId)}/comments`,
+    `/api/moderation/view/images/${encodeURIComponent(imageId)}/comments`,
+    `/api/moderation/legacy/view/images/${encodeURIComponent(imageId)}/comments`,
     {
       method: "POST",
       headers: {

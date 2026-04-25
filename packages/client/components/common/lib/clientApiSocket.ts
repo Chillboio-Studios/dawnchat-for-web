@@ -150,7 +150,7 @@ async function postRemoteCallState(
 ): Promise<boolean> {
   for (let attempt = 1; attempt <= CALL_STATE_PUSH_MAX_ATTEMPTS; attempt += 1) {
     try {
-      const response = await fetch(toClientApiUrl("/client-api/dm-ringing"), {
+      const response = await fetch(toClientApiUrl("/api/dm-ringing"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -283,7 +283,7 @@ export function ensureClientApiSocketConnected() {
 
   socketStarted = true;
 
-  const socketUrl = toClientApiWsUrl("/client-api/socket");
+  const socketUrl = toClientApiWsUrl("/api/socket");
   const ws = new WebSocket(socketUrl);
 
   console.error("[client-api-socket] connect", {
@@ -331,7 +331,7 @@ export async function fetchRemoteCallState(channelId: string, callId: string) {
   try {
     const query = new URLSearchParams({ channelId, callId });
     const response = await fetch(
-      toClientApiUrl(`/client-api/dm-ringing?${query.toString()}`),
+      toClientApiUrl(`/api/dm-ringing?${query.toString()}`),
     );
 
     if (!response.ok) return;

@@ -36,10 +36,9 @@ const explicitClientApiUrl =
 
 const clientApiUrl = (explicitClientApiUrl
   ? explicitClientApiUrl
-  : appApiUrl.replace(/\/api\/?$/i, "/client-api"))
+  : appApiUrl)
   .trim()
-  // Keep the previous localhost behavior for local dev defaults.
-  || "http://localhost:3000/client-api";
+  || "http://localhost:3000/api";
 
 const normalizedApiUrl = appApiUrl.replace(/\/+$/, "");
 const normalizedClientApiUrl = clientApiUrl.replace(/\/+$/, "");
@@ -57,6 +56,7 @@ const proxyUrl = `${apiUrl.protocol}//${apiUrl.host}/january`;
 const env = {
   ...process.env,
   VITE_API_URL: normalizedApiUrl,
+  // Keep legacy env key available, but it now points to the main API base.
   VITE_CLIENT_API_URL: normalizedClientApiUrl,
   VITE_WS_URL: derivedWsUrl,
   VITE_MEDIA_URL: mediaUrl,

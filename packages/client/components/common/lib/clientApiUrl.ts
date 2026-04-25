@@ -15,42 +15,35 @@ function normalizeApiBase(input: string | undefined) {
   return `${trimmed}/api`;
 }
 
-function normalizeClientApiBase(input: string | undefined) {
-  const trimmed = input?.trim().replace(/\/+$/, "");
-  if (!trimmed) return undefined;
-
-  if (/\/client-api$/i.test(trimmed)) {
-    return trimmed;
-  }
-
-  if (/\/api$/i.test(trimmed)) {
-    return trimmed.replace(/\/api$/i, "/client-api");
-  }
-
-  return `${trimmed}/client-api`;
-}
-
-const explicitClientApiBase = normalizeClientApiBase(
-  import.meta.env.VITE_CLIENT_API_URL as string | undefined,
+const explicitApiBase = normalizeApiBase(
+  (import.meta.env.VITE_API_URL as string | undefined) ??
+    (import.meta.env.VITE_CLIENT_API_URL as string | undefined),
 );
 const derivedApiBase = normalizeApiBase(env.DEFAULT_API_URL);
-const derivedClientApiBase = normalizeClientApiBase(derivedApiBase);
-
-const clientApiBase = derivedClientApiBase
-  ? explicitClientApiBase || derivedClientApiBase
-  : explicitClientApiBase || "https://app.dawn-chat.com/client-api";
+const apiBase = explicitApiBase || derivedApiBase || "https://app.dawn-chat.com/api";
+const wsBase =
+  (import.meta.env.VITE_WS_URL as string | undefined)?.trim().replace(/\/+$/, "") ||
+  apiBase
+    .replace(/^http:/i, "ws:")
+    .replace(/^https:/i, "wss:")
+    .replace(/\/api$/i, "/ws");
 
 export function toClientApiUrl(pathOrUrl: string) {
   if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(pathOrUrl)) {
     return pathOrUrl;
   }
 
-  if (!pathOrUrl.startsWith("/client-api")) {
-    return pathOrUrl;
+  if (pathOrUrl.startsWith("/client-api")) {
+    const suffix = pathOrUrl.slice("/client-api".length);
+    return `${apiBase}${suffix}`;
   }
 
-  const suffix = pathOrUrl.slice("/client-api".length);
-  return `${clientApiBase}${suffix}`;
+  if (pathOrUrl.startsWith("/api")) {
+    const suffix = pathOrUrl.slice("/api".length);
+    return `${apiBase}${suffix}`;
+  }
+
+  return pathOrUrl;
 }
 
 export function toClientApiWsUrl(pathname: string) {
@@ -59,10 +52,12 @@ export function toClientApiWsUrl(pathname: string) {
   }
 
   if (pathname.startsWith("/client-api")) {
-    const wsBase = clientApiBase
-      .replace(/^http:/i, "ws:")
-      .replace(/^https:/i, "wss:");
     const suffix = pathname.slice("/client-api".length);
+    return `${wsBase}${suffix}`;
+  }
+
+  if (pathname.startsWith("/api")) {
+    const suffix = pathname.slice("/api".length);
     return `${wsBase}${suffix}`;
   }
 
