@@ -16,6 +16,7 @@ import MdLogout from "@material-design-icons/svg/outlined/logout.svg?component-s
 import MdMemory from "@material-design-icons/svg/outlined/memory.svg?component-solid";
 import MdMic from "@material-design-icons/svg/outlined/mic.svg?component-solid";
 import MdPalette from "@material-design-icons/svg/outlined/palette.svg?component-solid";
+import MdAdminPanelSettings from "@material-design-icons/svg/outlined/admin_panel_settings.svg?component-solid";
 import MdRateReview from "@material-design-icons/svg/outlined/rate_review.svg?component-solid";
 import MdScience from "@material-design-icons/svg/outlined/science.svg?component-solid";
 import MdSmartToy from "@material-design-icons/svg/outlined/smart_toy.svg?component-solid";
@@ -27,9 +28,12 @@ import { version as appVersion } from "../../../../package.json";
 import { SettingsConfiguration } from ".";
 import { MyAccount } from "./user/Account";
 import AdvancedSettings from "./user/Advanced";
+import { AdminPanel } from "../admin/AdminPanel";
 import { Feedback } from "./user/Feedback";
 import { LanguageSettings } from "./user/Language";
 import Native from "./user/Native";
+import { MyAccountStanding } from "./user/MyAccountStanding";
+import { MyModerationHistory } from "./user/MyModerationHistory";
 import { Sessions } from "./user/Sessions";
 import { AccountCard } from "./user/_AccountCard";
 import { AppearanceMenu } from "./user/appearance";
@@ -82,14 +86,15 @@ function getSettingsFooterVersionLabel() {
     return undefined;
   })();
 
+  const desktopWindow = (globalThis as any).window as any;
   const isDesktopRuntime =
-    typeof window !== "undefined" &&
-    (Boolean(window.native) ||
-      "__TAURI__" in window ||
-      "__TAURI_INTERNALS__" in window ||
-      window.location.hostname === "tauri.localhost" ||
-      window.location.hostname.endsWith(".tauri.localhost") ||
-      window.location.protocol === "tauri:");
+    !!desktopWindow &&
+    (Boolean(desktopWindow.native) ||
+      "__TAURI__" in desktopWindow ||
+      "__TAURI_INTERNALS__" in desktopWindow ||
+      desktopWindow.location.hostname === "tauri.localhost" ||
+      desktopWindow.location.hostname.endsWith(".tauri.localhost") ||
+      desktopWindow.location.protocol === "tauri:");
 
   if (!isDesktopRuntime) {
     return builtFor
@@ -97,7 +102,7 @@ function getSettingsFooterVersionLabel() {
       : `dawnchat-web-${appVersion}`;
   }
 
-  const desktopVersion = window.native?.versions.desktop?.() ?? appVersion;
+  const desktopVersion = desktopWindow?.native?.versions.desktop?.() ?? appVersion;
   return builtFor
     ? `${builtFor}-${desktopVersion}`
     : `dawnchat-desktop-${desktopVersion}`;
@@ -145,6 +150,12 @@ const Config: SettingsConfiguration<{ server: Server }> = {
         return <EditProfile />;
       case "sessions":
         return <Sessions />;
+      case "standing":
+        return <MyAccountStanding />;
+      case "moderation-history":
+        return <MyModerationHistory />;
+      case "admin":
+        return <AdminPanel />;
       case "bots":
         return <MyBots />;
       case "language":
@@ -173,7 +184,9 @@ const Config: SettingsConfiguration<{ server: Server }> = {
   list() {
     const { pop } = useModals();
     const { logout } = useClientLifecycle();
+    const client = useClient();
     const footerVersion = getSettingsFooterVersionLabel();
+    const isPrivileged = () => client().user?.privileged === true;
 
     return {
       context: null!,
@@ -231,6 +244,16 @@ const Config: SettingsConfiguration<{ server: Server }> = {
               icon: <MdVerifiedUser {...iconSize(20)} />,
               title: <Trans>Sessions</Trans>,
             },
+            {
+              id: "standing",
+              icon: <MdVerifiedUser {...iconSize(20)} />,
+              title: <Trans>My Account Standing</Trans>,
+            },
+            {
+              id: "moderation-history",
+              icon: <MdRateReview {...iconSize(20)} />,
+              title: <Trans>My Moderation History</Trans>,
+            },
           ],
         },
         {
@@ -245,6 +268,17 @@ const Config: SettingsConfiguration<{ server: Server }> = {
               id: "feedback",
               icon: <MdRateReview {...iconSize(20)} />,
               title: <Trans>Feedback</Trans>,
+            },
+          ],
+        },
+        {
+          hidden: !isPrivileged(),
+          title: <Trans>Admin</Trans>,
+          entries: [
+            {
+              id: "admin",
+              icon: <MdAdminPanelSettings {...iconSize(20)} />,
+              title: <Trans>Admin Panel</Trans>,
             },
           ],
         },

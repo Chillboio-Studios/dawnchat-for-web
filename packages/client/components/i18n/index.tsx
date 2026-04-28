@@ -4,8 +4,16 @@ import { I18nProvider as LinguiProvider } from "@lingui-solid/solid";
 import { i18n } from "@lingui/core";
 
 import { type LocaleOptions, Language, Languages } from "./Languages";
-import { messages as en } from "./catalogs/en/messages.ts";
+import enCatalogText from "./catalogs/en/messages.js?raw";
 import { initTime, loadTimeLocale } from "./dayjs";
+
+function loadCatalog(raw: string) {
+  const module = { exports: {} as { messages: unknown } };
+  new Function("module", "exports", raw)(module, module.exports);
+  return module.exports.messages;
+}
+
+const en = loadCatalog(enCatalogText);
 
 export function I18nProvider(props: { children: JSX.Element }) {
   return <LinguiProvider i18n={i18n}>{props.children}</LinguiProvider>;
@@ -23,8 +31,13 @@ export async function loadAndSwitchLocale(
     const data =
       Languages[key].i18n === "en"
         ? en
-        : (await import(`./catalogs/${Languages[key].i18n}/messages.ts`))
-            .messages;
+        : {
+            ...en,
+            ...loadCatalog(
+              (await import(`./catalogs/${Languages[key].i18n}/messages.js?raw`))
+                .default,
+            ),
+          };
 
     i18n.load({
       [key]: data,

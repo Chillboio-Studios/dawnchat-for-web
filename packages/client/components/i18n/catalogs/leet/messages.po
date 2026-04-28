@@ -247,6 +247,10 @@ msgstr "24 hours"
 msgid "404 page could not be found"
 msgstr "404 page could not be found"
 
+#: components/app/interface/settings/user/MyAccountStanding.tsx
+msgid "A short summary of your current moderation status on the platform."
+msgstr ""
+
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 msgid "Able to access channels on this server"
 msgstr "Able to access channels on this server"
@@ -315,14 +319,12 @@ msgstr "Add status text"
 msgid "Additional details"
 msgstr "Additional details"
 
+#: components/app/interface/settings/UserSettings.tsx
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 msgid "Admin"
 msgstr "Admin"
 
-#: components/app/menus/UserContextMenu.tsx
-#: components/app/menus/ServerContextMenu.tsx
-#: components/app/menus/MessageContextMenu.tsx
-#: components/app/menus/ChannelContextMenu.tsx
+#: components/app/interface/settings/UserSettings.tsx
 msgid "Admin Panel"
 msgstr "Admin Panel"
 
@@ -688,6 +690,10 @@ msgstr "Click to show full description"
 msgid "Click to show spoiler"
 msgstr "Click to show spoiler"
 
+#: src/interface/navigation/servers/UserMenu.tsx
+msgid "Client debug view"
+msgstr ""
+
 #: components/app/interface/settings/UserSettings.tsx
 msgid "Client Settings"
 msgstr "CL13N7 53771N65"
@@ -697,7 +703,6 @@ msgstr "CL13N7 53771N65"
 #: components/modal/modals/UserProfileMutualFriends.tsx
 #: components/modal/modals/ServerInfo.tsx
 #: components/modal/modals/PolicyChange.tsx
-#: components/modal/modals/ModerationPanel.tsx
 #: components/modal/modals/LinkWarning.tsx
 #: components/modal/modals/JoinServer.tsx
 #: components/modal/modals/EmojiPreview.tsx
@@ -1820,6 +1825,14 @@ msgstr "Listen"
 msgid "Load file ({0})"
 msgstr "Load file ({0})"
 
+#: components/app/interface/settings/user/MyModerationHistory.tsx
+msgid "Loading moderation history..."
+msgstr ""
+
+#: components/app/interface/settings/user/MyAccountStanding.tsx
+msgid "Loading standing information..."
+msgstr ""
+
 #: components/auth/src/flows/FlowHome.tsx
 msgid "Log In"
 msgstr "Log In"
@@ -1993,9 +2006,13 @@ msgstr "Minimise to Tray"
 msgid "Missing permission"
 msgstr "Missing permission"
 
+#: components/app/interface/settings/user/MyModerationHistory.tsx
+msgid "Moderation actions recorded against your account."
+msgstr ""
+
 #: components/modal/modals/ModerationPanel.tsx
-msgid "Moderation Panel"
-msgstr "Moderation Panel"
+#~ msgid "Moderation Panel"
+#~ msgstr "Moderation Panel"
 
 #: components/app/interface/settings/user/appearance/AppearanceMenu.tsx
 msgid "Monochrome"
@@ -2074,8 +2091,18 @@ msgid "My Account"
 msgstr "MY 4CC0UN7"
 
 #: components/app/interface/settings/UserSettings.tsx
+#: components/app/interface/settings/user/MyAccountStanding.tsx
+msgid "My Account Standing"
+msgstr ""
+
+#: components/app/interface/settings/UserSettings.tsx
 msgid "My Bots"
 msgstr "MY 8075"
+
+#: components/app/interface/settings/UserSettings.tsx
+#: components/app/interface/settings/user/MyModerationHistory.tsx
+msgid "My Moderation History"
+msgstr ""
 
 #: components/modal/modals/RenameSession.tsx
 #: components/modal/modals/CreateCategory.tsx
@@ -2115,6 +2142,10 @@ msgstr "New to the server"
 #: components/modal/modals/ServerIdentity.tsx
 msgid "Nickname"
 msgstr "N1CKN4M3"
+
+#: components/app/interface/settings/user/MyModerationHistory.tsx
+msgid "No moderation actions have been recorded for your account."
+msgstr ""
 
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsOverview.tsx
 msgid "No permissions set yet"
@@ -2217,6 +2248,14 @@ msgstr "Open channel settings"
 msgid "Open file"
 msgstr "Open file"
 
+#: components/app/menus/UserContextMenu.tsx
+#: components/app/menus/ServerContextMenu.tsx
+#: components/app/menus/MessageContextMenu.tsx
+#: components/app/menus/MessageContextMenu.tsx
+#: components/app/menus/ChannelContextMenu.tsx
+msgid "Open in Admin Panel"
+msgstr ""
+
 #: components/app/menus/ServerContextMenu.tsx
 msgid "Open server settings"
 msgstr "Open server settings"
@@ -2226,8 +2265,8 @@ msgid "Open settings"
 msgstr "0P3N 53771N65"
 
 #: src/interface/moderation/ModerationEntityView.tsx
-msgid "Opening moderation target..."
-msgstr "Opening moderation target..."
+#~ msgid "Opening moderation target..."
+#~ msgstr "Opening moderation target..."
 
 #: components/modal/modals/ReportContent.tsx
 #: components/modal/modals/ReportContent.tsx
@@ -3333,6 +3372,7 @@ msgstr "V321FY1N6 Y0U2 4CC0UN7…"
 msgid "Version:"
 msgstr "Version:"
 
+#: components/app/interface/settings/UserSettings.tsx
 #: components/app/interface/settings/channel/permissions/ChannelPermissionsEditor.tsx
 msgid "Video"
 msgstr "V1D30"
