@@ -78,26 +78,43 @@ export function AdminPanel() {
   const [assignedRoleKeys, setAssignedRoleKeys] = createSignal<string[]>([]);
   const [busy, setBusy] = createSignal(false);
 
-  const [me] = createResource(async () => {
-    setError(null);
-    const [header, token] = client().authenticationHeader;
-    if (header !== "X-Session-Token") {
-      throw new Error("Admin panel requires a user session.");
-    }
+  // Fetch the admin identity once the client auth header is ready.
+  const [me] = createResource(
+    () => client().authenticationHeader,
+    async ([header, token]) => {
+      setError(null);
 
-    const response = await fetch(`${ADMIN_API}/me`, {
-      headers: {
-        [header]: token,
-      },
-    });
+      if (!header || !token) {
+        throw new Error("Admin panel requires a user session.");
+      }
+      if (header !== "X-Session-Token") {
+        throw new Error("Admin panel requires a user session.");
+      }
 
-    const text = await response.text();
-    if (!response.ok) {
-      throw new Error(text || `Admin API error: ${response.status}`);
-    }
+      try {
+        const response = await fetch(`${ADMIN_API}/me`, {
+          headers: {
+            [header]: token,
+          },
+        });
 
-    return (text ? JSON.parse(text) : {}) as AdminIdentity;
-  });
+        const text = await response.text();
+        if (!response.ok) {
+          throw new Error(text || `Admin API error: ${response.status}`);
+        }
+
+        try {
+          return (text ? JSON.parse(text) : {}) as AdminIdentity;
+        } catch (e) {
+          console.error("Failed to parse /me response:", text, e);
+          throw e;
+        }
+      } catch (e) {
+        console.error("Admin /me fetch failed:", e);
+        throw e;
+      }
+    },
+  );
 
   const hasPermission = (permission: string) => !!me()?.permissions?.includes(permission);
 

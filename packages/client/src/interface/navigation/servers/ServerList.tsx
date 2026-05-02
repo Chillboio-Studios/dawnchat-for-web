@@ -5,6 +5,8 @@ import {
   Show,
   createMemo,
   createSignal,
+  onMount,
+  onCleanup,
 } from "solid-js";
 
 import { Trans } from "@lingui-solid/solid/macro";
@@ -21,6 +23,7 @@ import { useState } from "@revolt/state";
 import { Avatar, Column, Text, Time, Unreads, UserStatus } from "@revolt/ui";
 
 import MdAdd from "@material-design-icons/svg/filled/add.svg?component-solid";
+import MdDragHandle from "@material-design-icons/svg/filled/drag_handle.svg?component-solid";
 import MdExplore from "@material-design-icons/svg/filled/explore.svg?component-solid";
 import MdHome from "@material-design-icons/svg/filled/home.svg?component-solid";
 import MdSettings from "@material-design-icons/svg/filled/settings.svg?component-solid";
@@ -95,7 +98,6 @@ export const ServerList = (props: Props) => {
     );
 
     const nextIndex = currentServerIndex + byOffset;
-
     if (nextIndex === -1) {
       return navigate("/app");
     }
@@ -119,7 +121,20 @@ export const ServerList = (props: Props) => {
   });
 
   // Ref for floating menu
-  const [menuButton, setMenuButton] = createSignal<HTMLDivElement>();
+  const [menuButton, setMenuButton] = createSignal<HTMLDivElement | undefined>();
+  // Small screen modal state
+  const [isSmallScreen, setIsSmallScreen] = createSignal(false);
+  const [showReorderPopup, setShowReorderPopup] = createSignal(false);
+
+  onMount(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsSmallScreen(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    onCleanup(() => mediaQuery.removeEventListener("change", update));
+  });
   return (
     <ServerListBase>
       <div use:invisibleScrollable={{ direction: "y", class: listBase() }}>
@@ -155,25 +170,45 @@ export const ServerList = (props: Props) => {
             <Column>
               <span>{props.user.username}</span>
               <Text class="label" size="small">
-                {getEffectiveUserPresence(props.user)}
+                {getEffectiveUserPresence({
+                  id: props.user.id,
+                  presence: props.user.status?.presence ?? undefined,
+                  status: props.user.status
+                    ? {
+                        ...props.user.status,
+                        text: props.user.status.text ?? undefined,
+                        presence: props.user.status.presence ?? undefined,
+                      }
+                    : undefined,
+                })}
               </Text>
             </Column>
           )}
           aria={props.user.username}
         >
-          <a ref={setMenuButton} class={entryContainer()}>
-            <Avatar
+          <div ref={setMenuButton}>
+            <a class={entryContainer()}>
+              <Avatar
               size={42}
               src={props.user.avatarURL}
               holepunch={"bottom-right"}
-              overlay={
-                <UserStatus.Graphic
-                  status={getEffectiveUserPresence(props.user)}
-                />
-              }
+              overlay={<UserStatus.Graphic
+                  status={getEffectiveUserPresence({
+                    id: props.user.id,
+                    presence: props.user.status?.presence ?? undefined,
+                    status: props.user.status
+                      ? {
+                          ...props.user.status,
+                          text: props.user.status.text ?? undefined,
+                          presence: props.user.status.presence ?? undefined,
+                        }
+                      : undefined,
+                  })}
+                />}
               interactive
             />
-          </a>
+            </a>
+          </div>
           <UserMenu anchor={menuButton} />
         </Tooltip>
         <For each={props.unreadConversations.slice(0, 9)}>
@@ -271,9 +306,7 @@ export const ServerList = (props: Props) => {
                   <Avatar
                     size={42}
                     src={entry.item.iconURL}
-                    holepunch={
-                      entry.item.mentions.length ? "top-right" : "none"
-                    }
+                    holepunch={entry.item.mentions.length ? "top-right" : "none"}
                     overlay={
                       <>
                         <Show
@@ -316,6 +349,33 @@ export const ServerList = (props: Props) => {
           </Tooltip>
         </Show>
       </div>
+      <Show when={isSmallScreen()}>
+        <Tooltip placement="right" content="Reorder servers">
+          <a class={entryContainer()} onClick={() => setShowReorderPopup(true)}>
+            <Avatar size={42} fallback={<MdDragHandle />} />
+          </a>
+        </Tooltip>
+      </Show>
+      <Show when={showReorderPopup()}>
+        <div style={( { position: "fixed", left: 0, top: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.5)" } as any)}>
+          <div style={( { background: "var(--md-sys-color-surface)", padding: "2em", borderRadius: "1em", minWidth: "300px" } as any)}>
+            <h3><Trans>Reorder Servers</Trans></h3>
+            <Draggable
+              type="servers"
+              items={props.orderedServers}
+              onChange={props.setServerOrder}
+            >
+              {(entry) => (
+                <div style={( { margin: "0.5em 0", display: "flex", alignItems: "center" } as any)}>
+                  <Avatar size={32} src={entry.item.iconURL} fallback={entry.item.name.slice(0, 2).toUpperCase()} />
+                  <span style={( { marginLeft: "1em" } as any)}>{entry.item.name}</span>
+                </div>
+              )}
+            </Draggable>
+            <button style={( { marginTop: "1em" } as any)} onClick={() => setShowReorderPopup(false)}><Trans>Done</Trans></button>
+          </div>
+        </div>
+      </Show>
       <Shadow>
         <div />
       </Shadow>
